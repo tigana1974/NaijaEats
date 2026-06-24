@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, Outlet, useRouterState, useMatchRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { IoStar, IoTime, IoLocation, IoChevronBack, IoChatbubbleEllipses, IoCartOutline, IoFlame, IoAdd } from "react-icons/io5";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,9 +38,6 @@ export const Route = createFileRoute("/vendor/$slug")({
 function VendorPage() {
   const { slug } = Route.useParams();
   const { cart, itemCount, subtotal } = useCart();
-  const routerState = useRouterState();
-  
-  const isItemRoute = routerState.location.pathname.includes("/item/");
 
   const { data, isLoading } = useQuery({
     queryKey: ["vendor", slug],
