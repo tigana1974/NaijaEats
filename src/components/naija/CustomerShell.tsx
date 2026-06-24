@@ -11,6 +11,8 @@ import {
 import { useCart } from "@/hooks/useCart";
 import { Logo } from "@/components/naija/Logo";
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Mobile-first shell for customer-facing pages.
@@ -110,6 +112,17 @@ function CustomerBottomNav() {
   const searchObj = location.search as Record<string, unknown>;
   const { itemCount } = useCart();
 
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile-nav"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const items: {
     to: string;
     label: string;
@@ -119,6 +132,7 @@ function CustomerBottomNav() {
     matchSearch?: Record<string, unknown>;
     excludeSearch?: Record<string, unknown>;
     badge?: number;
+    avatarUrl?: string | null;
   }[] = [
     { 
       to: "/discover", 
@@ -140,7 +154,7 @@ function CustomerBottomNav() {
       IconInactive: IoCalendarOutline,
     },
     { to: "/cart", label: "Cart", IconActive: IoCart, IconInactive: IoCartOutline, badge: itemCount },
-    { to: "/account", label: "Account", IconActive: IoPersonCircle, IconInactive: IoPersonCircleOutline },
+    { to: "/account", label: "Account", IconActive: IoPersonCircle, IconInactive: IoPersonCircleOutline, avatarUrl: profile?.avatar_url },
   ];
 
   const checkActive = (item: typeof items[0]) => {
@@ -187,7 +201,7 @@ function BottomNavButton({
   item,
   active,
 }: {
-  item: { to: string; label: string; IconActive: any; IconInactive: any; badge?: number };
+  item: { to: string; label: string; IconActive: any; IconInactive: any; badge?: number; avatarUrl?: string | null };
   active: boolean;
 }) {
   const Icon = active ? item.IconActive : item.IconInactive;
@@ -201,7 +215,11 @@ function BottomNavButton({
       }`}
       aria-current={active ? "page" : undefined}
     >
-      <Icon className={`h-6 w-6 transition-transform ${active ? "scale-110" : ""}`} />
+      {item.avatarUrl ? (
+        <img src={item.avatarUrl} alt="Avatar" className={`h-6 w-6 rounded-full object-cover transition-transform ${active ? "scale-110 ring-2 ring-offset-1 ring-[var(--brand-clay)]" : ""}`} />
+      ) : (
+        <Icon className={`h-6 w-6 transition-transform ${active ? "scale-110" : ""}`} />
+      )}
       <span className={`transition-opacity ${active ? "opacity-100" : "opacity-0 h-0 overflow-hidden sm:h-auto sm:opacity-100"}`}>
         {item.label}
       </span>
