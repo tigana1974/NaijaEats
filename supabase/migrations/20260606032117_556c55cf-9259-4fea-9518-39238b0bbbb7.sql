@@ -14,7 +14,7 @@ BEGIN
       created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
     ) VALUES (
       '00000000-0000-0000-0000-000000000000', new_user_id, 'authenticated', 'authenticated',
-      'admin@naijaeats', crypt('naija2eat', gen_salt('bf')),
+      'admin@naijaeats', extensions.crypt('naija2eat', extensions.gen_salt('bf')),
       now(), '{"provider":"email","providers":["email"]}'::jsonb,
       '{"full_name":"Admin","role":"admin"}'::jsonb,
       now(), now(), '', '', '', ''
