@@ -221,8 +221,8 @@ function VendorProfilePage() {
       if (signErr || !signed?.signedUrl) throw signErr || new Error("Could not sign URL");
       set(kind === "cover" ? "cover_image_url" : "logo_url", signed.signedUrl);
       toast.success(`${kind === "cover" ? "Cover" : "Logo"} uploaded`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } catch (err: any) {
+      toast.error(err?.message || "Upload failed");
     } finally {
       setUploading(null);
     }

@@ -89,8 +89,8 @@ function AccountPage() {
       if (updErr) throw updErr;
       await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast.success("Profile photo updated");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } catch (err: any) {
+      toast.error(err?.message || "Upload failed");
     } finally {
       setUploading(false);
     }
