@@ -80,10 +80,8 @@ function AuthPage() {
         if (data.session) {
           toast.success("Account created — welcome!");
         } else {
-          // Fallback if a session isn't returned for some reason — sign in directly.
-          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-          if (signInError) throw signInError;
-          toast.success("Account created — welcome!");
+          toast.success("Registration successful! Please check your email for a confirmation link.");
+          setMode("signin"); // switch to signin tab for when they come back
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
