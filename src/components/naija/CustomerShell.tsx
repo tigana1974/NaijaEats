@@ -6,7 +6,7 @@ import {
   IoCalendar, IoCalendarOutline, 
   IoCart, IoCartOutline, 
   IoPersonCircle, IoPersonCircleOutline,
-  IoNotifications
+  IoNotifications, IoWalletOutline
 } from "react-icons/io5";
 import { useCart } from "@/hooks/useCart";
 import { Logo } from "@/components/naija/Logo";
@@ -79,13 +79,23 @@ export function CustomerLocationHeader() {
           </span>
         </div>
       </Link>
-      <Link
-        to="/notifications"
-        aria-label="Notifications"
-        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 text-zinc-700 transition-colors"
-      >
-        <IoNotifications className="h-5 w-5" />
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link
+          to="/wallet"
+          aria-label="Wallet"
+          className="relative inline-flex h-11 w-11 sm:w-auto sm:px-4 items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 text-zinc-700 transition-colors font-bold text-sm"
+        >
+          <IoWalletOutline className="h-5 w-5 shrink-0" />
+          <span className="hidden sm:inline">Wallet</span>
+        </Link>
+        <Link
+          to="/notifications"
+          aria-label="Notifications"
+          className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 text-zinc-700 transition-colors"
+        >
+          <IoNotifications className="h-5 w-5" />
+        </Link>
+      </div>
     </div>
   );
 }

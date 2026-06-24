@@ -188,3 +188,11 @@
     radial-gradient(circle at top left, rgba(215, 235, 215, 0.6) 0%, transparent 50%),
     linear-gradient(to bottom, #FAFAFA, #FFFFFF);
 }
+
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

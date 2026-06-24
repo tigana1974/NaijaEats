@@ -3,6 +3,9 @@ import { CustomerShell } from "@/components/naija/CustomerShell";
 import { useState } from "react";
 import { Bell, Package, MessageCircle, Gift, CheckCircle2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -10,65 +13,51 @@ export const Route = createFileRoute("/_authenticated/notifications")({
 
 type NotificationType = "order" | "message" | "promo" | "system";
 
-interface NotificationItem {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  time: string;
-  isUnread: boolean;
-  actionText?: string;
-}
-
-const DUMMY_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "1",
-    type: "order",
-    title: "Order on the way! 🛵",
-    message: "Your Jollof Rice from Chef Ada is out for delivery. Track your rider now.",
-    time: "2 mins ago",
-    isUnread: true,
-    actionText: "Track Order",
-  },
-  {
-    id: "2",
-    type: "message",
-    title: "New message from Chef Tunde",
-    message: "Sure! I can make the Asun extra spicy for your booking this Friday.",
-    time: "1 hour ago",
-    isUnread: true,
-    actionText: "Reply",
-  },
-  {
-    id: "3",
-    type: "promo",
-    title: "Weekend Special: 20% Off 🎁",
-    message: "Book any backyard grill experience this weekend and get 20% off your total.",
-    time: "Yesterday",
-    isUnread: false,
-  },
-  {
-    id: "4",
-    type: "system",
-    title: "Account verified",
-    message: "Your phone number has been successfully verified. You're all set!",
-    time: "2 days ago",
-    isUnread: false,
-  },
-];
-
 function NotificationsPage() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>(DUMMY_NOTIFICATIONS);
+  const { user } = Route.useRouteContext();
+  const queryClient = useQueryClient();
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isUnread: false })));
-  };
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["notifications", user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
 
+  const markAsReadMut = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("notifications").update({ is_unread: false }).eq("id", id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+    }
+  });
+
+  const markAllAsReadMut = useMutation({
+    mutationFn: async () => {
+      await supabase.from("notifications").update({ is_unread: false }).eq("user_id", user.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+    }
+  });
+
+  const markAllAsRead = () => markAllAsReadMut.mutate();
   const markAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isUnread: false } : n));
+    // Only fire if it's unread
+    const notif = notifications.find(n => n.id === id);
+    if (notif?.is_unread) {
+      markAsReadMut.mutate(id);
+    }
   };
 
-  const unreadCount = notifications.filter(n => n.isUnread).length;
+  const unreadCount = notifications.filter((n) => n.is_unread).length;
 
   const getIconData = (type: NotificationType) => {
     switch (type) {
@@ -145,13 +134,13 @@ function NotificationsPage() {
                   key={notif.id}
                   onClick={() => markAsRead(notif.id)}
                   className={`group relative overflow-hidden rounded-[1.75rem] p-4 sm:p-5 transition-all duration-300 cursor-pointer ${
-                    notif.isUnread 
+                    notif.is_unread 
                       ? "bg-orange-50/60 ring-1 ring-orange-200/50 shadow-sm hover:bg-orange-50/80" 
                       : "bg-white ring-1 ring-zinc-100 hover:ring-zinc-200 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.08)] hover:-translate-y-0.5"
                   }`}
                 >
                   {/* Unread Indicator Dot */}
-                  {notif.isUnread && (
+                  {notif.is_unread && (
                     <div className="absolute top-5 right-5 h-2.5 w-2.5 rounded-full bg-[var(--brand-clay)] ring-4 ring-orange-50 animate-pulse" />
                   )}
 
@@ -164,23 +153,23 @@ function NotificationsPage() {
                     {/* Content */}
                     <div className="flex-1 min-w-0 pt-0.5">
                       <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-1">
-                        <h3 className={`font-display text-base tracking-tight truncate ${notif.isUnread ? "font-bold text-zinc-900" : "font-semibold text-zinc-800"}`}>
+                        <h3 className={`font-display text-base tracking-tight truncate ${notif.is_unread ? "font-bold text-zinc-900" : "font-semibold text-zinc-800"}`}>
                           {notif.title}
                         </h3>
                         <span className="text-[11px] font-semibold text-zinc-400 whitespace-nowrap uppercase tracking-wider">
-                          {notif.time}
+                          {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                         </span>
                       </div>
                       
-                      <p className={`text-sm leading-relaxed ${notif.isUnread ? "text-zinc-700 font-medium" : "text-zinc-500"}`}>
+                      <p className={`text-sm leading-relaxed ${notif.is_unread ? "text-zinc-700 font-medium" : "text-zinc-500"}`}>
                         {notif.message}
                       </p>
 
                       {/* Action Button */}
-                      {notif.actionText && (
+                      {notif.link && (
                         <div className="mt-3.5">
                           <button className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--brand-clay)] hover:text-orange-700 transition group-hover:underline">
-                            {notif.actionText} <ChevronRight className="h-4 w-4" />
+                            View details <ChevronRight className="h-4 w-4" />
                           </button>
                         </div>
                       )}
