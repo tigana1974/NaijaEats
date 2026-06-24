@@ -24,6 +24,7 @@ type Form = {
   delivery_fee: number;
   min_order: number;
   prep_time_minutes: number;
+  cuisine: string[];
 };
 
 const defaultForm: Form = {
@@ -40,7 +41,15 @@ const defaultForm: Form = {
   delivery_fee: 0,
   min_order: 0,
   prep_time_minutes: 30,
+  cuisine: [],
 };
+
+const CUISINE_OPTIONS = [
+  "Nigerian", "Ghanaian", "West African", "East African", "South African",
+  "Chinese", "Indian", "Italian", "Japanese", "Mexican",
+  "Thai", "Mediterranean", "Middle Eastern", "British", "American",
+  "Caribbean", "French", "Korean", "Vietnamese", "Ethiopian",
+];
 
 const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
   { key: "business_registration", label: "Business registration", required: true },
@@ -108,11 +117,15 @@ function VendorProfilePage() {
         delivery_fee: Number(existing.delivery_fee ?? 0),
         min_order: Number(existing.min_order ?? 0),
         prep_time_minutes: Number(existing.prep_time_minutes ?? 30),
+        cuisine: existing.cuisine ?? [],
       });
     }
   }, [existing]);
 
   if (!roleLoading && role !== "vendor") return <Navigate to="/" replace />;
+
+  const isChef = form.type === "home_chef" || form.type === "personal_chef";
+  const isGrocery = form.type === "grocery";
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -248,10 +261,12 @@ function VendorProfilePage() {
     <AppShell>
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-8">
         <h1 className="font-display text-3xl sm:text-4xl font-semibold">
-          {existing ? "Edit shop" : "Create your shop"}
+          {existing
+            ? isGrocery ? "Edit store" : isChef ? "Edit kitchen" : "Edit restaurant"
+            : "Create your shop"}
         </h1>
         <p className="text-muted-foreground mt-1">
-          {existing ? "Update your shop details." : "Tell customers about your kitchen or store."}
+          {existing ? "Update your details below." : "Tell customers about your kitchen or store."}
         </p>
         {isLoading ? (
           <p className="mt-8 text-muted-foreground">Loading…</p>
@@ -272,9 +287,8 @@ function VendorProfilePage() {
               <Field label="Type">
                 <select className="vinput" value={form.type} onChange={(e) => set("type", e.target.value as Form["type"])}>
                   <option value="restaurant">Restaurant</option>
-                  <option value="home_chef">Home chef</option>
-                  <option value="personal_chef">Personal chef</option>
-                  <option value="grocery">Grocery</option>
+                  <option value="home_chef">Chef</option>
+                  <option value="grocery">Grocery store</option>
                 </select>
               </Field>
             </div>
@@ -288,6 +302,31 @@ function VendorProfilePage() {
                 onChange={(e) => set("description", e.target.value)}
               />
             </Field>
+            {!isGrocery && (
+              <Field label={isChef ? "Specialties" : "Cuisine"}>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {CUISINE_OPTIONS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        const next = form.cuisine.includes(c)
+                          ? form.cuisine.filter((x) => x !== c)
+                          : [...form.cuisine, c];
+                        set("cuisine", next);
+                      }}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                        form.cuisine.includes(c)
+                          ? "bg-[var(--brand-clay)] text-white border-[var(--brand-clay)]"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            )}
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Country">
                 <select className="vinput" value={form.country} onChange={(e) => set("country", e.target.value as "NG" | "UK")}>
@@ -322,7 +361,7 @@ function VendorProfilePage() {
                 />
               </Field>
             </div>
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className={`grid gap-4 ${isGrocery ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
               <Field label="Delivery fee">
                 <input
                   type="number" min={0} className="vinput"
@@ -337,13 +376,15 @@ function VendorProfilePage() {
                   onChange={(e) => set("min_order", Number(e.target.value))}
                 />
               </Field>
-              <Field label="Prep time (min)">
-                <input
-                  type="number" min={1} className="vinput"
-                  value={form.prep_time_minutes}
-                  onChange={(e) => set("prep_time_minutes", Number(e.target.value))}
-                />
-              </Field>
+              {!isGrocery && (
+                <Field label={isChef ? "Average cook time (min)" : "Prep time (min)"}>
+                  <input
+                    type="number" min={1} className="vinput"
+                    value={form.prep_time_minutes}
+                    onChange={(e) => set("prep_time_minutes", Number(e.target.value))}
+                  />
+                </Field>
+              )}
             </div>
 
             <button

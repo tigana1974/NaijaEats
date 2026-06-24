@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
-import { ClipboardList, UtensilsCrossed, Store, TrendingUp, Star } from "lucide-react";
+import { ClipboardList, UtensilsCrossed, Store, TrendingUp, Star, ChefHat, ShoppingBasket, CalendarCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/vendor/dashboard")({
   component: VendorDashboard,
@@ -50,49 +50,56 @@ function VendorDashboard() {
           <SetupCta />
         ) : (
           <>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h1 className="font-display text-3xl sm:text-4xl font-semibold">{data.vendor.name}</h1>
-                <p className="text-muted-foreground mt-1 capitalize">
-                  Status: <span className="font-medium text-foreground">{data.vendor.status}</span>
-                </p>
-              </div>
-              <Link
-                to="/vendor/profile"
-                className="rounded-full bg-[var(--brand-clay)] text-[var(--brand-cream)] px-4 py-2 text-sm font-semibold"
-              >
-                Edit shop
-              </Link>
-            </div>
+            {(() => {
+              const cfg = vendorConfig(data.vendor.type);
+              return (
+                <>
+                  <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground capitalize">{cfg.title}</p>
+                      <h1 className="font-display text-3xl sm:text-4xl font-semibold">{data.vendor.name}</h1>
+                      <p className="text-muted-foreground mt-1 capitalize">
+                        Status: <span className="font-medium text-foreground">{data.vendor.status}</span>
+                      </p>
+                    </div>
+                    <Link
+                      to="/vendor/profile"
+                      className="rounded-full bg-[var(--brand-clay)] text-[var(--brand-cream)] px-4 py-2 text-sm font-semibold"
+                    >
+                      {cfg.editLabel}
+                    </Link>
+                  </div>
 
-            {data.vendor.status !== "approved" && (
-              <div className="mt-6 rounded-xl border border-border bg-card p-4 text-sm">
-                Your shop is <strong className="capitalize">{data.vendor.status}</strong>.
-                Customers won't see it on Discover until it's approved.
-              </div>
-            )}
+                  {data.vendor.status !== "approved" && (
+                    <div className="mt-6 rounded-xl border border-border bg-card p-4 text-sm">
+                      Your shop is <strong className="capitalize">{data.vendor.status}</strong>.
+                      Customers won't see it on Discover until it's approved.
+                    </div>
+                  )}
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Stat label="Orders today" value={data.ordersToday ?? 0} Icon={ClipboardList} />
-              <Stat
-                label="Revenue today"
-                value={formatMoney(data.revenueToday ?? 0, data.vendor.currency)}
-                Icon={TrendingUp}
-              />
-              <Stat label="Open orders" value={data.pending ?? 0} Icon={ClipboardList} />
-              <Stat
-                label="Rating"
-                value={`${Number(data.vendor.rating || 0).toFixed(1)} (${data.vendor.rating_count || 0})`}
-                Icon={Star}
-              />
-            </div>
+                  <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <Stat label="Orders today" value={data.ordersToday ?? 0} Icon={ClipboardList} />
+                    <Stat
+                      label="Revenue today"
+                      value={formatMoney(data.revenueToday ?? 0, data.vendor.currency)}
+                      Icon={TrendingUp}
+                    />
+                    <Stat label="Open orders" value={data.pending ?? 0} Icon={ClipboardList} />
+                    <Stat
+                      label="Rating"
+                      value={`${Number(data.vendor.rating || 0).toFixed(1)} (${data.vendor.rating_count || 0})`}
+                      Icon={Star}
+                    />
+                  </div>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <QuickLink to="/vendor/orders" Icon={ClipboardList} title="Orders queue" desc="Accept, prepare, and mark ready." />
-              <QuickLink to="/vendor/menu" Icon={UtensilsCrossed} title="Menu" desc="Add items, categories, prices." />
-              <QuickLink to="/vendor/earnings" Icon={TrendingUp} title="Earnings" desc="Paid revenue and payout requests." />
-              <QuickLink to="/vendor/profile" Icon={Store} title="Shop profile" desc="Cover, delivery fee, prep time." />
-            </div>
+                  <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                    {cfg.quickLinks.map((ql) => (
+                      <QuickLink key={ql.to} to={ql.to} Icon={ql.Icon} title={ql.title} desc={ql.desc} />
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
           </>
         )}
       </div>
@@ -142,6 +149,41 @@ function QuickLink({ to, Icon, title, desc }: { to: string; Icon: React.Componen
       </div>
     </Link>
   );
+}
+
+function vendorConfig(type: string) {
+  const isChef = type === "home_chef" || type === "personal_chef";
+  const isGrocery = type === "grocery";
+  if (isChef) return {
+    title: "Chef dashboard",
+    editLabel: "Edit kitchen",
+    quickLinks: [
+      { to: "/vendor/orders", Icon: ClipboardList, title: "Orders", desc: "Accept and manage orders." },
+      { to: "/vendor/menu", Icon: UtensilsCrossed, title: "Menu", desc: "Manage your dishes and prices." },
+      { to: "/vendor/profile", Icon: CalendarCheck, title: "Availability", desc: "Set dates you can cook." },
+      { to: "/vendor/earnings", Icon: TrendingUp, title: "Earnings", desc: "Revenue and payout requests." },
+    ],
+  };
+  if (isGrocery) return {
+    title: "Store dashboard",
+    editLabel: "Edit store",
+    quickLinks: [
+      { to: "/vendor/orders", Icon: ClipboardList, title: "Orders", desc: "Accept and manage orders." },
+      { to: "/vendor/menu", Icon: ShoppingBasket, title: "Products", desc: "Manage inventory and prices." },
+      { to: "/vendor/earnings", Icon: TrendingUp, title: "Earnings", desc: "Revenue and payout requests." },
+      { to: "/vendor/profile", Icon: Store, title: "Store profile", desc: "Cover, delivery fee, details." },
+    ],
+  };
+  return {
+    title: "Restaurant dashboard",
+    editLabel: "Edit restaurant",
+    quickLinks: [
+      { to: "/vendor/orders", Icon: ClipboardList, title: "Orders queue", desc: "Accept, prepare, and mark ready." },
+      { to: "/vendor/menu", Icon: UtensilsCrossed, title: "Menu", desc: "Add items, categories, prices." },
+      { to: "/vendor/earnings", Icon: TrendingUp, title: "Earnings", desc: "Revenue and payout requests." },
+      { to: "/vendor/profile", Icon: Store, title: "Restaurant profile", desc: "Cover, delivery fee, prep time." },
+    ],
+  };
 }
 
 function formatMoney(n: number, currency: string) {

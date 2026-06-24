@@ -72,8 +72,12 @@ function VendorMenu() {
   return (
     <AppShell>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
-        <h1 className="font-display text-3xl sm:text-4xl font-semibold">Menu</h1>
-        <p className="text-muted-foreground mt-1">Manage what customers can order.</p>
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold">
+          {data?.vendor?.type === "grocery" ? "Products" : "Menu"}
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          {data?.vendor?.type === "grocery" ? "Manage your store inventory." : "Manage what customers can order."}
+        </p>
 
         {isLoading ? (
           <p className="mt-6 text-muted-foreground">Loading…</p>
@@ -83,12 +87,14 @@ function VendorMenu() {
           <>
             {/* Categories */}
             <section className="mt-8">
-              <h2 className="font-display text-xl font-semibold">Categories</h2>
+              <h2 className="font-display text-xl font-semibold">
+                {data?.vendor?.type === "grocery" ? "Departments" : "Categories"}
+              </h2>
               <div className="mt-3 flex gap-2">
                 <input
                   value={newCat}
                   onChange={(e) => setNewCat(e.target.value)}
-                  placeholder="e.g. Mains, Drinks"
+                  placeholder={data?.vendor?.type === "grocery" ? "e.g. Produce, Dairy, Beverages" : "e.g. Mains, Drinks"}
                   className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm"
                 />
                 <button onClick={addCategory} className="rounded-lg bg-[var(--brand-clay)] text-[var(--brand-cream)] px-4 py-2 text-sm font-semibold inline-flex items-center gap-1">
@@ -113,12 +119,14 @@ function VendorMenu() {
             {/* Items */}
             <section className="mt-10">
               <div className="flex items-end justify-between">
-                <h2 className="font-display text-xl font-semibold">Items</h2>
+                <h2 className="font-display text-xl font-semibold">
+                  {data?.vendor?.type === "grocery" ? "Products" : "Items"}
+                </h2>
                 <button
                   onClick={() => { setEditing(null); setShowItemForm(true); }}
                   className="rounded-full bg-[var(--brand-clay)] text-[var(--brand-cream)] px-4 py-2 text-sm font-semibold inline-flex items-center gap-1"
                 >
-                  <Plus className="h-4 w-4" /> Add item
+                  <Plus className="h-4 w-4" /> {data?.vendor?.type === "grocery" ? "Add product" : "Add item"}
                 </button>
               </div>
 
@@ -153,7 +161,9 @@ function VendorMenu() {
                   </div>
                 ))}
                 {data.items?.length === 0 && (
-                  <p className="text-sm text-muted-foreground col-span-full">No items yet. Add your first dish.</p>
+                  <p className="text-sm text-muted-foreground col-span-full">
+                    {data?.vendor?.type === "grocery" ? "No products yet. Add your first product." : "No items yet. Add your first dish."}
+                  </p>
                 )}
               </div>
             </section>
@@ -175,6 +185,8 @@ function VendorMenu() {
 }
 
 function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any; categories: any[]; item: any | null; onClose: () => void; onSaved: () => void }) {
+  const isGrocery = vendor.type === "grocery";
+  const isChef = vendor.type === "home_chef" || vendor.type === "personal_chef";
   const [form, setForm] = useState({
     name: item?.name ?? "",
     description: item?.description ?? "",
@@ -182,6 +194,9 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
     category_id: item?.category_id ?? "",
     image_url: item?.image_url ?? "",
     is_available: item?.is_available ?? true,
+    spice_level: item?.spice_level ?? "",
+    unit: item?.unit ?? "",
+    stock: item?.stock ?? 0,
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -237,6 +252,8 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
         category_id: form.category_id || null,
         image_url: form.image_url || null,
         is_available: form.is_available,
+        ...(isGrocery ? { unit: form.unit || null, stock: form.stock } : {}),
+        ...((vendor.type === "restaurant" || isChef) ? { spice_level: form.spice_level || null } : {}),
       };
       if (item) {
         const { error } = await supabase.from("menu_items").update(payload).eq("id", item.id);
@@ -258,7 +275,9 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display text-xl font-semibold mb-4">{item ? "Edit item" : "Add item"}</h3>
+        <h3 className="font-display text-xl font-semibold mb-4">
+          {item ? (isGrocery ? "Edit product" : "Edit item") : (isGrocery ? "Add product" : "Add item")}
+        </h3>
         <form onSubmit={save} className="space-y-3">
           {/* Image uploader */}
           <div className="flex items-center gap-3">
@@ -292,7 +311,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
             </div>
           </div>
 
-          <input required placeholder="Item name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="vinput" />
+          <input required placeholder={isGrocery ? "Product name" : "Item name"} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="vinput" />
           <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="vinput min-h-[80px]" />
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
@@ -304,6 +323,44 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
+          {/* Type-specific fields */}
+          {isGrocery && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Unit</label>
+                <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="vinput">
+                  <option value="">Select unit</option>
+                  <option value="kg">Kilogram (kg)</option>
+                  <option value="g">Gram (g)</option>
+                  <option value="L">Litre (L)</option>
+                  <option value="ml">Millilitre (ml)</option>
+                  <option value="pack">Pack</option>
+                  <option value="bottle">Bottle</option>
+                  <option value="tin">Tin</option>
+                  <option value="bag">Bag</option>
+                  <option value="piece">Piece</option>
+                  <option value="dozen">Dozen</option>
+                  <option value="bunch">Bunch</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Stock count</label>
+                <input type="number" min={0} value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="vinput" />
+              </div>
+            </div>
+          )}
+          {(vendor.type === "restaurant" || isChef) && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Spice level</label>
+              <select value={form.spice_level} onChange={(e) => setForm({ ...form, spice_level: e.target.value })} className="vinput">
+                <option value="">Not specified</option>
+                <option value="mild">Mild</option>
+                <option value="medium">Medium</option>
+                <option value="hot">Hot</option>
+                <option value="extra_hot">Extra hot</option>
+              </select>
+            </div>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.is_available} onChange={(e) => setForm({ ...form, is_available: e.target.checked })} />
             Available to order

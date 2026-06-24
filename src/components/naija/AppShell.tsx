@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
-import { ShoppingBag, Compass, LayoutDashboard, UtensilsCrossed, ClipboardList, Store, Bike, Wallet, PackageSearch, ShieldCheck, CalendarCheck, Bell, MessageCircle, FileText } from "lucide-react";
+import { ShoppingBag, Compass, LayoutDashboard, UtensilsCrossed, ClipboardList, Store, Bike, Wallet, PackageSearch, ShieldCheck, CalendarCheck, Bell, MessageCircle, FileText, ShoppingBasket, ChefHat } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMyRole, type AppRole } from "@/hooks/useMyRole";
 import { Logo } from "@/components/naija/Logo";
@@ -28,6 +28,23 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: vendorType } = useQuery({
+    queryKey: ["my-vendor-type"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id;
+      if (!uid) return null;
+      const { data: v } = await supabase
+        .from("vendors")
+        .select("type")
+        .eq("owner_id", uid)
+        .maybeSingle();
+      return v?.type ?? null;
+    },
+    enabled: role === "vendor",
+    staleTime: 5 * 60 * 1000,
+  });
+
   const initials = (me?.full_name || me?.email || "?")
     .split(/[\s@]+/)
     .filter(Boolean)
@@ -47,13 +64,17 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       { to: "/book", label: "Book", Icon: CalendarCheck },
       { to: "/wallet", label: "Wallet", Icon: Wallet },
     ],
-    vendor: [
-      { to: "/vendor/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-      { to: "/vendor/orders", label: "Orders", Icon: ClipboardList },
-      { to: "/vendor/menu", label: "Menu", Icon: UtensilsCrossed },
-      { to: "/vendor/earnings", label: "Earnings", Icon: Wallet },
-      { to: "/vendor/profile", label: "Shop", Icon: Store },
-    ],
+    vendor: (() => {
+      const isChef = vendorType === "home_chef" || vendorType === "personal_chef";
+      const isGrocery = vendorType === "grocery";
+      return [
+        { to: "/vendor/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+        { to: "/vendor/orders", label: "Orders", Icon: ClipboardList },
+        { to: "/vendor/menu", label: isGrocery ? "Products" : "Menu", Icon: isGrocery ? ShoppingBasket : UtensilsCrossed },
+        { to: "/vendor/earnings", label: "Earnings", Icon: Wallet },
+        { to: "/vendor/profile", label: isGrocery ? "Store" : isChef ? "Kitchen" : "Restaurant", Icon: isGrocery ? ShoppingBasket : isChef ? ChefHat : Store },
+      ];
+    })(),
     rider: [
       { to: "/rider/dashboard", label: "Home", Icon: LayoutDashboard },
       { to: "/rider/available", label: "Available", Icon: PackageSearch },

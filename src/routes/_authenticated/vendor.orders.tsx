@@ -22,11 +22,15 @@ const STATUS_LABEL: Record<Status, string> = {
   cancelled: "Cancelled",
 };
 
-const NEXT: Partial<Record<Status, { to: Status; label: string }>> = {
-  pending: { to: "accepted", label: "Accept" },
-  accepted: { to: "preparing", label: "Start preparing" },
-  preparing: { to: "ready", label: "Mark ready" },
-};
+function getNextActions(vendorType?: string): Partial<Record<Status, { to: Status; label: string }>> {
+  const isChef = vendorType === "home_chef" || vendorType === "personal_chef";
+  const isGrocery = vendorType === "grocery";
+  return {
+    pending: { to: "accepted", label: "Accept" },
+    accepted: { to: "preparing", label: isGrocery ? "Start packing" : isChef ? "Start cooking" : "Start preparing" },
+    preparing: { to: "ready", label: isGrocery ? "Ready for pickup" : "Mark ready" },
+  };
+}
 
 function VendorOrders() {
   const qc = useQueryClient();
@@ -104,7 +108,7 @@ function VendorOrders() {
           )}
           {orders.map((o: any) => {
             const symbol = o.currency === "GBP" ? "£" : "₦";
-            const next = NEXT[o.status as Status];
+            const next = getNextActions(data?.vendor?.type)[o.status as Status];
             return (
               <div key={o.id} className="rounded-2xl border border-border bg-card p-5">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
