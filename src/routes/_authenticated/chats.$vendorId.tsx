@@ -3,7 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerShell } from "@/components/naija/CustomerShell";
 import { ChatThread } from "@/components/naija/ChatThread";
-import { ArrowLeft, Info, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Info, MoreHorizontal, Trash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/chats/$vendorId")({
   component: ChatPage,
@@ -75,12 +81,38 @@ function ChatPage() {
               Offline
             </div>
           </div>
-          <button className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5" aria-label="Info">
-            <Info className="h-5 w-5" />
-          </button>
-          <button className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5" aria-label="More">
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
+          {data?.vendor?.slug && (
+            <Link
+              to="/vendor/$slug"
+              params={{ slug: data.vendor.slug }}
+              className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5"
+              aria-label="Info"
+            >
+              <Info className="h-5 w-5" />
+            </Link>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5" aria-label="More">
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={async () => {
+                  if (confirm("Are you sure you want to clear this chat history?")) {
+                    if (data?.conversation?.id) {
+                      await supabase.from("messages").delete().eq("conversation_id", data.conversation.id);
+                    }
+                  }
+                }}
+                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Clear Chat History
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {isLoading || !data?.conversation ? (

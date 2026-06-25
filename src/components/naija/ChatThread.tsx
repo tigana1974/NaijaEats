@@ -17,6 +17,8 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
   const [sending, setSending] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", conversationId],
@@ -78,6 +80,44 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     }
     qc.invalidateQueries({ queryKey: ["messages", conversationId] });
     inputRef.current?.focus();
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const ext = file.name.split('.').pop();
+      const filename = `${meId}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("chat-images")
+        .upload(filename, file);
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("chat-images")
+        .getPublicUrl(filename);
+
+      const { error: insertError } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_id: meId,
+          body: "",
+          image_url: publicUrlData.publicUrl,
+        });
+      if (insertError) throw insertError;
+      
+      qc.invalidateQueries({ queryKey: ["messages", conversationId] });
+    } catch (err) {
+      console.error("Image upload failed:", err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const initial = (otherName ?? "C").charAt(0).toUpperCase();
@@ -100,7 +140,10 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
             return (
               <div key={m.id} className="flex justify-end">
                 <div className="max-w-[78%] rounded-2xl rounded-br-md px-4 py-2.5 text-white shadow-sm bg-gradient-to-br from-fuchsia-500 to-purple-700">
-                  <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>
+                  {m.image_url && (
+                    <img src={m.image_url} alt="Attachment" className="max-w-full rounded-lg mb-1 object-cover" />
+                  )}
+                  {m.body && <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>}
                   <p className="mt-1 text-[10px] text-white/70 text-right">{time}</p>
                 </div>
               </div>
@@ -119,7 +162,10 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
               </div>
               <div className="max-w-[78%] rounded-2xl rounded-bl-md px-4 py-2.5 bg-[#ece6dc] text-foreground shadow-sm">
                 <p className="text-[13px] font-semibold mb-0.5">{otherName ?? "Chef"}</p>
-                <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>
+                {m.image_url && (
+                  <img src={m.image_url} alt="Attachment" className="max-w-full rounded-lg mb-1 object-cover" />
+                )}
+                {m.body && <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>}
                 <p className="mt-1 text-[10px] text-muted-foreground text-right">{time}</p>
               </div>
             </div>
@@ -137,7 +183,11 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
           <textarea
             ref={inputRef}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -146,18 +196,28 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
             }}
             rows={1}
             placeholder="Start a message"
-            className="flex-1 resize-none bg-transparent text-[15px] focus:outline-none max-h-32 placeholder:text-muted-foreground"
+            className="flex-1 resize-none bg-transparent text-[15px] focus:outline-none max-h-32 placeholder:text-muted-foreground py-0.5"
+            style={{ minHeight: "24px" }}
+          />
+          <input 
+            type="file" 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handleImageSelect} 
+            className="hidden" 
           />
           <button
             type="button"
-            className="h-9 w-9 grid place-items-center rounded-full text-muted-foreground hover:bg-black/5 shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="h-9 w-9 grid place-items-center rounded-full text-muted-foreground hover:bg-black/5 shrink-0 disabled:opacity-50"
             aria-label="Attach"
           >
             <Paperclip className="h-5 w-5" />
           </button>
           <button
             type="submit"
-            disabled={!text.trim() || sending}
+            disabled={(!text.trim() && !uploading) || sending || uploading}
             className="h-9 w-9 grid place-items-center rounded-full text-purple-700 disabled:opacity-40 shrink-0"
             aria-label="Send"
           >
