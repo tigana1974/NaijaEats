@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Leaf, Apple, Coffee, Milk } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { FoodCard, VendorCard } from "@/components/naija/customer-ui";
 
 export const Route = createFileRoute("/_authenticated/groceries")({
@@ -66,7 +66,7 @@ function GroceriesPage() {
   });
 
   return (
-    <CustomerShell
+    <RoleShell
       topBar={
         <div className="flex items-center justify-between gap-4 py-1">
           <div className="flex items-center gap-3 shrink-0">
@@ -159,7 +159,7 @@ function GroceriesPage() {
           </section>
         </div>
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }
 

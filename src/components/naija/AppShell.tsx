@@ -72,7 +72,9 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
         { to: "/vendor/orders", label: "Orders", Icon: ClipboardList },
         { to: "/vendor/menu", label: isGrocery ? "Products" : "Menu", Icon: isGrocery ? ShoppingBasket : UtensilsCrossed },
         { to: "/vendor/earnings", label: "Earnings", Icon: Wallet },
-        { to: "/vendor/profile", label: isGrocery ? "Store" : isChef ? "Kitchen" : "Restaurant", Icon: isGrocery ? ShoppingBasket : isChef ? ChefHat : Store },
+        isGrocery
+          ? { to: "/vendor/profile", label: "Store", Icon: Store }
+          : { to: "/groceries", label: "Groceries", Icon: ShoppingBasket },
       ];
     })(),
     rider: [

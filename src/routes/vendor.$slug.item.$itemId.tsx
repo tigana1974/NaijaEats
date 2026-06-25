@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { IoStar, IoChevronBack, IoEllipsisVertical, IoHeart, IoTimeOutline, IoFlameOutline, IoCallOutline, IoChatbubbleEllipsesOutline, IoRemove, IoAdd } from "react-icons/io5";
+import { IoStar, IoChevronBack, IoEllipsisVertical, IoHeart, IoTimeOutline, IoFlameOutline, IoCallOutline, IoChatbubbleEllipsesOutline, IoRemove, IoAdd, IoInformationCircleOutline } from "react-icons/io5";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";

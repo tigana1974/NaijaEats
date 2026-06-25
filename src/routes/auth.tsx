@@ -20,7 +20,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 type Mode = "signin" | "signup";
-type Role = "customer" | "vendor" | "rider";
+type SignupRole = "customer" | "chef" | "grocery" | "rider";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<Role>("customer");
+  const [role, setRole] = useState<SignupRole>("customer");
   const [country, setCountry] = useState<"NG" | "UK">("NG");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -68,12 +68,15 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const dbRole = role === "chef" || role === "grocery" ? "vendor" : role;
+        const vendor_type = role === "grocery" ? "grocery" : role === "chef" ? "restaurant" : null;
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, role, country },
+            data: { full_name: fullName, role: dbRole, vendor_type, country },
           },
         });
         if (error) throw error;
@@ -231,11 +234,12 @@ function AuthPage() {
                   <Field label="I am a">
                     <select
                       value={role}
-                      onChange={(e) => setRole(e.target.value as Role)}
+                      onChange={(e) => setRole(e.target.value as SignupRole)}
                       className="input"
                     >
                       <option value="customer">Customer</option>
-                      <option value="vendor">Vendor / Chef</option>
+                      <option value="chef">Chef / Restaurant</option>
+                      <option value="grocery">Groceries Market</option>
                       <option value="rider">Delivery rider</option>
                     </select>
                   </Field>

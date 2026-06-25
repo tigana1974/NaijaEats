@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { Coffee, Utensils, Moon, ArrowRight, Calendar } from "lucide-react";
 import { IoFlame } from "react-icons/io5";
 
@@ -28,7 +28,7 @@ function MealPlannerPage() {
   const currentDayIndex = todayIndex < 0 ? 6 : todayIndex; // Adjust Sunday to 6
 
   return (
-    <CustomerShell
+    <RoleShell
       topBar={
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/20">
@@ -110,6 +110,6 @@ function MealPlannerPage() {
         </div>
 
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }

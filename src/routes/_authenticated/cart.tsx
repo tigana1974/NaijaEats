@@ -6,7 +6,7 @@ import { Trash2, ShoppingCart, MapPin, StickyNote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { initiatePayment } from "@/lib/api/payments.functions";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { QuantityStepper } from "@/components/naija/customer-ui";
 import { toast } from "sonner";
 
@@ -82,11 +82,10 @@ function CartPage() {
   };
 
   return (
-    <CustomerShell
+    <RoleShell
       topBar={<h1 className="font-display text-lg font-bold">Your cart</h1>}
       showBack
       backTo="/discover"
-      containerClassName="mx-auto max-w-2xl px-4 sm:px-6 pb-40 lg:pb-32"
     >
       {!cart || cart.items.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-dashed border-zinc-200 bg-zinc-50/50 p-10 text-center">
@@ -219,6 +218,6 @@ function CartPage() {
           </div>
         </div>
       )}
-    </CustomerShell>
+    </RoleShell>
   );
 }

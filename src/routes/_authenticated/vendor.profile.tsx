@@ -64,6 +64,7 @@ function slugify(s: string) {
 }
 
 function VendorProfilePage() {
+  const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: role, isLoading: roleLoading } = useMyRole();
@@ -75,8 +76,7 @@ function VendorProfilePage() {
   const { data: existing, isLoading } = useQuery({
     queryKey: ["my-vendor"],
     queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const uid = userData.user?.id;
+      const uid = user.id;
       if (!uid) return null;
       const { data } = await supabase
         .from("vendors")
@@ -119,8 +119,14 @@ function VendorProfilePage() {
         prep_time_minutes: Number(existing.prep_time_minutes ?? 30),
         cuisine: existing.cuisine ?? [],
       });
+    } else {
+      // Set type based on auth metadata if available
+      const vt = user.user_metadata?.vendor_type;
+      if (vt === "grocery" || vt === "restaurant") {
+        setForm(f => ({ ...f, type: vt }));
+      }
     }
-  }, [existing]);
+  }, [existing, user.user_metadata?.vendor_type]);
 
   if (!roleLoading && role !== "vendor") return <Navigate to="/" replace />;
 
@@ -285,7 +291,12 @@ function VendorProfilePage() {
                 />
               </Field>
               <Field label="Type">
-                <select className="vinput" value={form.type} onChange={(e) => set("type", e.target.value as Form["type"])}>
+                <select 
+                  className="vinput" 
+                  value={form.type} 
+                  onChange={(e) => set("type", e.target.value as Form["type"])}
+                  disabled={!!user.user_metadata?.vendor_type}
+                >
                   <option value="restaurant">Restaurant</option>
                   <option value="home_chef">Chef</option>
                   <option value="grocery">Grocery store</option>

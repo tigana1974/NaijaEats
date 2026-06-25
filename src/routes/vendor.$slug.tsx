@@ -86,7 +86,7 @@ function VendorPage() {
 
   if (vendor.type === "grocery") {
     return <GroceryStoreLayout {...commonProps} />;
-  } else if (vendor.type === "chef") {
+  } else if (vendor.type === "home_chef" || vendor.type === "personal_chef") {
     return <ChefProfileLayout {...commonProps} />;
   }
   return <RestaurantLayout {...commonProps} />;
