@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { AppShell } from "@/components/naija/AppShell";
+import { useMyRole } from "@/hooks/useMyRole";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -16,6 +18,7 @@ type NotificationType = "order" | "message" | "promo" | "system";
 function NotificationsPage() {
   const { user } = Route.useRouteContext();
   const queryClient = useQueryClient();
+  const { data: role } = useMyRole();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user.id],
@@ -89,19 +92,35 @@ function NotificationsPage() {
     }
   };
 
+  const topBarContent = (
+    <div className="flex items-center gap-3 w-full border-b border-border pb-4 px-2">
+      <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/20">
+        <Bell className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <h1 className="text-xl font-bold truncate text-zinc-900 tracking-tight">Notifications</h1>
+      </div>
+    </div>
+  );
+
+  const MainWrapper = ({ children }: { children: React.ReactNode }) => {
+    if (role && role !== "customer") {
+      return (
+        <AppShell>
+          <div className="flex-1 overflow-y-auto px-4 pt-6 pb-24">
+            <div className="mx-auto max-w-2xl">
+              {topBarContent}
+              {children}
+            </div>
+          </div>
+        </AppShell>
+      );
+    }
+    return <CustomerShell topBar={topBarContent}>{children}</CustomerShell>;
+  };
+
   return (
-    <CustomerShell
-      topBar={
-        <div className="flex items-center gap-3 w-full">
-          <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/20">
-            <Bell className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold truncate text-zinc-900 tracking-tight">Notifications</h1>
-          </div>
-        </div>
-      }
-    >
+    <MainWrapper>
       <div className="mx-auto max-w-2xl px-2 pt-6 sm:pt-8 space-y-6">
         
         {/* Header Actions */}
@@ -193,6 +212,6 @@ function NotificationsPage() {
         )}
 
       </div>
-    </CustomerShell>
+    </MainWrapper>
   );
 }
