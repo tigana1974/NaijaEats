@@ -255,7 +255,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
         is_available: form.is_available,
         ...(isGrocery ? { unit: form.unit || null, stock: form.stock } : {}),
         ...((vendor.type === "restaurant" || isChef) ? { 
-          spice_level: form.spice_level || null,
+          spice_level: form.spice_level !== "" ? Number(form.spice_level) : null,
           prep_time_minutes: form.prep_time_minutes || null,
         } : {}),
       };
@@ -269,8 +269,8 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
         toast.success("Item added");
       }
       onSaved();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Save failed");
+    } catch (err: any) {
+      toast.error(err?.message || (err && JSON.stringify(err)) || "Save failed");
     } finally {
       setSaving(false);
     }
@@ -359,10 +359,10 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Spice level</label>
                 <select value={form.spice_level} onChange={(e) => setForm({ ...form, spice_level: e.target.value })} className="vinput">
                   <option value="">Not specified</option>
-                  <option value="mild">Mild</option>
-                  <option value="medium">Medium</option>
-                  <option value="hot">Hot</option>
-                  <option value="extra_hot">Extra hot</option>
+                  <option value="0">Mild</option>
+                  <option value="1">Medium</option>
+                  <option value="2">Hot</option>
+                  <option value="3">Extra hot</option>
                 </select>
               </div>
               <div>
