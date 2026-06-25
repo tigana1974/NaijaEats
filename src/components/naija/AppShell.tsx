@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
-import { ShoppingBag, Compass, LayoutDashboard, UtensilsCrossed, ClipboardList, Store, Bike, Wallet, PackageSearch, ShieldCheck, CalendarCheck, Bell, MessageCircle, FileText, ShoppingBasket, ChefHat } from "lucide-react";
+import { ShoppingBag, Compass, LayoutDashboard, UtensilsCrossed, ClipboardList, Store, Bike, Wallet, PackageSearch, ShieldCheck, CalendarCheck, Bell, MessageCircle, FileText, ShoppingBasket, ChefHat, Settings, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMyRole, type AppRole } from "@/hooks/useMyRole";
 import { Logo } from "@/components/naija/Logo";
@@ -11,6 +12,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: role, isLoading: roleLoading } = useMyRole();
   const { itemCount } = useCart();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: me } = useQuery({
     queryKey: ["me-header"],
@@ -141,7 +143,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
               <span className="font-display text-lg font-semibold hidden sm:inline">Naija Eats</span>
             </Link>
             <nav className="hidden md:flex items-center gap-1 ml-2">
-              {navItems.map((n) => (
+              {role === "customer" && navItems.map((n) => (
                 <span key={n.to}>{desktopNavItem(n.to, n.label, n.Icon)}</span>
               ))}
             </nav>
@@ -192,15 +194,102 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
         </header>
       )}
       <main className="pb-20 md:pb-0">{children}</main>
-      {/* Mobile bottom nav */}
-      {navItems.length > 0 && !hideBottomNav && (
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none">
-        <nav className="pointer-events-auto mx-auto max-w-sm flex items-stretch bg-[#1a1a1a] rounded-full px-2 py-1.5 shadow-2xl will-change-transform [transform:translateZ(0)]">
-          {navItems.map((n) => (
-            <span key={n.to} className="flex-1 flex">{mobileNavItem(n.to, n.label, n.Icon)}</span>
-          ))}
-        </nav>
-      </div>
+      
+      {/* Mobile bottom nav for customers only */}
+      {role === "customer" && navItems.length > 0 && !hideBottomNav && (
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none">
+          <nav className="pointer-events-auto mx-auto max-w-sm flex items-stretch bg-[#1a1a1a] rounded-full px-2 py-1.5 shadow-2xl will-change-transform [transform:translateZ(0)]">
+            {navItems.map((n) => (
+              <span key={n.to} className="flex-1 flex">{mobileNavItem(n.to, n.label, n.Icon)}</span>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      {/* Floating Logo Button & Sidebar for Non-Customers */}
+      {role && role !== "customer" && !hideBottomNav && (
+        <>
+          {/* FAB */}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-[var(--brand-clay)] shadow-2xl flex items-center justify-center hover:scale-105 hover:shadow-[0_8px_30px_-4px_rgba(255,77,77,0.5)] transition-all duration-300 border-2 border-white/20"
+            aria-label="Open navigation menu"
+          >
+            <Logo className="h-7 w-7 text-white" />
+          </button>
+
+          {/* Sidebar Overlay */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 flex">
+              {/* Backdrop */}
+              <div 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                onClick={() => setSidebarOpen(false)}
+              />
+              {/* Sidebar Panel */}
+              <div className="relative flex flex-col w-[300px] h-full sm:h-auto sm:my-4 sm:ml-4 bg-[#121928] sm:rounded-[2.5rem] shadow-2xl p-6 text-white overflow-y-auto animate-in slide-in-from-left-8 duration-300 border border-white/5">
+                
+                {/* Header / Profile */}
+                <div className="flex items-start justify-between mb-8">
+                   <div className="flex items-center gap-3">
+                     <Avatar className="h-12 w-12 border-2 border-white/10 shadow-lg">
+                       {me?.avatar_url ? <AvatarImage src={me.avatar_url} /> : null}
+                       <AvatarFallback className="text-sm font-semibold bg-white/10 text-white">{initials || "?"}</AvatarFallback>
+                     </Avatar>
+                     <div className="min-w-0">
+                        <h3 className="font-bold text-lg leading-tight truncate">{me?.full_name || 'My Account'}</h3>
+                        <p className="text-xs text-white/50 truncate capitalize">{vendorType || role}</p>
+                     </div>
+                   </div>
+                   <button 
+                     onClick={() => setSidebarOpen(false)} 
+                     className="h-8 w-8 shrink-0 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-colors"
+                     aria-label="Close menu"
+                   >
+                     <X className="h-4 w-4" />
+                   </button>
+                </div>
+                
+                {/* Nav Links */}
+                <nav className="flex-1 space-y-1">
+                  {navItems.map((n) => {
+                     const active = isActive(n.to);
+                     return (
+                       <Link 
+                         key={n.to} 
+                         to={n.to}
+                         onClick={() => setSidebarOpen(false)}
+                         className={`flex items-center gap-4 py-3.5 px-4 rounded-2xl font-semibold transition-all duration-300 ${
+                           active 
+                             ? "bg-white/10 text-white shadow-sm" 
+                             : "text-slate-400 hover:text-white hover:bg-white/5"
+                         }`}
+                       >
+                         <n.Icon className={`h-[22px] w-[22px] ${active ? "text-[var(--brand-clay)]" : ""}`} />
+                         {n.label}
+                       </Link>
+                     );
+                  })}
+                </nav>
+
+                {/* Settings & Support footer */}
+                <div className="mt-8 pt-6 border-t border-white/10">
+                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-4">Settings & Support</p>
+                   <Link 
+                     to="/account" 
+                     onClick={() => setSidebarOpen(false)}
+                     className="flex items-center gap-4 py-3.5 px-4 rounded-2xl font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                   >
+                      <Settings className="h-[22px] w-[22px]" />
+                      Account Settings
+                   </Link>
+                </div>
+
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
