@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
-import { ShoppingBag, Compass, LayoutDashboard, UtensilsCrossed, ClipboardList, Store, Bike, Wallet, PackageSearch, ShieldCheck, CalendarCheck, Bell, MessageCircle, FileText, ShoppingBasket, ChefHat, Settings, X } from "lucide-react";
+import { ShoppingBag, Compass, LayoutDashboard, UtensilsCrossed, ClipboardList, Store, Bike, Wallet, PackageSearch, ShieldCheck, CalendarCheck, Bell, MessageCircle, FileText, ShoppingBasket, ChefHat, Settings, X, TrendingUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMyRole, type AppRole } from "@/hooks/useMyRole";
 import { Logo } from "@/components/naija/Logo";
@@ -30,22 +30,26 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: vendorType } = useQuery({
-    queryKey: ["my-vendor-type"],
+  const { data: vendorData } = useQuery({
+    queryKey: ["my-vendor-data"],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id;
       if (!uid) return null;
       const { data: v } = await supabase
         .from("vendors")
-        .select("type")
+        .select("type, logo_url")
         .eq("owner_id", uid)
         .maybeSingle();
-      return v?.type ?? null;
+      return v ?? null;
     },
     enabled: role === "vendor",
     staleTime: 5 * 60 * 1000,
   });
+
+  const vendorType = vendorData?.type;
+  const vendorLogo = vendorData?.logo_url;
+  const displayAvatar = vendorLogo || me?.avatar_url;
 
   const initials = (me?.full_name || me?.email || "?")
     .split(/[\s@]+/)
@@ -73,7 +77,8 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
         { to: "/vendor/dashboard", label: "Dashboard", Icon: LayoutDashboard },
         { to: "/vendor/orders", label: "Orders", Icon: ClipboardList },
         { to: "/vendor/menu", label: isGrocery ? "Products" : "Menu", Icon: isGrocery ? ShoppingBasket : UtensilsCrossed },
-        { to: "/vendor/earnings", label: "Earnings", Icon: Wallet },
+        { to: "/vendor/earnings", label: "Earnings", Icon: TrendingUp },
+        { to: "/wallet", label: "Wallet", Icon: Wallet },
         isGrocery
           ? { to: "/vendor/profile", label: "Store", Icon: Store }
           : { to: "/groceries", label: "Groceries", Icon: ShoppingBasket },
@@ -82,7 +87,8 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     rider: [
       { to: "/rider/dashboard", label: "Home", Icon: LayoutDashboard },
       { to: "/rider/available", label: "Available", Icon: PackageSearch },
-      { to: "/rider/earnings", label: "Earnings", Icon: Wallet },
+      { to: "/rider/earnings", label: "Earnings", Icon: TrendingUp },
+      { to: "/wallet", label: "Wallet", Icon: Wallet },
       { to: "/rider/documents", label: "Documents", Icon: FileText },
     ],
     admin: [
@@ -90,6 +96,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       { to: "/admin/vendors", label: "Vendors", Icon: Store },
       { to: "/admin/orders", label: "Orders", Icon: ClipboardList },
       { to: "/admin/riders", label: "Riders", Icon: Bike },
+      { to: "/wallet", label: "Wallet", Icon: Wallet },
     ],
   };
   // While the role is still loading, render no nav items rather than
@@ -185,7 +192,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
                 className="rounded-full ring-1 ring-border hover:ring-[var(--brand-clay)] transition"
               >
                 <Avatar className="h-9 w-9">
-                  {me?.avatar_url ? <AvatarImage src={me.avatar_url} alt={me.full_name ?? "Profile"} /> : null}
+                  {displayAvatar ? <AvatarImage src={displayAvatar} alt={me?.full_name ?? "Profile"} /> : null}
                   <AvatarFallback className="text-xs font-semibold">{initials || "?"}</AvatarFallback>
                 </Avatar>
               </Link>
@@ -220,75 +227,85 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
           </button>
 
           {/* Sidebar Overlay */}
-          {sidebarOpen && (
-            <div className="fixed inset-0 z-50 flex">
-              {/* Backdrop */}
-              <div 
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                onClick={() => setSidebarOpen(false)}
-              />
-              {/* Sidebar Panel */}
-              <div className="relative flex flex-col w-[300px] h-full sm:h-auto sm:my-4 sm:ml-4 bg-[#121928] sm:rounded-[2.5rem] shadow-2xl p-6 text-white overflow-y-auto animate-in slide-in-from-left-8 duration-300 border border-white/5">
-                
-                {/* Header / Profile */}
-                <div className="flex items-start justify-between mb-8">
-                   <div className="flex items-center gap-3">
-                     <Avatar className="h-12 w-12 border-2 border-white/10 shadow-lg">
-                       {me?.avatar_url ? <AvatarImage src={me.avatar_url} /> : null}
-                       <AvatarFallback className="text-sm font-semibold bg-white/10 text-white">{initials || "?"}</AvatarFallback>
-                     </Avatar>
-                     <div className="min-w-0">
-                        <h3 className="font-bold text-lg leading-tight truncate">{me?.full_name || 'My Account'}</h3>
-                        <p className="text-xs text-white/50 truncate capitalize">{vendorType || role}</p>
-                     </div>
+          <div 
+            className={`fixed inset-0 z-50 flex transition-opacity duration-300 ${
+              sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setSidebarOpen(false)}
+            />
+            {/* Sidebar Panel */}
+            <div 
+              className={`relative flex flex-col w-[300px] max-w-[calc(100vw-2rem)] h-[calc(100%-2rem)] my-4 ml-4 bg-black rounded-[2.5rem] shadow-2xl p-6 text-white overflow-y-auto border border-white/10 transition-transform duration-300 ease-in-out ${
+                sidebarOpen ? "translate-x-0" : "-translate-x-[120%]"
+              }`}
+            >
+              
+              {/* Header / Profile */}
+              <div className="flex items-start justify-between mb-8">
+                 <Link 
+                   to={role === "vendor" ? "/vendor/profile" : "/account"} 
+                   onClick={() => setSidebarOpen(false)}
+                   className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                 >
+                   <Avatar className="h-12 w-12 border-2 border-white/10 shadow-lg">
+                     {displayAvatar ? <AvatarImage src={displayAvatar} /> : null}
+                     <AvatarFallback className="text-sm font-semibold bg-white/10 text-white">{initials || "?"}</AvatarFallback>
+                   </Avatar>
+                   <div className="min-w-0">
+                      <h3 className="font-bold text-lg leading-tight truncate">{me?.full_name || 'My Account'}</h3>
+                      <p className="text-xs text-white/50 truncate capitalize">{vendorType || role}</p>
                    </div>
-                   <button 
-                     onClick={() => setSidebarOpen(false)} 
-                     className="h-8 w-8 shrink-0 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-colors"
-                     aria-label="Close menu"
-                   >
-                     <X className="h-4 w-4" />
-                   </button>
-                </div>
-                
-                {/* Nav Links */}
-                <nav className="flex-1 space-y-1">
-                  {navItems.map((n) => {
-                     const active = isActive(n.to);
-                     return (
-                       <Link 
-                         key={n.to} 
-                         to={n.to}
-                         onClick={() => setSidebarOpen(false)}
-                         className={`flex items-center gap-4 py-3.5 px-4 rounded-2xl font-semibold transition-all duration-300 ${
-                           active 
-                             ? "bg-white/10 text-white shadow-sm" 
-                             : "text-slate-400 hover:text-white hover:bg-white/5"
-                         }`}
-                       >
-                         <n.Icon className={`h-[22px] w-[22px] ${active ? "text-[var(--brand-clay)]" : ""}`} />
-                         {n.label}
-                       </Link>
-                     );
-                  })}
-                </nav>
-
-                {/* Settings & Support footer */}
-                <div className="mt-8 pt-6 border-t border-white/10">
-                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-4">Settings & Support</p>
-                   <Link 
-                     to="/account" 
-                     onClick={() => setSidebarOpen(false)}
-                     className="flex items-center gap-4 py-3.5 px-4 rounded-2xl font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                   >
-                      <Settings className="h-[22px] w-[22px]" />
-                      Account Settings
-                   </Link>
-                </div>
-
+                 </Link>
+                 <button 
+                   onClick={() => setSidebarOpen(false)} 
+                   className="h-8 w-8 shrink-0 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-colors"
+                   aria-label="Close menu"
+                 >
+                   <X className="h-4 w-4" />
+                 </button>
               </div>
+              
+              {/* Nav Links */}
+              <nav className="flex-1 space-y-1">
+                {navItems.map((n) => {
+                   const active = isActive(n.to);
+                   return (
+                     <Link 
+                       key={n.to} 
+                       to={n.to}
+                       onClick={() => setSidebarOpen(false)}
+                       className={`flex items-center gap-4 py-3.5 px-4 rounded-2xl font-semibold transition-all duration-300 ${
+                         active 
+                           ? "bg-white/10 text-white shadow-sm" 
+                           : "text-slate-400 hover:text-white hover:bg-white/5"
+                       }`}
+                     >
+                       <n.Icon className={`h-[22px] w-[22px] ${active ? "text-[var(--brand-clay)]" : ""}`} />
+                       {n.label}
+                     </Link>
+                   );
+                })}
+              </nav>
+
+              {/* Settings & Support footer */}
+              <div className="mt-8 pt-6 border-t border-white/10">
+                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-4">Settings & Support</p>
+                 <Link 
+                   to="/account" 
+                   onClick={() => setSidebarOpen(false)}
+                   className="flex items-center gap-4 py-3.5 px-4 rounded-2xl font-semibold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                 >
+                    <Settings className="h-[22px] w-[22px]" />
+                    Account Settings
+                 </Link>
+              </div>
+
             </div>
-          )}
+          </div>
         </>
       )}
     </div>
