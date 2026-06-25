@@ -24,20 +24,14 @@ export const Route = createFileRoute("/_authenticated/wallet")({
   component: WalletPage,
 });
 
-const txns = [
-  { id: 1, title: "Mama Put Buka", sub: "Order #NE-2843", amount: -4500, when: "Today · 1:24pm", kind: "out", Icon: Receipt },
-  { id: 2, title: "Wallet top-up", sub: "GTBank •• 4421", amount: 25000, when: "Today · 9:02am", kind: "in", Icon: Plus },
-  { id: 3, title: "Refund — Suya Spot", sub: "Order cancelled", amount: 3200, when: "Yesterday", kind: "in", Icon: Repeat },
-  { id: 4, title: "Sent to Tunde", sub: "Split bill · pepper soup", amount: -2000, when: "Yesterday", kind: "out", Icon: Send },
-  { id: 5, title: "Cashback reward", sub: "Loyalty tier · Gold", amount: 850, when: "Mon", kind: "in", Icon: Gift },
-];
+const txns: any[] = [];
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n);
 
 function WalletPage() {
   const [hidden, setHidden] = useState(false);
-  const balance = 184250;
+  const balance = 0;
 
   return (
     <RoleShell>
@@ -79,7 +73,7 @@ function WalletPage() {
                 </div>
                 <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-white/80">
                   <TrendingUp className="h-3.5 w-3.5 text-[var(--brand-gold)]" />
-                  +12% spent on heritage meals this month
+                  Your digital wallet is active
                 </div>
               </div>
               <Wifi className="h-6 w-6 rotate-90 text-white/70" />
@@ -89,7 +83,7 @@ function WalletPage() {
               <div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-white/60">Naija Eats · Wallet</div>
                 <div className="mt-1 font-mono text-sm tracking-[0.25em] text-white/90">
-                  {hidden ? "•••• •••• •••• 4421" : "4924 ·· 8810 ·· 4421"}
+                  {hidden ? "•••• •••• •••• ••••" : "---- ---- ---- ----"}
                 </div>
               </div>
               <div className="text-right">
@@ -125,9 +119,9 @@ function WalletPage() {
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <StatCard label="Spent this month" value={fmt(48200)} hint="Across 14 orders" tone="clay" />
-          <StatCard label="Saved with rewards" value={fmt(6450)} hint="Gold tier · 5% back" tone="gold" />
-          <StatCard label="Pending refunds" value={fmt(3200)} hint="Arrives in 2 days" tone="forest" />
+          <StatCard label="Spent this month" value={fmt(0)} hint="Across 0 orders" tone="clay" />
+          <StatCard label="Saved with rewards" value={fmt(0)} hint="No rewards yet" tone="gold" />
+          <StatCard label="Pending refunds" value={fmt(0)} hint="No pending refunds" tone="forest" />
         </div>
 
         {/* Transactions */}
@@ -139,28 +133,34 @@ function WalletPage() {
         </div>
 
         <div className="mt-4 rounded-3xl border border-border bg-card overflow-hidden">
-          <ul className="divide-y divide-border">
-            {txns.map((t) => {
-              const out = t.kind === "out";
-              return (
-                <li key={t.id} className="flex items-center gap-3 px-4 sm:px-5 py-4 hover:bg-muted/40 transition">
-                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${out ? "bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]" : "bg-[var(--brand-forest)]/15 text-[var(--brand-forest)]"}`}>
-                    {out ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownLeft className="h-5 w-5" />}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <t.Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <div className="font-medium text-sm truncate">{t.title}</div>
+          {txns.length > 0 ? (
+            <ul className="divide-y divide-border">
+              {txns.map((t) => {
+                const out = t.kind === "out";
+                return (
+                  <li key={t.id} className="flex items-center gap-3 px-4 sm:px-5 py-4 hover:bg-muted/40 transition">
+                    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${out ? "bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]" : "bg-[var(--brand-forest)]/15 text-[var(--brand-forest)]"}`}>
+                      {out ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownLeft className="h-5 w-5" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <t.Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <div className="font-medium text-sm truncate">{t.title}</div>
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">{t.sub} · {t.when}</div>
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">{t.sub} · {t.when}</div>
-                  </div>
-                  <div className={`shrink-0 text-right font-semibold tabular-nums text-sm ${out ? "text-foreground" : "text-[var(--brand-forest)]"}`}>
-                    {out ? "−" : "+"}{fmt(Math.abs(t.amount))}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    <div className={`shrink-0 text-right font-semibold tabular-nums text-sm ${out ? "text-foreground" : "text-[var(--brand-forest)]"}`}>
+                      {out ? "−" : "+"}{fmt(Math.abs(t.amount))}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="p-8 text-center text-muted-foreground text-sm">
+              No transactions yet. Add money to get started!
+            </div>
+          )}
         </div>
 
         {/* Promo */}
