@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +33,7 @@ function HelpPage() {
   };
 
   return (
-    <CustomerShell>
+    <RoleShell>
       <div className="mx-auto max-w-md px-4 sm:px-6 py-8">
         <Link to="/account" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back
@@ -79,6 +79,6 @@ function HelpPage() {
           <Button type="submit" className="w-full rounded-2xl bg-[var(--brand-clay)] text-[var(--brand-cream)] hover:opacity-90">Send message</Button>
         </form>
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }

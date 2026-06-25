@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { ComingSoonBanner } from "@/components/naija/ComingSoonBanner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ function WalletPage() {
   const balance = 184250;
 
   return (
-    <CustomerShell>
+    <RoleShell>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-6 sm:pt-10 pb-16">
         <ComingSoonBanner feature="Wallet" />
         {/* Heading */}
@@ -178,7 +178,7 @@ function WalletPage() {
           </div>
         </div>
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }
 

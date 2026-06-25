@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Bell, Moon, Globe, KeyRound, Trash2 } from "lucide-react";
@@ -47,7 +47,7 @@ function SettingsPage() {
   };
 
   return (
-    <CustomerShell>
+    <RoleShell>
       <div className="mx-auto max-w-md px-4 sm:px-6 py-8">
         <Link to="/account" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back
@@ -92,7 +92,7 @@ function SettingsPage() {
           </Button>
         </div>
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }
 

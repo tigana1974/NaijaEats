@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, ShoppingBag, MapPin, CreditCard, Settings, HelpCircle, ChevronRight, Camera } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -124,7 +124,7 @@ function AccountPage() {
   ];
 
   return (
-    <CustomerShell>
+    <RoleShell>
       <div className="mx-auto max-w-md px-4 sm:px-6 py-8">
         <div className="flex flex-col items-center text-center">
           <div className="relative">
@@ -226,6 +226,6 @@ function AccountPage() {
         onCancel={() => setPendingFile(null)}
         onCropped={handleCropped}
       />
-    </CustomerShell>
+    </RoleShell>
   );
 }

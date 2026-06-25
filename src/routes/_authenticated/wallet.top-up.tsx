@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -37,7 +37,7 @@ function TopUpPage() {
   };
 
   return (
-    <CustomerShell>
+    <RoleShell>
       <div className="mx-auto max-w-md px-4 sm:px-6 py-6">
         <Link to="/wallet" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Wallet
@@ -128,6 +128,6 @@ function TopUpPage() {
           {loading ? "Processing…" : <>Top up {fmt(amount || 0)} <Plus className="h-4 w-4" /></>}
         </Button>
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }

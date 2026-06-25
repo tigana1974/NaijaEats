@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,7 +80,7 @@ function AddressesPage() {
   };
 
   return (
-    <CustomerShell>
+    <RoleShell>
       <div className="mx-auto max-w-md px-4 sm:px-6 py-8">
         <Link to="/account" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back
@@ -163,6 +163,6 @@ function AddressesPage() {
           )}
         </ul>
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }

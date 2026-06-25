@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CustomerShell } from "@/components/naija/CustomerShell";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { ComingSoonBanner } from "@/components/naija/ComingSoonBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,7 +107,7 @@ function ReferralsPage() {
   };
 
   return (
-    <CustomerShell>
+    <RoleShell>
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-6 pb-16">
         <Link to="/wallet" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Wallet
@@ -273,7 +273,7 @@ function ReferralsPage() {
           Rewards credit to your Naija Eats wallet within 24 hours of your friend's first order. Max ₦8,000 per friend.
         </p>
       </div>
-    </CustomerShell>
+    </RoleShell>
   );
 }
 
