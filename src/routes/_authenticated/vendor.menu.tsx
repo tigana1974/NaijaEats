@@ -320,7 +320,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{symbol}</span>
-              <input required type="number" min={0} step="0.01" placeholder="Price" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="vinput pl-7" />
+              <input required type="number" min={0} step="0.01" placeholder="Price" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="vinput !pl-8" />
             </div>
             <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="vinput">
               <option value="">No category</option>
