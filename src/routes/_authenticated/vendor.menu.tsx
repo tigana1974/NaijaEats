@@ -25,7 +25,7 @@ function VendorMenu() {
       const uid = userData.user?.id;
       if (!uid) return null;
       const { data: vendor } = await supabase.from("vendors").select("*").eq("owner_id", uid).maybeSingle();
-      if (!vendor) return { vendor: null };
+      if (!vendor) return { vendor: null, fallbackType: userData.user?.user_metadata?.vendor_type };
       const [{ data: cats }, { data: items }] = await Promise.all([
         supabase.from("menu_categories").select("*").eq("vendor_id", vendor.id).order("sort_order"),
         supabase.from("menu_items").select("*").eq("vendor_id", vendor.id).order("created_at", { ascending: false }),
@@ -73,10 +73,10 @@ function VendorMenu() {
     <AppShell>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
         <h1 className="font-display text-3xl sm:text-4xl font-semibold">
-          {data?.vendor?.type === "grocery" ? "Groceries" : "Menu"}
+          {(data?.vendor?.type || data?.fallbackType) === "grocery" ? "Groceries" : "Menu"}
         </h1>
         <p className="text-muted-foreground mt-1">
-          {data?.vendor?.type === "grocery" ? "Manage your store inventory." : "Manage what customers can order."}
+          {(data?.vendor?.type || data?.fallbackType) === "grocery" ? "Manage your store inventory." : "Manage what customers can order."}
         </p>
 
         {isLoading ? (

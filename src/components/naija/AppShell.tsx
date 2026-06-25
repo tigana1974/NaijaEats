@@ -41,7 +41,10 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
         .select("type, logo_url")
         .eq("owner_id", uid)
         .maybeSingle();
-      return v ?? null;
+      return {
+        type: v?.type || u.user?.user_metadata?.vendor_type || null,
+        logo_url: v?.logo_url || null,
+      };
     },
     enabled: role === "vendor",
     staleTime: 5 * 60 * 1000,
