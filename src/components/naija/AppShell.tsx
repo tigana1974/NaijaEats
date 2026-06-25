@@ -160,9 +160,13 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       {!hideHeader && (
         <header className="sticky top-0 z-30 bg-background/80 backdrop-blur border-b border-border">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-6">
-            <Link to="/" className="flex items-center gap-2 shrink-0">
-              <Logo className="h-8 w-8" />
-              <span className="font-display text-lg font-semibold hidden sm:inline">Naija Eats</span>
+            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+              <Logo className="h-8 w-8 transition-transform duration-300 group-hover:scale-105" />
+              <div className="min-w-0">
+                <span className="font-display text-lg font-bold tracking-tight text-foreground">
+                  Naija<span className="text-[var(--brand-clay)]">Eats</span>
+                </span>
+              </div>
             </Link>
             <nav className="hidden md:flex items-center gap-1 ml-2">
               {role === "customer" && navItems.map((n) => (
