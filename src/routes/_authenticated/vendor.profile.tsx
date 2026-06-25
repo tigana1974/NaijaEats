@@ -284,9 +284,14 @@ function VendorProfilePage() {
                   onChange={(e) => set("type", e.target.value as Form["type"])}
                   disabled={!!user.user_metadata?.vendor_type}
                 >
-                  <option value="restaurant">Restaurant</option>
-                  <option value="home_chef">Chef</option>
-                  <option value="grocery">Grocery store</option>
+                  {form.type === "grocery" ? (
+                    <option value="grocery">Grocery store</option>
+                  ) : (
+                    <>
+                      <option value="restaurant">Restaurant</option>
+                      <option value="home_chef">Chef</option>
+                    </>
+                  )}
                 </select>
               </Field>
             </div>
