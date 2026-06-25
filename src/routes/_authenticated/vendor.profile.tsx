@@ -23,7 +23,6 @@ type Form = {
   logo_url: string;
   delivery_fee: number;
   min_order: number;
-  prep_time_minutes: number;
 };
 
 const defaultForm: Form = {
@@ -39,7 +38,6 @@ const defaultForm: Form = {
   logo_url: "",
   delivery_fee: 0,
   min_order: 0,
-  prep_time_minutes: 30,
 };
 
 const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
@@ -107,7 +105,6 @@ function VendorProfilePage() {
         logo_url: existing.logo_url ?? "",
         delivery_fee: existing.delivery_fee || 0,
         min_order: existing.min_order || 0,
-        prep_time_minutes: existing.prep_time_minutes || 30,
       });
     } else {
       // Set type based on auth metadata if available
@@ -337,7 +334,7 @@ function VendorProfilePage() {
                 />
               </Field>
             </div>
-            <div className={`grid gap-4 ${isGrocery ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+            <div className={`grid gap-4 ${isGrocery ? "sm:grid-cols-2" : "sm:grid-cols-2"}`}>
               <Field label="Delivery fee">
                 <input
                   type="number" min={0} className="vinput"
@@ -352,15 +349,6 @@ function VendorProfilePage() {
                   onChange={(e) => set("min_order", Number(e.target.value))}
                 />
               </Field>
-              {!isGrocery && (
-                <Field label={isChef ? "Average cook time (min)" : "Prep time (min)"}>
-                  <input
-                    type="number" min={1} className="vinput"
-                    value={form.prep_time_minutes}
-                    onChange={(e) => set("prep_time_minutes", Number(e.target.value))}
-                  />
-                </Field>
-              )}
             </div>
 
             <button
