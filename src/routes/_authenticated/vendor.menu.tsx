@@ -197,6 +197,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
     spice_level: item?.spice_level ?? "",
     unit: item?.unit ?? "",
     stock: item?.stock ?? 0,
+    prep_time_minutes: item?.prep_time_minutes ?? 15,
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -253,7 +254,10 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
         image_url: form.image_url || null,
         is_available: form.is_available,
         ...(isGrocery ? { unit: form.unit || null, stock: form.stock } : {}),
-        ...((vendor.type === "restaurant" || isChef) ? { spice_level: form.spice_level || null } : {}),
+        ...((vendor.type === "restaurant" || isChef) ? { 
+          spice_level: form.spice_level || null,
+          prep_time_minutes: form.prep_time_minutes || null,
+        } : {}),
       };
       if (item) {
         const { error } = await supabase.from("menu_items").update(payload).eq("id", item.id);
@@ -350,15 +354,25 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
             </div>
           )}
           {(vendor.type === "restaurant" || isChef) && (
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Spice level</label>
-              <select value={form.spice_level} onChange={(e) => setForm({ ...form, spice_level: e.target.value })} className="vinput">
-                <option value="">Not specified</option>
-                <option value="mild">Mild</option>
-                <option value="medium">Medium</option>
-                <option value="hot">Hot</option>
-                <option value="extra_hot">Extra hot</option>
-              </select>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Spice level</label>
+                <select value={form.spice_level} onChange={(e) => setForm({ ...form, spice_level: e.target.value })} className="vinput">
+                  <option value="">Not specified</option>
+                  <option value="mild">Mild</option>
+                  <option value="medium">Medium</option>
+                  <option value="hot">Hot</option>
+                  <option value="extra_hot">Extra hot</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Prep time (min)</label>
+                <input 
+                  type="number" min={1} className="vinput"
+                  value={form.prep_time_minutes}
+                  onChange={(e) => setForm({ ...form, prep_time_minutes: Number(e.target.value) })}
+                />
+              </div>
             </div>
           )}
           <label className="flex items-center gap-2 text-sm">
