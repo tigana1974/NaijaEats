@@ -320,7 +320,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{symbol}</span>
-              <input required type="number" min={0} step="0.01" placeholder="Price" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="vinput !pl-8" />
+              <input required type="number" min={0} step="0.01" placeholder="0" value={form.price === 0 ? "" : form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="vinput !pl-8" />
             </div>
             <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="vinput">
               <option value="">No category</option>
@@ -349,7 +349,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Stock count</label>
-                <input type="number" min={0} value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="vinput" />
+                <input type="number" min={0} placeholder="0" value={form.stock === 0 ? "" : form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} className="vinput" />
               </div>
             </div>
           )}
@@ -368,8 +368,8 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Prep time (min)</label>
                 <input 
-                  type="number" min={1} className="vinput"
-                  value={form.prep_time_minutes}
+                  type="number" min={1} placeholder="0" className="vinput"
+                  value={form.prep_time_minutes === 0 ? "" : form.prep_time_minutes}
                   onChange={(e) => setForm({ ...form, prep_time_minutes: Number(e.target.value) })}
                 />
               </div>
