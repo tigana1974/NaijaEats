@@ -73,7 +73,7 @@ function VendorMenu() {
     <AppShell>
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
         <h1 className="font-display text-3xl sm:text-4xl font-semibold">
-          {data?.vendor?.type === "grocery" ? "Products" : "Menu"}
+          {data?.vendor?.type === "grocery" ? "Groceries" : "Menu"}
         </h1>
         <p className="text-muted-foreground mt-1">
           {data?.vendor?.type === "grocery" ? "Manage your store inventory." : "Manage what customers can order."}

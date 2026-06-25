@@ -91,7 +91,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       return [
         { to: "/vendor/dashboard", label: "Dashboard", Icon: LayoutDashboard },
         { to: "/vendor/orders", label: "Orders", Icon: ClipboardList },
-        { to: "/vendor/menu", label: isGrocery ? "Products" : "Menu", Icon: isGrocery ? ShoppingBasket : UtensilsCrossed },
+        { to: "/vendor/menu", label: isGrocery ? "Groceries" : "Menu", Icon: isGrocery ? ShoppingBasket : UtensilsCrossed },
         { to: "/vendor/earnings", label: "Earnings", Icon: TrendingUp },
         { to: "/wallet", label: "Wallet", Icon: Wallet },
         isGrocery

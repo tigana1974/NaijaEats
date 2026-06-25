@@ -169,7 +169,7 @@ function vendorConfig(type: string) {
     editLabel: "Edit store",
     quickLinks: [
       { to: "/vendor/orders", Icon: ClipboardList, title: "Orders", desc: "Accept and manage orders." },
-      { to: "/vendor/menu", Icon: ShoppingBasket, title: "Products", desc: "Manage inventory and prices." },
+      { to: "/vendor/menu", Icon: ShoppingBasket, title: "Groceries", desc: "Manage inventory and prices." },
       { to: "/vendor/earnings", Icon: TrendingUp, title: "Earnings", desc: "Revenue and payout requests." },
       { to: "/vendor/profile", Icon: Store, title: "Store profile", desc: "Cover, delivery fee, details." },
     ],
