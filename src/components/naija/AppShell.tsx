@@ -47,6 +47,21 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["unread-notifications"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user?.id) return 0;
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", u.user.id)
+        .eq("is_unread", true);
+      return count ?? 0;
+    },
+    staleTime: 10000,
+  });
+
   const vendorType = vendorData?.type;
   const vendorLogo = vendorData?.logo_url;
   const displayAvatar = vendorLogo || me?.avatar_url;
@@ -184,7 +199,9 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
                 className="relative inline-flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-border hover:ring-[var(--brand-clay)] transition text-foreground"
               >
                 <Bell className="h-4 w-4" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--brand-clay)]" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--brand-clay)]" />
+                )}
               </Link>
               <Link
                 to="/account"
