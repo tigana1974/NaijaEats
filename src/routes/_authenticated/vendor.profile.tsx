@@ -24,7 +24,6 @@ type Form = {
   delivery_fee: number;
   min_order: number;
   prep_time_minutes: number;
-  cuisine: string[];
 };
 
 const defaultForm: Form = {
@@ -41,15 +40,7 @@ const defaultForm: Form = {
   delivery_fee: 0,
   min_order: 0,
   prep_time_minutes: 30,
-  cuisine: [],
 };
-
-const CUISINE_OPTIONS = [
-  "Nigerian", "Ghanaian", "West African", "East African", "South African",
-  "Chinese", "Indian", "Italian", "Japanese", "Mexican",
-  "Thai", "Mediterranean", "Middle Eastern", "British", "American",
-  "Caribbean", "French", "Korean", "Vietnamese", "Ethiopian",
-];
 
 const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
   { key: "business_registration", label: "Business registration", required: true },
@@ -114,10 +105,9 @@ function VendorProfilePage() {
         address_line: existing.address_line ?? "",
         cover_image_url: existing.cover_image_url ?? "",
         logo_url: existing.logo_url ?? "",
-        delivery_fee: Number(existing.delivery_fee ?? 0),
-        min_order: Number(existing.min_order ?? 0),
-        prep_time_minutes: Number(existing.prep_time_minutes ?? 30),
-        cuisine: existing.cuisine ?? [],
+        delivery_fee: existing.delivery_fee || 0,
+        min_order: existing.min_order || 0,
+        prep_time_minutes: existing.prep_time_minutes || 30,
       });
     } else {
       // Set type based on auth metadata if available
@@ -313,31 +303,6 @@ function VendorProfilePage() {
                 onChange={(e) => set("description", e.target.value)}
               />
             </Field>
-            {!isGrocery && (
-              <Field label={isChef ? "Specialties" : "Cuisine"}>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {CUISINE_OPTIONS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => {
-                        const next = form.cuisine.includes(c)
-                          ? form.cuisine.filter((x) => x !== c)
-                          : [...form.cuisine, c];
-                        set("cuisine", next);
-                      }}
-                      className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                        form.cuisine.includes(c)
-                          ? "bg-[var(--brand-clay)] text-white border-[var(--brand-clay)]"
-                          : "border-border hover:bg-muted"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-            )}
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Country">
                 <select className="vinput" value={form.country} onChange={(e) => set("country", e.target.value as "NG" | "UK")}>
