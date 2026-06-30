@@ -89,7 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Order from home chefs, African & Caribbean restaurants, ethnic groceries, and book personal chefs. Cooked with culture, delivered fresh." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+
       { name: "twitter:title", content: "Naija Eats — The Home of African & Authentic Food" },
       { name: "twitter:description", content: "Order from home chefs, African & Caribbean restaurants, ethnic groceries, and book personal chefs. Cooked with culture, delivered fresh." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WwfEWjKFFmQR7zXd4Diy2oZplB92/social-images/social-1780595681268-Naija_Eats_logo_Transparent_2.webp" },

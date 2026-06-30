@@ -11,6 +11,76 @@ export const Route = createFileRoute("/_authenticated/search")({
 });
 
 const POPULAR_SEARCHES = ["Jollof Rice", "Suya", "Plantain", "Shawarma", "Burger"];
+const ITEM_SEARCH_SELECT =
+  "id, name, description, tags, price, image_url, is_available, is_featured, category:menu_categories(name), vendor:vendors!inner(id, slug, name, city, currency, country, status)";
+
+type SearchVendor = {
+  id: string;
+  slug: string;
+  name: string;
+  cover_image_url: string | null;
+  city: string | null;
+  rating: number | null;
+  prep_time_minutes: number | null;
+  delivery_fee: number | null;
+  currency: string;
+  is_featured: boolean | null;
+};
+
+type SearchItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  tags: string[] | null;
+  price: number;
+  image_url: string | null;
+  is_featured: boolean;
+  category: { name: string | null } | null;
+  vendor: {
+    id: string;
+    slug: string;
+    name: string;
+    city: string | null;
+    currency: string;
+    country: string;
+    status: string;
+  } | null;
+};
+
+type SearchItemWithVendor = SearchItem & { vendor: NonNullable<SearchItem["vendor"]> };
+
+function normalizeSearchValue(value: unknown) {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function makeIlikePattern(value: string) {
+  return `%${value.trim().replace(/[%_,()]/g, "")}%`;
+}
+
+function itemMatchesSearch(item: SearchItem, searchTerm: string) {
+  const words = normalizeSearchValue(searchTerm).split(" ").filter(Boolean);
+  if (words.length === 0) return false;
+
+  const searchableText = normalizeSearchValue(
+    [
+      item.name,
+      item.description,
+      item.category?.name,
+      item.vendor?.name,
+      item.vendor?.city,
+      ...(Array.isArray(item.tags) ? item.tags : []),
+    ].join(" "),
+  );
+
+  return words.every((word) => searchableText.includes(word));
+}
+
+function hasApprovedVendor(item: SearchItem): item is SearchItemWithVendor {
+  return item.vendor?.status === "approved";
+}
 
 function SearchPage() {
   const navigate = useNavigate();
@@ -22,15 +92,16 @@ function SearchPage() {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
-  const { data: vendors, isLoading: vendorsLoading } = useQuery({
+  const { data: vendors, isLoading: vendorsLoading } = useQuery<SearchVendor[]>({
     queryKey: ["search-vendors", search],
     queryFn: async () => {
       if (!search.trim()) return [];
+      const like = makeIlikePattern(search);
       const { data, error } = await supabase
         .from("vendors")
         .select("*")
         .eq("status", "approved")
-        .ilike("name", `%${search.trim()}%`)
+        .or(`name.ilike.${like},tagline.ilike.${like},city.ilike.${like}`)
         .order("rating", { ascending: false })
         .limit(10);
       if (error) throw error;
@@ -39,18 +110,39 @@ function SearchPage() {
     enabled: search.trim().length > 1,
   });
 
-  const { data: items, isLoading: itemsLoading } = useQuery({
+  const { data: items, isLoading: itemsLoading } = useQuery<SearchItemWithVendor[]>({
     queryKey: ["search-items", search],
     queryFn: async () => {
-      if (!search.trim()) return [];
-      const { data, error } = await supabase
-        .from("menu_items")
-        .select("id, name, price, image_url, is_available, is_featured, vendor:vendors!inner(id, slug, name, currency, country, status)")
-        .eq("is_available", true)
-        .ilike("name", `%${search.trim()}%`)
-        .limit(20);
-      if (error) throw error;
-      return (data ?? []).filter((it: any) => it.vendor?.status === "approved");
+      const term = search.trim();
+      if (!term) return [];
+      const like = makeIlikePattern(term);
+      const [textMatches, candidateMatches] = await Promise.all([
+        supabase
+          .from("menu_items")
+          .select(ITEM_SEARCH_SELECT)
+          .eq("is_available", true)
+          .or(`name.ilike.${like},description.ilike.${like}`)
+          .limit(100),
+        supabase
+          .from("menu_items")
+          .select(ITEM_SEARCH_SELECT)
+          .eq("is_available", true)
+          .order("is_featured", { ascending: false })
+          .limit(200),
+      ]);
+      if (textMatches.error) throw textMatches.error;
+      if (candidateMatches.error) throw candidateMatches.error;
+
+      const mergedItems = new Map<string, SearchItem>();
+      [...(textMatches.data ?? []), ...(candidateMatches.data ?? [])].forEach((it) => {
+        mergedItems.set(it.id, it as SearchItem);
+      });
+
+      return Array.from(mergedItems.values())
+        .filter(
+          (it): it is SearchItemWithVendor => hasApprovedVendor(it) && itemMatchesSearch(it, term),
+        )
+        .slice(0, 20);
     },
     enabled: search.trim().length > 1,
   });
@@ -114,7 +206,7 @@ function SearchPage() {
                   </div>
                 ) : (
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                    {(vendors ?? []).map((v: any) => (
+                    {(vendors ?? []).map((v) => (
                       <VendorCard
                         key={v.id}
                         slug={v.slug}
@@ -124,7 +216,7 @@ function SearchPage() {
                         rating={v.rating}
                         prepMinutes={v.prep_time_minutes}
                         deliveryLabel={`Delivery ${v.currency === "GBP" ? "£" : "₦"}${Number(v.delivery_fee || 0).toLocaleString()}`}
-                        isFeatured={v.is_featured}
+                        isFeatured={Boolean(v.is_featured)}
                       />
                     ))}
                   </div>
@@ -147,7 +239,7 @@ function SearchPage() {
                   </div>
                 ) : (
                   <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-                    {(items ?? []).map((it: any) => (
+                    {(items ?? []).map((it) => (
                       <FoodCard
                         key={it.id}
                         vendorSlug={it.vendor.slug}
@@ -168,7 +260,9 @@ function SearchPage() {
               <div className="mt-12 rounded-3xl border border-dashed border-zinc-200 bg-zinc-50/50 p-8 text-center">
                 <SearchIcon className="h-8 w-8 text-zinc-300 mx-auto mb-3" />
                 <p className="font-semibold text-zinc-700">No results found</p>
-                <p className="mt-1 text-sm text-zinc-500">We couldn't find anything matching "{search}". Try searching for something else.</p>
+                <p className="mt-1 text-sm text-zinc-500">
+                  We couldn't find anything matching "{search}". Try searching for something else.
+                </p>
               </div>
             )}
           </>
