@@ -419,12 +419,13 @@ function Hero() {
               Order Now
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="#contact"
+            <Link
+              to="/auth"
+              search={{ mode: "signup", role: "chef" }}
               className="inline-flex items-center gap-2 rounded-full bg-card border border-border text-foreground px-7 py-3.5 text-sm font-semibold hover:border-primary hover:text-primary transition"
             >
               Become a Vendor
-            </a>
+            </Link>
           </div>
 
           {/* Featured chef chip */}

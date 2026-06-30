@@ -9,6 +9,12 @@ import { Logo } from "@/components/naija/Logo";
 import authHero from "@/assets/auth-hero.jpg";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>): { mode?: Mode; role?: SignupRole } => {
+    return {
+      mode: search.mode as Mode | undefined,
+      role: search.role as SignupRole | undefined,
+    }
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Naija Eats" },
@@ -24,11 +30,12 @@ type SignupRole = "customer" | "chef" | "grocery" | "rider";
 function AuthPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState<Mode>("signin");
+  const { mode: initialMode, role: initialRole } = Route.useSearch();
+  const [mode, setMode] = useState<Mode>(initialMode || "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<SignupRole>("customer");
+  const [role, setRole] = useState<SignupRole>(initialRole || "customer");
   const [country, setCountry] = useState<"NG" | "UK">("NG");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
