@@ -538,6 +538,45 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          id: number
+          platform_name: string
+          default_currency: string
+          default_service_charge_pct: number
+          default_commission_pct: number
+          cash_on_delivery_enabled: boolean
+          wallet_payments_enabled: boolean
+          referral_program_enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          platform_name?: string
+          default_currency?: string
+          default_service_charge_pct?: number
+          default_commission_pct?: number
+          cash_on_delivery_enabled?: boolean
+          wallet_payments_enabled?: boolean
+          referral_program_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          platform_name?: string
+          default_currency?: string
+          default_service_charge_pct?: number
+          default_commission_pct?: number
+          cash_on_delivery_enabled?: boolean
+          wallet_payments_enabled?: boolean
+          referral_program_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   UberPageTitle,
@@ -17,7 +18,7 @@ import {
   uberBtn,
   formatMoney,
 } from "@/components/admin/AdminUI";
-import { RefreshCcw, Plus, MoreHorizontal } from "lucide-react";
+import { RefreshCcw, Plus, MoreHorizontal, CheckCircle, Ban, XCircle, RotateCcw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
   component: AdminOrders,
@@ -37,8 +38,43 @@ const LIVE_STATUSES = new Set([
 type Tab = "all" | "live" | "new" | "preparing" | "on_the_way" | "delivered" | "cancelled" | "refunded";
 
 function AdminOrders() {
+  const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState<string>("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string, status: "pending" | "accepted" | "preparing" | "ready" | "picked_up" | "delivered" | "cancelled" }) => {
+      const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Order status updated");
+      qc.invalidateQueries({ queryKey: ["admin-orders-full"] });
+      setOpenMenuId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update order");
+      setOpenMenuId(null);
+    }
+  });
+
+  const updatePayment = useMutation({
+    mutationFn: async ({ id, payment_status }: { id: string, payment_status: "unpaid" | "paid" | "refunded" | "failed" }) => {
+      const { error } = await supabase.from("orders").update({ payment_status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Payment status updated");
+      qc.invalidateQueries({ queryKey: ["admin-orders-full"] });
+      setOpenMenuId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update payment");
+      setOpenMenuId(null);
+    }
+  });
 
   const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ["admin-orders-full"],
@@ -46,7 +82,7 @@ function AdminOrders() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id,status,total,currency,created_at,vendor_id,customer_id,payment_status,delivery_address")
+        .select("id,status,total,currency,created_at,vendor_id,customer_id,payment_status,delivery_address,order_items(name,price,quantity,subtotal)")
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
@@ -174,28 +210,75 @@ function AdminOrders() {
                 </UberTr>
               ) : (
                 filtered.map((o: any) => (
-                  <UberTr key={o.id}>
-                    <UberTd className="font-mono text-xs text-neutral-700">#{o.id.slice(0, 8)}</UberTd>
-                    <UberTd><UberStatus status={humanise(o.status)} /></UberTd>
-                    <UberTd><UberStatus status={humanise(o.payment_status ?? "pending")} /></UberTd>
-                    <UberTd className="font-medium">{formatMoney(Number(o.total ?? 0), o.currency || "GBP")}</UberTd>
-                    <UberTd className="max-w-[220px] truncate text-neutral-600">
-                      {formatAddress(o.delivery_address)}
-                    </UberTd>
-                    <UberTd className="text-neutral-500">
-                      {new Date(o.created_at).toLocaleString([], {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </UberTd>
-                    <UberTd>
-                      <button className="rounded-full p-1.5 hover:bg-[oklch(0.965_0.003_260)]">
-                        <MoreHorizontal className="h-4 w-4 text-neutral-500" />
-                      </button>
-                    </UberTd>
-                  </UberTr>
+                  <React.Fragment key={o.id}>
+                    <UberTr onClick={() => setExpandedId(expandedId === o.id ? null : o.id)} className="cursor-pointer hover:bg-muted/30">
+                      <UberTd className="font-mono text-xs text-neutral-700">#{o.id.slice(0, 8)}</UberTd>
+                      <UberTd><UberStatus status={humanise(o.status)} /></UberTd>
+                      <UberTd><UberStatus status={humanise(o.payment_status ?? "pending")} /></UberTd>
+                      <UberTd className="font-medium">{formatMoney(Number(o.total ?? 0), o.currency || "GBP")}</UberTd>
+                      <UberTd className="max-w-[220px] truncate text-neutral-600">
+                        {formatAddress(o.delivery_address)}
+                      </UberTd>
+                      <UberTd className="text-neutral-500">
+                        {new Date(o.created_at).toLocaleString([], {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </UberTd>
+                      <UberTd>
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                          <button 
+                            onClick={() => setOpenMenuId(openMenuId === o.id ? null : o.id)}
+                            className="rounded-full p-1.5 hover:bg-[oklch(0.965_0.003_260)]"
+                          >
+                            <MoreHorizontal className="h-4 w-4 text-neutral-500" />
+                          </button>
+                          {openMenuId === o.id && (
+                            <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-md border border-border bg-card shadow-lg py-1">
+                              <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Order Status</div>
+                              <button
+                                onClick={() => updateStatus.mutate({ id: o.id, status: "cancelled" })}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-rose-600"
+                              >
+                                <Ban className="h-4 w-4" /> Cancel Order
+                              </button>
+                              <div className="my-1 border-t border-border" />
+                              <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Payment Status</div>
+                              <button
+                                onClick={() => updatePayment.mutate({ id: o.id, payment_status: "refunded" })}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-amber-600"
+                              >
+                                <RotateCcw className="h-4 w-4" /> Mark Refunded
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </UberTd>
+                    </UberTr>
+                    {expandedId === o.id && (
+                      <tr className="border-t border-border bg-muted/20">
+                        <td colSpan={7} className="px-4 py-4">
+                          <div className="text-sm">
+                            <div className="font-medium mb-2">Order Items</div>
+                            {o.order_items?.length > 0 ? (
+                              <ul className="space-y-1">
+                                {o.order_items.map((item: any, i: number) => (
+                                  <li key={i} className="flex justify-between max-w-md text-neutral-600">
+                                    <span>{item.quantity}x {item.name}</span>
+                                    <span>{formatMoney(item.subtotal || (item.price * item.quantity), o.currency)}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div className="text-neutral-500">No items found for this order.</div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))
               )}
             </tbody>

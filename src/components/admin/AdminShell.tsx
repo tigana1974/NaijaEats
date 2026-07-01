@@ -30,6 +30,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Logo } from "@/components/naija/Logo";
 
 type NavItem = {
   to: string;
@@ -302,9 +303,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 function BrandMark() {
   return (
     <Link to="/admin/dashboard" className="flex items-center gap-2 min-w-0">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[var(--naija-green)] text-white font-bold">
-        N
-      </span>
+      <Logo className="h-8 w-8 shrink-0" />
       <span className="truncate text-[15px] font-semibold leading-tight">
         Naija Eats <span className="text-neutral-500 font-normal">Manager</span>
       </span>
