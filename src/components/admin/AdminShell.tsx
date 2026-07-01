@@ -113,10 +113,40 @@ const NAV: NavItem[] = [
 ];
 
 const REGIONS = [
-  { id: "all", label: "All regions", flag: "🌍" },
-  { id: "uk", label: "United Kingdom", flag: "🇬🇧" },
-  { id: "ng", label: "Nigeria", flag: "🇳🇬" },
-] as const;
+  { 
+    id: "all", 
+    label: "All regions", 
+    flag: <div className="h-full w-full bg-[#1e40af] flex items-center justify-center text-[10px]">🌍</div> 
+  },
+  { 
+    id: "uk", 
+    label: "United Kingdom", 
+    flag: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" className="h-full w-full object-cover" preserveAspectRatio="none">
+        <clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
+        <clipPath id="t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+        <g clipPath="url(#s)">
+          <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+          <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4"/>
+          <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
+          <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6"/>
+        </g>
+      </svg>
+    )
+  },
+  { 
+    id: "ng", 
+    label: "Nigeria", 
+    flag: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" className="h-full w-full object-cover" preserveAspectRatio="none">
+        <rect width="60" height="30" fill="#fff" />
+        <rect width="20" height="30" fill="#008751" />
+        <rect x="40" width="20" height="30" fill="#008751" />
+      </svg>
+    )
+  },
+];
 
 const SIDEBAR_WIDTH = 248;
 
@@ -334,7 +364,7 @@ function RegionSelector({
       >
         <span className="flex items-center gap-2.5 min-w-0">
           <div className="h-[18px] w-[18px] rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)]">
-            <span className="text-xl leading-none" style={{ transform: 'scale(1.3)' }}>{activeRegion.flag}</span>
+            <span className="flex h-full w-full items-center justify-center">{activeRegion.flag}</span>
           </div>
           <span className="truncate font-medium">{activeRegion.label}</span>
         </span>
@@ -353,7 +383,7 @@ function RegionSelector({
               >
                 <span className="flex items-center gap-2.5">
                   <div className="h-[18px] w-[18px] rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)]">
-                    <span className="text-xl leading-none" style={{ transform: 'scale(1.3)' }}>{r.flag}</span>
+                    <span className="flex h-full w-full items-center justify-center">{r.flag}</span>
                   </div>
                   <span>{r.label}</span>
                 </span>
