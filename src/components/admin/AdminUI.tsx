@@ -360,14 +360,15 @@ export function Section({
 }
 
 /** ScaffoldPage — reusable page skeleton for modules whose full data plumbing
- *  will be wired incrementally. Provides page header, KPI cards, sections
- *  reflecting the spec, and a Coming-soon banner. */
+ *  will be wired incrementally. Uber-Eats-style page title, KPI row, and section
+ *  cards reflecting the spec, plus a Coming-soon banner. */
 export function ScaffoldPage({
   title,
   description,
   kpis,
   sections,
   actions,
+  eyebrow,
 }: {
   title: string;
   description: string;
@@ -379,28 +380,58 @@ export function ScaffoldPage({
   }[];
   sections: { title: string; description?: string; items: string[] }[];
   actions?: ReactNode;
+  eyebrow?: string;
 }) {
   return (
-    <>
-      <PageHeader title={title} description={description} actions={actions} />
-      <PageBody>
-        {kpis && kpis.length > 0 && (
-          <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-${Math.min(kpis.length, 4)}`}>
-            {kpis.map((k, i) => (
-              <KpiCard key={i} label={k.label} value={k.value} Icon={k.Icon} accent={k.accent ?? "green"} />
-            ))}
-          </div>
-        )}
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {sections.map((s, i) => (
-            <Section key={i} title={s.title} description={s.description} items={s.items} />
+    <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
+      <UberPageTitle eyebrow={eyebrow} title={title} description={description} actions={actions} />
+      {kpis && kpis.length > 0 && (
+        <div className={`mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-${Math.min(kpis.length, 4)}`}>
+          {kpis.map((k, i) => (
+            <UberKpi key={i} label={k.label} value={k.value} />
           ))}
         </div>
-        <div className="mt-6">
-          <ComingSoon description="Full CRUD, filters, and Supabase wiring for this module are staged and will land in follow-up pushes. All sections listed here map directly to the Naija Eats spec." />
-        </div>
-      </PageBody>
-    </>
+      )}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {sections.map((s, i) => (
+          <UberSection key={i} title={s.title} description={s.description} items={s.items} />
+        ))}
+      </div>
+      <div className="mt-6">
+        <ComingSoon description="Full CRUD, filters, and Supabase wiring for this module are staged and will land in follow-up pushes. All sections listed here map directly to the Naija Eats spec." />
+      </div>
+    </div>
+  );
+}
+
+/** Uber-style titled section card (used inside ScaffoldPage). */
+export function UberSection({
+  title,
+  description,
+  items,
+}: {
+  title: string;
+  description?: string;
+  items: string[];
+}) {
+  return (
+    <div className="rounded-xl border border-[oklch(0.92_0.003_260)] bg-white">
+      <div className="border-b border-[oklch(0.94_0.003_260)] px-5 py-4">
+        <div className="text-[15px] font-semibold text-[oklch(0.18_0.006_260)]">{title}</div>
+        {description && <div className="mt-0.5 text-[12.5px] text-neutral-500">{description}</div>}
+      </div>
+      <ul className="grid gap-1 p-4 sm:grid-cols-2">
+        {items.map((it, i) => (
+          <li
+            key={i}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-[oklch(0.28_0.006_260)] hover:bg-[oklch(0.965_0.003_260)]"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--naija-green)]" />
+            <span className="truncate">{it}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -434,7 +465,7 @@ export function UberKpi({
   );
 }
 
-/** The distinctive Uber Eats "Current tier" card with an SVG circular gauge. */
+/** The distinctive Uber Eats "Current tier" card with an SVG circular gauge — Naija green palette. */
 export function CurrentTierCard({
   tier,
   benefitsLabel,
@@ -454,15 +485,22 @@ export function CurrentTierCard({
   const dash = c * Math.max(0, Math.min(1, progress));
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-[oklch(0.9_0.05_85)] bg-[oklch(0.985_0.03_85)] p-4">
+    <div className="flex items-center gap-4 rounded-xl border border-[oklch(0.9_0.05_145)] bg-[oklch(0.98_0.02_145)] p-4">
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.9_0.03_85)" strokeWidth={stroke} fill="none" />
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
-            stroke="oklch(0.78_0.16_75)"
+            stroke="oklch(0.9_0.04_145)"
+            strokeWidth={stroke}
+            fill="none"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            stroke="var(--naija-green)"
             strokeWidth={stroke}
             fill="none"
             strokeDasharray={`${dash} ${c}`}
@@ -482,7 +520,7 @@ export function CurrentTierCard({
             {tier}
           </div>
         </div>
-        <div className="mx-2 hidden h-10 w-px bg-[oklch(0.9_0.05_85)] sm:block" />
+        <div className="mx-2 hidden h-10 w-px bg-[oklch(0.9_0.05_145)] sm:block" />
         <div className="min-w-0">
           <div className="flex items-center gap-1 text-[13px] text-neutral-600">
             Current tier benefits
@@ -501,6 +539,17 @@ export function CurrentTierCard({
   );
 }
 
+/** Naija-brand icon color variants — used across opportunity cards and quick actions. */
+export type NaijaIconColor = "green" | "orange" | "ink" | "mint" | "peach";
+
+const NAIJA_ICON_BG: Record<NaijaIconColor, string> = {
+  green: "bg-[oklch(0.95_0.05_145)] text-[var(--naija-green-dark)]",
+  orange: "bg-[oklch(0.95_0.05_65)] text-[var(--naija-orange-dark)]",
+  ink: "bg-[oklch(0.95_0.005_260)] text-[oklch(0.28_0.006_260)]",
+  mint: "bg-[oklch(0.97_0.03_155)] text-[oklch(0.42_0.13_155)]",
+  peach: "bg-[oklch(0.97_0.04_45)] text-[oklch(0.55_0.16_45)]",
+};
+
 /** Opportunity card matching Uber Eats: tag pill, title, body, primary button, big circle icon on the right, Helpful/Not helpful feedback. */
 export function UberOpportunityCard({
   tag,
@@ -509,7 +558,7 @@ export function UberOpportunityCard({
   ctaLabel,
   ctaHref,
   Icon,
-  iconColor = "orange",
+  iconColor = "green",
 }: {
   tag: string;
   title: string;
@@ -517,20 +566,9 @@ export function UberOpportunityCard({
   ctaLabel: string;
   ctaHref: string;
   Icon: React.ComponentType<{ className?: string }>;
-  iconColor?: "orange" | "green" | "blue" | "pink";
+  iconColor?: NaijaIconColor;
 }) {
-  const bubbleBg = {
-    orange: "bg-[oklch(0.94_0.05_65)]",
-    green: "bg-[oklch(0.94_0.05_155)]",
-    blue: "bg-[oklch(0.94_0.04_240)]",
-    pink: "bg-[oklch(0.94_0.04_15)]",
-  }[iconColor];
-  const bubbleFg = {
-    orange: "text-[oklch(0.55_0.19_55)]",
-    green: "text-[oklch(0.5_0.14_155)]",
-    blue: "text-[oklch(0.5_0.14_240)]",
-    pink: "text-[oklch(0.55_0.15_15)]",
-  }[iconColor];
+  const bubble = NAIJA_ICON_BG[iconColor];
 
   return (
     <div className="rounded-xl border border-[oklch(0.92_0.003_260)] bg-white p-5">
@@ -550,7 +588,7 @@ export function UberOpportunityCard({
             {ctaLabel}
           </a>
         </div>
-        <div className={`grid h-20 w-20 shrink-0 place-items-center rounded-full ${bubbleBg} ${bubbleFg}`}>
+        <div className={`grid h-20 w-20 shrink-0 place-items-center rounded-full ${bubble}`}>
           <Icon className="h-8 w-8" />
         </div>
       </div>
@@ -571,20 +609,14 @@ export function UberQuickAction({
   label,
   to,
   Icon,
-  iconColor = "orange",
+  iconColor = "green",
 }: {
   label: string;
   to: string;
   Icon: React.ComponentType<{ className?: string }>;
-  iconColor?: "orange" | "green" | "blue" | "pink" | "purple";
+  iconColor?: NaijaIconColor;
 }) {
-  const bg = {
-    orange: "bg-[oklch(0.94_0.05_65)] text-[oklch(0.55_0.19_55)]",
-    green: "bg-[oklch(0.94_0.05_155)] text-[oklch(0.5_0.14_155)]",
-    blue: "bg-[oklch(0.94_0.04_240)] text-[oklch(0.5_0.14_240)]",
-    pink: "bg-[oklch(0.94_0.04_15)] text-[oklch(0.55_0.15_15)]",
-    purple: "bg-[oklch(0.94_0.05_310)] text-[oklch(0.5_0.16_310)]",
-  }[iconColor];
+  const bg = NAIJA_ICON_BG[iconColor];
   return (
     <a
       href={to}
@@ -606,5 +638,207 @@ function ChevronRightArrow() {
     <svg className="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="none">
       <path d="M7.5 5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+/** Uber-style page title used at the top of every wired admin page. */
+export function UberPageTitle({
+  eyebrow,
+  title,
+  description,
+  actions,
+}: {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        {eyebrow && <div className="text-[13px] text-neutral-600">{eyebrow}</div>}
+        <h1 className="mt-0.5 text-[32px] font-semibold leading-tight tracking-tight text-[oklch(0.18_0.006_260)]">
+          {title}
+        </h1>
+        {description && <div className="mt-1 text-[13px] text-neutral-500">{description}</div>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </div>
+  );
+}
+
+/** Uber-style tab pill row (used for order-status, store-type, payout-status filters). */
+export function UberTabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: { id: T; label: string; count?: number }[];
+  value: T;
+  onChange: (id: T) => void;
+}) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-1.5">
+      {tabs.map((t) => {
+        const active = t.id === value;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => onChange(t.id)}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] transition-colors ${
+              active
+                ? "bg-[oklch(0.18_0.006_260)] text-white font-medium"
+                : "bg-[oklch(0.965_0.003_260)] text-[oklch(0.28_0.006_260)] hover:bg-[oklch(0.94_0.003_260)]"
+            }`}
+          >
+            {t.label}
+            {typeof t.count === "number" && (
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
+                  active ? "bg-white/15 text-white" : "bg-white/70 text-neutral-500"
+                }`}
+              >
+                {t.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Uber-style search + filter chip bar. Cleaner than FilterBar which was too dense. */
+export function UberFilterBar({
+  search,
+  onSearch,
+  filters,
+  extra,
+  onExport,
+}: {
+  search?: string;
+  onSearch?: (v: string) => void;
+  filters?: { label: string }[];
+  extra?: ReactNode;
+  onExport?: () => void;
+}) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="relative min-w-[220px] flex-1">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+        <input
+          value={search}
+          onChange={(e) => onSearch?.(e.target.value)}
+          placeholder="Search…"
+          className="h-9 w-full rounded-full border border-[oklch(0.92_0.003_260)] bg-white pl-9 pr-3 text-[13.5px] outline-none focus:border-[var(--naija-green)]"
+        />
+      </div>
+      {(filters ?? []).map((f, i) => (
+        <button
+          key={i}
+          type="button"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.92_0.003_260)] bg-white px-3.5 py-2 text-[13px] hover:bg-[oklch(0.965_0.003_260)]"
+        >
+          {f.label}
+          <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+        </button>
+      ))}
+      {extra}
+      {onExport && (
+        <button
+          type="button"
+          onClick={onExport}
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.18_0.006_260)] bg-white px-3.5 py-2 text-[13px] font-medium hover:bg-[oklch(0.965_0.003_260)]"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Export
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Uber-style pill button (dark filled = primary; outlined = secondary). */
+export const uberBtn = {
+  primary:
+    "inline-flex items-center gap-1.5 rounded-full bg-[oklch(0.18_0.006_260)] px-4 py-2 text-[13.5px] font-medium text-white hover:bg-[oklch(0.28_0.006_260)]",
+  secondary:
+    "inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.18_0.006_260)] bg-white px-4 py-2 text-[13.5px] font-medium text-[oklch(0.18_0.006_260)] hover:bg-[oklch(0.965_0.003_260)]",
+  green:
+    "inline-flex items-center gap-1.5 rounded-full bg-[var(--naija-green)] px-4 py-2 text-[13.5px] font-medium text-white hover:bg-[var(--naija-green-dark)]",
+} as const;
+
+/** Uber-style bordered table wrapper. Wraps the whole table in a rounded card. */
+export function UberTable({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-[oklch(0.92_0.003_260)] bg-white">
+      <div className="overflow-x-auto">
+        <table className="w-full text-[13.5px]">{children}</table>
+      </div>
+    </div>
+  );
+}
+export function UberThead({ children }: { children: ReactNode }) {
+  return (
+    <thead className="border-b border-[oklch(0.94_0.003_260)] bg-[oklch(0.985_0.003_260)] text-left text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+      {children}
+    </thead>
+  );
+}
+export function UberTh({ children, className = "" }: { children?: ReactNode; className?: string }) {
+  return <th className={`px-4 py-3 font-medium ${className}`}>{children}</th>;
+}
+export function UberTd({ children, className = "" }: { children?: ReactNode; className?: string }) {
+  return <td className={`px-4 py-3 align-middle ${className}`}>{children}</td>;
+}
+export function UberTr({
+  children,
+  onClick,
+  className = "",
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  className?: string;
+}) {
+  return (
+    <tr
+      onClick={onClick}
+      className={`border-t border-[oklch(0.94_0.003_260)] first:border-t-0 ${onClick ? "cursor-pointer hover:bg-[oklch(0.985_0.003_260)]" : ""} ${className}`}
+    >
+      {children}
+    </tr>
+  );
+}
+
+/** Uber-style status pill (used in tables). Uses only Naija-brand hues. */
+export function UberStatus({ status }: { status: string }) {
+  const s = (status || "").toLowerCase();
+  const green = new Set([
+    "delivered", "completed", "paid", "approved", "active", "open",
+  ]);
+  const orange = new Set([
+    "new", "awaiting acceptance", "accepted", "preparing", "ready for pickup",
+    "assigned to rider", "picked up", "on the way", "pending", "requested",
+  ]);
+  const danger = new Set([
+    "cancelled", "refunded", "rejected", "suspended", "failed", "closed",
+  ]);
+
+  let cls: string;
+  if (green.has(s)) {
+    cls = "bg-[oklch(0.95_0.05_145)] text-[var(--naija-green-dark)]";
+  } else if (danger.has(s)) {
+    cls = "bg-[oklch(0.95_0.03_15)] text-[oklch(0.42_0.16_15)]";
+  } else if (orange.has(s)) {
+    cls = "bg-[oklch(0.95_0.05_65)] text-[var(--naija-orange-dark)]";
+  } else {
+    cls = "bg-[oklch(0.95_0.005_260)] text-[oklch(0.32_0.006_260)]";
+  }
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-medium ${cls}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-90" />
+      {status}
+    </span>
   );
 }

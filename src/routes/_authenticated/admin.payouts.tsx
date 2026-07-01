@@ -4,173 +4,166 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
-  PageHeader,
-  PageBody,
-  KpiCard,
-  Card,
-  FilterBar,
-  StatusBadge,
-  TableWrap,
-  Thead,
-  Th,
-  Tr,
-  Td,
-  EmptyState,
+  UberPageTitle,
+  UberKpi,
+  UberTabs,
+  UberFilterBar,
+  UberTable,
+  UberThead,
+  UberTh,
+  UberTr,
+  UberTd,
+  UberStatus,
+  uberBtn,
   formatMoney,
-  btn,
 } from "@/components/admin/AdminUI";
-import { Banknote, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { MoreHorizontal, Play } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/payouts")({
   component: AdminPayouts,
 });
 
-const TABS = [
-  { key: "all", label: "All" },
-  { key: "requested", label: "Pending" },
-  { key: "paid", label: "Paid" },
-  { key: "failed", label: "Failed" },
-];
+type Tab = "all" | "requested" | "paid" | "failed";
 
 function AdminPayouts() {
-  const [tab, setTab] = useState<string>("all");
-  const [search, setSearch] = useState<string>("");
+  const [tab, setTab] = useState<Tab>("all");
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-payouts"],
+  const { data: payouts, isLoading } = useQuery({
+    queryKey: ["admin-payouts-full"],
     staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payouts")
-        .select("id,user_id,amount,currency,status,created_at,requested_at,payout_method")
-        .order("requested_at", { ascending: false })
+        .select("id,payee_id,payee_type,amount,currency,status,created_at,scheduled_for")
+        .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as any[];
     },
   });
 
+  const list = payouts ?? [];
+
+  const counts = useMemo(() => {
+    const c: Record<Tab, number> = { all: list.length, requested: 0, paid: 0, failed: 0 };
+    for (const p of list) {
+      if ((["requested", "paid", "failed"] as Tab[]).includes(p.status as Tab)) c[p.status as Tab]++;
+    }
+    return c;
+  }, [list]);
+
   const filtered = useMemo(() => {
-    let list = data ?? [];
-    if (tab !== "all") list = list.filter((p: any) => p.status === tab);
-    if (search) list = list.filter((p: any) => JSON.stringify(p).toLowerCase().includes(search.toLowerCase()));
-    return list;
-  }, [data, tab, search]);
+    return list.filter((p: any) => {
+      if (tab !== "all" && p.status !== tab) return false;
+      if (search && !JSON.stringify(p).toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+  }, [list, tab, search]);
 
   const stats = useMemo(() => {
-    const list = data ?? [];
-    const sum = (rs: any[]) => rs.reduce((s, r) => s + Number(r.amount ?? 0), 0);
-    const requested = list.filter((p: any) => p.status === "requested");
+    const pending = list.filter((p: any) => p.status === "requested");
     const paid = list.filter((p: any) => p.status === "paid");
     const failed = list.filter((p: any) => p.status === "failed");
     const currency = (list[0]?.currency as string) || "GBP";
     return {
       currency,
       totalCount: list.length,
-      pending: sum(requested),
-      paid: sum(paid),
-      failed: failed.length,
+      pendingAmount: pending.reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0),
+      paidAmount: paid.reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0),
+      failedCount: failed.length,
     };
-  }, [data]);
+  }, [list]);
 
   return (
     <AdminShell>
-      <PageHeader
-        title="Payouts"
-        description="Review, approve and settle payouts to vendors and riders."
-        actions={
-          <>
-            <button className={btn.secondary}>Payout schedule</button>
-            <button className={btn.primary}>Process pending</button>
-          </>
-        }
-      />
-      <PageBody>
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
+        <UberPageTitle
+          eyebrow="Payments"
+          title="Payouts"
+          description="Vendor and rider payouts across Stripe (UK) and Paystack (Nigeria)."
+          actions={
+            <button type="button" className={uberBtn.primary}>
+              <Play className="h-3.5 w-3.5" /> Run payout batch
+            </button>
+          }
+        />
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label="Total payouts" value={stats.totalCount} Icon={Banknote} accent="green" />
-          <KpiCard
-            label="Pending amount"
-            value={formatMoney(stats.pending, stats.currency)}
-            Icon={Clock}
-            accent="orange"
-          />
-          <KpiCard
-            label="Paid amount"
-            value={formatMoney(stats.paid, stats.currency)}
-            Icon={CheckCircle2}
-            accent="green"
-          />
-          <KpiCard label="Failed" value={stats.failed} Icon={XCircle} accent="ink" />
+          <UberKpi label="Total payouts" value={isLoading ? "…" : stats.totalCount.toLocaleString()} hint="Last 200 records" />
+          <UberKpi label="Pending amount" value={isLoading ? "…" : formatMoney(stats.pendingAmount, stats.currency)} hint="Awaiting settlement" />
+          <UberKpi label="Paid amount" value={isLoading ? "…" : formatMoney(stats.paidAmount, stats.currency)} hint="Successfully settled" />
+          <UberKpi label="Failed" value={isLoading ? "…" : stats.failedCount.toLocaleString()} hint="Require retry" />
         </div>
 
-        <div className="mt-6">
-          <Card>
-            <div className="flex flex-wrap items-center gap-1 border-b border-border px-4 py-2">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  className={`rounded-full px-3 py-1.5 text-sm ${
-                    tab === t.key
-                      ? "bg-[var(--naija-green)]/10 text-[var(--naija-green)] font-medium"
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            <div className="p-4">
-              <FilterBar
-                onSearch={setSearch}
-                filters={[{ label: "Payee type" }, { label: "Currency" }, { label: "Date" }]}
-              />
+        <div className="mt-8">
+          <UberTabs<Tab>
+            value={tab}
+            onChange={setTab}
+            tabs={[
+              { id: "all", label: "All", count: counts.all },
+              { id: "requested", label: "Requested", count: counts.requested },
+              { id: "paid", label: "Paid", count: counts.paid },
+              { id: "failed", label: "Failed", count: counts.failed },
+            ]}
+          />
 
+          <UberFilterBar
+            search={search}
+            onSearch={setSearch}
+            filters={[{ label: "Payee type" }, { label: "Provider" }, { label: "Date range" }]}
+            onExport={() => {}}
+          />
+
+          <UberTable>
+            <UberThead>
+              <tr>
+                <UberTh>Payout</UberTh>
+                <UberTh>Payee</UberTh>
+                <UberTh>Amount</UberTh>
+                <UberTh>Status</UberTh>
+                <UberTh>Scheduled</UberTh>
+                <UberTh>Requested</UberTh>
+                <UberTh className="w-[1%]" />
+              </tr>
+            </UberThead>
+            <tbody>
               {isLoading ? (
-                <div className="p-6 text-sm text-muted-foreground">Loading payouts…</div>
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">Loading payouts…</UberTd>
+                </UberTr>
               ) : filtered.length === 0 ? (
-                <EmptyState
-                  title="No payouts match"
-                  description="Vendor and rider payouts appear here once requested."
-                />
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">No payouts match the current filter.</UberTd>
+                </UberTr>
               ) : (
-                <TableWrap>
-                  <Thead>
-                    <tr>
-                      <Th>Payout</Th>
-                      <Th>Method</Th>
-                      <Th>Amount</Th>
-                      <Th>Status</Th>
-                      <Th>Requested</Th>
-                      <Th>Processed</Th>
-                    </tr>
-                  </Thead>
-                  <tbody>
-                    {filtered.map((p: any) => (
-                      <Tr key={p.id}>
-                        <Td className="font-mono text-xs">#{p.id.slice(0, 8)}</Td>
-                        <Td className="capitalize">{p.payout_method || "bank transfer"}</Td>
-                        <Td className="font-medium">
-                          {formatMoney(Number(p.amount ?? 0), p.currency || "GBP")}
-                        </Td>
-                        <Td>
-                          <StatusBadge status={p.status || "requested"} />
-                        </Td>
-                        <Td className="text-muted-foreground">
-                          {p.requested_at ? new Date(p.requested_at).toLocaleString() : "—"}
-                        </Td>
-                        <Td className="text-muted-foreground">
-                          {p.created_at ? new Date(p.created_at).toLocaleString() : "—"}
-                        </Td>
-                      </Tr>
-                    ))}
-                  </tbody>
-                </TableWrap>
+                filtered.map((p: any) => (
+                  <UberTr key={p.id}>
+                    <UberTd className="font-mono text-xs text-neutral-700">#{String(p.id).slice(0, 8)}</UberTd>
+                    <UberTd>
+                      <div className="font-medium text-[oklch(0.18_0.006_260)] capitalize">{p.payee_type || "—"}</div>
+                      <div className="font-mono text-[11px] text-neutral-500">#{String(p.payee_id ?? "").slice(0, 8)}</div>
+                    </UberTd>
+                    <UberTd className="font-medium">{formatMoney(Number(p.amount ?? 0), p.currency || "GBP")}</UberTd>
+                    <UberTd><UberStatus status={p.status} /></UberTd>
+                    <UberTd className="text-neutral-500">
+                      {p.scheduled_for ? new Date(p.scheduled_for).toLocaleDateString([], { day: "numeric", month: "short" }) : "—"}
+                    </UberTd>
+                    <UberTd className="text-neutral-500">
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString([], { day: "numeric", month: "short" }) : "—"}
+                    </UberTd>
+                    <UberTd>
+                      <button className="rounded-full p-1.5 hover:bg-[oklch(0.965_0.003_260)]">
+                        <MoreHorizontal className="h-4 w-4 text-neutral-500" />
+                      </button>
+                    </UberTd>
+                  </UberTr>
+                ))
               )}
-            </div>
-          </Card>
+            </tbody>
+          </UberTable>
         </div>
-      </PageBody>
+      </div>
     </AdminShell>
   );
 }

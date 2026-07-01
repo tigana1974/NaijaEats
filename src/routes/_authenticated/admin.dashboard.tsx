@@ -200,7 +200,7 @@ function AdminDashboard() {
                   ctaLabel="Create"
                   ctaHref="/admin/ads"
                   Icon={Megaphone}
-                  iconColor="blue"
+                  iconColor="green"
                 />
                 <UberOpportunityCard
                   tag="Growth"
@@ -209,7 +209,7 @@ function AdminDashboard() {
                   ctaLabel="Apply Now"
                   ctaHref="/admin/financing"
                   Icon={HandCoins}
-                  iconColor="green"
+                  iconColor="mint"
                 />
                 <UberOpportunityCard
                   tag="Retention"
@@ -227,7 +227,7 @@ function AdminDashboard() {
                   ctaLabel="Open menus"
                   ctaHref="/admin/menu"
                   Icon={UtensilsCrossed}
-                  iconColor="pink"
+                  iconColor="peach"
                 />
               </div>
             </div>
@@ -286,16 +286,16 @@ function AdminDashboard() {
                 Quick actions
               </div>
               <div className="space-y-0.5">
-                <UberQuickAction label="Create ad" to="/admin/ads" Icon={Megaphone} iconColor="blue" />
-                <UberQuickAction label="Create offer" to="/admin/offers" Icon={Tag} iconColor="pink" />
-                <UberQuickAction label="Edit item" to="/admin/menu" Icon={UtensilsCrossed} iconColor="orange" />
-                <UberQuickAction label="Edit menu hours" to="/admin/holiday-hours" Icon={Clock} iconColor="purple" />
-                <UberQuickAction label="Top eats" to="/admin/performance" Icon={Trophy} iconColor="green" />
-                <UberQuickAction label="Learning guide" to="/admin/success" Icon={BookOpen} iconColor="blue" />
-                <UberQuickAction label="Review payouts" to="/admin/payouts" Icon={Banknote} iconColor="green" />
-                <UberQuickAction label="Approve vendors" to="/admin/stores" Icon={Store} iconColor="orange" />
-                <UberQuickAction label="Rider roster" to="/admin/riders" Icon={Bike} iconColor="pink" />
-                <UberQuickAction label="Order Manager" to="/admin/orders" Icon={ClipboardList} iconColor="purple" />
+                <UberQuickAction label="Create ad" to="/admin/ads" Icon={Megaphone} iconColor="green" />
+                <UberQuickAction label="Create offer" to="/admin/offers" Icon={Tag} iconColor="orange" />
+                <UberQuickAction label="Edit item" to="/admin/menu" Icon={UtensilsCrossed} iconColor="peach" />
+                <UberQuickAction label="Edit menu hours" to="/admin/holiday-hours" Icon={Clock} iconColor="ink" />
+                <UberQuickAction label="Top eats" to="/admin/performance" Icon={Trophy} iconColor="mint" />
+                <UberQuickAction label="Learning guide" to="/admin/success" Icon={BookOpen} iconColor="green" />
+                <UberQuickAction label="Review payouts" to="/admin/payouts" Icon={Banknote} iconColor="orange" />
+                <UberQuickAction label="Approve vendors" to="/admin/stores" Icon={Store} iconColor="green" />
+                <UberQuickAction label="Rider roster" to="/admin/riders" Icon={Bike} iconColor="ink" />
+                <UberQuickAction label="Order Manager" to="/admin/orders" Icon={ClipboardList} iconColor="mint" />
               </div>
             </div>
 

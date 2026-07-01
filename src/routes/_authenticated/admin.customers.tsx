@@ -4,187 +4,176 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
-  PageHeader,
-  PageBody,
-  KpiCard,
-  Card,
-  CardHeader,
-  FilterBar,
-  StatusBadge,
-  TableWrap,
-  Thead,
-  Th,
-  Tr,
-  Td,
-  EmptyState,
+  UberPageTitle,
+  UberKpi,
+  UberFilterBar,
+  UberTable,
+  UberThead,
+  UberTh,
+  UberTr,
+  UberTd,
+  UberStatus,
+  uberBtn,
   formatMoney,
-  btn,
 } from "@/components/admin/AdminUI";
-import { Users, UserPlus, Star, TrendingUp, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Send } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/customers")({
   component: AdminCustomers,
 });
 
 function AdminCustomers() {
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState("");
 
-  const { data: customers, isLoading } = useQuery({
-    queryKey: ["admin-customers"],
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-customers-full"],
     staleTime: 60_000,
     queryFn: async () => {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id,full_name,email,phone,created_at")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      return profiles ?? [];
-    },
-  });
-
-  const { data: orderAgg } = useQuery({
-    queryKey: ["admin-customers-orders-agg"],
-    staleTime: 60_000,
-    queryFn: async () => {
-      const { data } = await supabase.from("orders").select("customer_id,total,currency,created_at");
-      const map = new Map<string, { count: number; spend: number; currency: string; last?: string }>();
-      (data ?? []).forEach((o: any) => {
-        const cid = o.customer_id;
-        if (!cid) return;
-        const cur = map.get(cid) ?? { count: 0, spend: 0, currency: o.currency || "GBP", last: o.created_at };
+      const [profilesRes, ordersRes] = await Promise.all([
+        supabase.from("profiles").select("id,full_name,email,phone,avatar_url,created_at").limit(500),
+        supabase.from("orders").select("customer_id,total,currency,created_at,status"),
+      ]);
+      const profiles = profilesRes.data ?? [];
+      const orders = ordersRes.data ?? [];
+      const byCustomer = new Map<string, { count: number; spend: number; currency: string; last: string | null }>();
+      for (const o of orders as any[]) {
+        if (!o.customer_id) continue;
+        const cur = byCustomer.get(o.customer_id) ?? { count: 0, spend: 0, currency: "GBP", last: null };
         cur.count += 1;
         cur.spend += Number(o.total ?? 0);
+        cur.currency = (o.currency as string) || cur.currency;
         if (!cur.last || new Date(o.created_at) > new Date(cur.last)) cur.last = o.created_at;
-        map.set(cid, cur);
-      });
-      return map;
+        byCustomer.set(o.customer_id, cur);
+      }
+      return { profiles, byCustomer };
     },
   });
 
+  const rows = useMemo(() => {
+    if (!data) return [];
+    return (data.profiles as any[]).map((p) => ({
+      ...p,
+      ...(data.byCustomer.get(p.id) ?? { count: 0, spend: 0, currency: "GBP", last: null }),
+    }));
+  }, [data]);
+
   const filtered = useMemo(() => {
-    const list = customers ?? [];
-    if (!search) return list;
-    const q = search.toLowerCase();
-    return list.filter((c: any) =>
-      [c.full_name, c.email, c.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(q))
+    if (!search) return rows;
+    const s = search.toLowerCase();
+    return rows.filter((r: any) =>
+      [r.full_name, r.email, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
     );
-  }, [customers, search]);
+  }, [rows, search]);
 
   const stats = useMemo(() => {
-    const list = customers ?? [];
     const now = new Date();
-    const newThisMonth = list.filter(
-      (c: any) => c.created_at && new Date(c.created_at).getMonth() === now.getMonth()
-    ).length;
-    let repeat = 0;
-    let totalCustomers = 0;
-    let totalSpend = 0;
-    let currency = "GBP";
-    orderAgg?.forEach((agg) => {
-      totalCustomers += 1;
-      totalSpend += agg.spend;
-      currency = agg.currency;
-      if (agg.count > 1) repeat += 1;
-    });
-    return {
-      total: list.length,
-      newThisMonth,
-      repeat,
-      ltv: totalCustomers ? totalSpend / totalCustomers : 0,
-      currency,
-    };
-  }, [customers, orderAgg]);
+    const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    const newThisMonth = rows.filter((r: any) => r.created_at && new Date(r.created_at) >= monthAgo).length;
+    const repeat = rows.filter((r: any) => r.count >= 2).length;
+    const spenders = rows.filter((r: any) => r.count > 0);
+    const avgLtv = spenders.length ? spenders.reduce((s: number, r: any) => s + r.spend, 0) / spenders.length : 0;
+    const currency = (spenders[0]?.currency as string) || "GBP";
+    return { total: rows.length, newThisMonth, repeat, avgLtv, currency };
+  }, [rows]);
 
   return (
     <AdminShell>
-      <PageHeader
-        title="Customers"
-        description="Every customer on Naija Eats, with wallet balance, order history and complaints."
-        actions={
-          <>
-            <button className={btn.secondary}>Segment</button>
-            <button className={btn.primary}>Message customers</button>
-          </>
-        }
-      />
-      <PageBody>
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
+        <UberPageTitle
+          eyebrow="Customers"
+          title="Customer list"
+          description="Everyone who has ordered on Naija Eats, plus their lifetime spend and status."
+          actions={
+            <button type="button" className={uberBtn.primary}>
+              <Send className="h-3.5 w-3.5" /> Send campaign
+            </button>
+          }
+        />
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard label="Total customers" value={stats.total} Icon={Users} accent="green" />
-          <KpiCard label="New this month" value={stats.newThisMonth} Icon={UserPlus} accent="orange" />
-          <KpiCard label="Repeat customers" value={stats.repeat} Icon={Star} accent="green" />
-          <KpiCard
-            label="Avg. customer LTV"
-            value={formatMoney(stats.ltv, stats.currency)}
-            Icon={TrendingUp}
-            accent="ink"
+          <UberKpi label="Total customers" value={isLoading ? "…" : stats.total.toLocaleString()} hint="Registered accounts" />
+          <UberKpi label="New this month" value={isLoading ? "…" : stats.newThisMonth.toLocaleString()} hint="Joined in the last 30 days" />
+          <UberKpi label="Repeat customers" value={isLoading ? "…" : stats.repeat.toLocaleString()} hint="2 or more completed orders" />
+          <UberKpi label="Avg lifetime value" value={isLoading ? "…" : formatMoney(stats.avgLtv, stats.currency)} hint="Per repeat customer" />
+        </div>
+
+        <div className="mt-8">
+          <UberFilterBar
+            search={search}
+            onSearch={setSearch}
+            filters={[{ label: "Segment" }, { label: "City" }, { label: "Signup" }]}
+            onExport={() => {}}
           />
-        </div>
 
-        <div className="mt-6">
-          <Card>
-            <CardHeader
-              title="Customer directory"
-              description="Search, segment, and manage individual customer records"
-            />
-            <div className="p-4">
-              <FilterBar
-                onSearch={setSearch}
-                filters={[{ label: "City" }, { label: "Country" }, { label: "Segment" }]}
-              />
-
+          <UberTable>
+            <UberThead>
+              <tr>
+                <UberTh>Customer</UberTh>
+                <UberTh>Contact</UberTh>
+                <UberTh>Orders</UberTh>
+                <UberTh>Spend</UberTh>
+                <UberTh>Last order</UberTh>
+                <UberTh>Status</UberTh>
+                <UberTh className="w-[1%]" />
+              </tr>
+            </UberThead>
+            <tbody>
               {isLoading ? (
-                <div className="p-6 text-sm text-muted-foreground">Loading customers…</div>
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">Loading customers…</UberTd>
+                </UberTr>
               ) : filtered.length === 0 ? (
-                <EmptyState
-                  title="No customers yet"
-                  description="When people sign up and place their first order they'll show up here."
-                />
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">No customers match the current filter.</UberTd>
+                </UberTr>
               ) : (
-                <TableWrap>
-                  <Thead>
-                    <tr>
-                      <Th>Customer</Th>
-                      <Th>Contact</Th>
-                      <Th>Orders</Th>
-                      <Th>Spend</Th>
-                      <Th>Last order</Th>
-                      <Th>Status</Th>
-                      <Th className="text-right">Actions</Th>
-                    </tr>
-                  </Thead>
-                  <tbody>
-                    {filtered.map((c: any) => {
-                      const agg = orderAgg?.get(c.id);
-                      return (
-                        <Tr key={c.id}>
-                          <Td className="font-medium">{c.full_name || "Unnamed customer"}</Td>
-                          <Td className="text-muted-foreground">
-                            <div>{c.email}</div>
-                            {c.phone && <div className="text-xs">{c.phone}</div>}
-                          </Td>
-                          <Td>{agg?.count ?? 0}</Td>
-                          <Td>{formatMoney(agg?.spend ?? 0, agg?.currency || "GBP")}</Td>
-                          <Td className="text-muted-foreground">
-                            {agg?.last ? new Date(agg.last).toLocaleDateString() : "—"}
-                          </Td>
-                          <Td>
-                            <StatusBadge status={agg && agg.count > 0 ? "active" : "inactive"} />
-                          </Td>
-                          <Td className="text-right">
-                            <button className="rounded-md p-1.5 hover:bg-muted">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                          </Td>
-                        </Tr>
-                      );
-                    })}
-                  </tbody>
-                </TableWrap>
+                filtered.map((c: any) => (
+                  <UberTr key={c.id}>
+                    <UberTd>
+                      <div className="flex items-center gap-2.5">
+                        <div className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.95_0.05_145)] text-[var(--naija-green-dark)] text-xs font-medium">
+                          {initials(c.full_name || c.email)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-[oklch(0.18_0.006_260)]">{c.full_name || "Unnamed"}</div>
+                          <div className="font-mono text-[11px] text-neutral-500">#{String(c.id).slice(0, 8)}</div>
+                        </div>
+                      </div>
+                    </UberTd>
+                    <UberTd className="text-neutral-600">
+                      <div className="truncate">{c.email || "—"}</div>
+                      <div className="text-[12px] text-neutral-500">{c.phone || ""}</div>
+                    </UberTd>
+                    <UberTd className="text-neutral-700">{c.count}</UberTd>
+                    <UberTd className="font-medium">{formatMoney(c.spend, c.currency)}</UberTd>
+                    <UberTd className="text-neutral-500">
+                      {c.last ? new Date(c.last).toLocaleDateString([], { day: "numeric", month: "short" }) : "—"}
+                    </UberTd>
+                    <UberTd>
+                      <UberStatus status={c.count > 0 ? "active" : "inactive"} />
+                    </UberTd>
+                    <UberTd>
+                      <button className="rounded-full p-1.5 hover:bg-[oklch(0.965_0.003_260)]">
+                        <MoreHorizontal className="h-4 w-4 text-neutral-500" />
+                      </button>
+                    </UberTd>
+                  </UberTr>
+                ))
               )}
-            </div>
-          </Card>
+            </tbody>
+          </UberTable>
         </div>
-      </PageBody>
+      </div>
     </AdminShell>
   );
+}
+
+function initials(name?: string | null) {
+  if (!name) return "?";
+  return name
+    .split(/[\s@]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("");
 }
