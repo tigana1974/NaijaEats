@@ -96,7 +96,6 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
         { to: "/vendor/menu", label: isGrocery ? "Groceries" : "Menu", Icon: isGrocery ? ShoppingBasket : UtensilsCrossed },
         { to: "/vendor/earnings", label: "Earnings", Icon: TrendingUp },
         { to: "/wallet", label: "Wallet", Icon: Wallet },
-        ...(!isGrocery ? [{ to: "/groceries", label: "Groceries", Icon: ShoppingBasket }] : []),
       ];
     })(),
     rider: [
