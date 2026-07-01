@@ -1,148 +1,190 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AppShell } from "@/components/naija/AppShell";
-import { useMyRole } from "@/hooks/useMyRole";
-import { Users, Repeat, UserPlus } from "lucide-react";
+import { AdminShell } from "@/components/admin/AdminShell";
+import {
+  PageHeader,
+  PageBody,
+  KpiCard,
+  Card,
+  CardHeader,
+  FilterBar,
+  StatusBadge,
+  TableWrap,
+  Thead,
+  Th,
+  Tr,
+  Td,
+  EmptyState,
+  formatMoney,
+  btn,
+} from "@/components/admin/AdminUI";
+import { Users, UserPlus, Star, TrendingUp, MoreHorizontal } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/customers")({
   component: AdminCustomers,
 });
 
 function AdminCustomers() {
-  const { data: role, isLoading: roleLoading } = useMyRole();
+  const [search, setSearch] = useState<string>("");
 
-  const { data, isLoading } = useQuery({
+  const { data: customers, isLoading } = useQuery({
     queryKey: ["admin-customers"],
-    enabled: role === "admin",
+    staleTime: 60_000,
     queryFn: async () => {
-      const { data: orders, error } = await supabase
-        .from("orders")
-        .select("customer_id,total,currency,status,created_at")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-
-      const customerIds = Array.from(new Set((orders ?? []).map((o: any) => o.customer_id)));
-      const { data: profiles } = customerIds.length
-        ? await supabase.from("profiles").select("id,full_name,created_at").in("id", customerIds)
-        : { data: [] as any[] };
-      const profileById: Record<string, any> = {};
-      (profiles ?? []).forEach((p: any) => (profileById[p.id] = p));
-
-      return { orders: orders ?? [], profileById };
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id,full_name,email,phone,created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      return profiles ?? [];
     },
   });
 
+  const { data: orderAgg } = useQuery({
+    queryKey: ["admin-customers-orders-agg"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.from("orders").select("customer_id,total,currency,created_at");
+      const map = new Map<string, { count: number; spend: number; currency: string; last?: string }>();
+      (data ?? []).forEach((o: any) => {
+        const cid = o.customer_id;
+        if (!cid) return;
+        const cur = map.get(cid) ?? { count: 0, spend: 0, currency: o.currency || "GBP", last: o.created_at };
+        cur.count += 1;
+        cur.spend += Number(o.total ?? 0);
+        if (!cur.last || new Date(o.created_at) > new Date(cur.last)) cur.last = o.created_at;
+        map.set(cid, cur);
+      });
+      return map;
+    },
+  });
+
+  const filtered = useMemo(() => {
+    const list = customers ?? [];
+    if (!search) return list;
+    const q = search.toLowerCase();
+    return list.filter((c: any) =>
+      [c.full_name, c.email, c.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(q))
+    );
+  }, [customers, search]);
+
   const stats = useMemo(() => {
-    if (!data) return null;
-    const { orders, profileById } = data;
-    const byCustomer: Record<
-      string,
-      { orders: number; spend: Record<string, number>; lastOrder: string; firstOrder: string }
-    > = {};
-    orders.forEach((o: any) => {
-      byCustomer[o.customer_id] ||= { orders: 0, spend: {}, lastOrder: o.created_at, firstOrder: o.created_at };
-      const c = byCustomer[o.customer_id];
-      c.orders++;
-      if (o.status !== "cancelled") {
-        c.spend[o.currency] = (c.spend[o.currency] ?? 0) + Number(o.total || 0);
-      }
-      if (o.created_at > c.lastOrder) c.lastOrder = o.created_at;
-      if (o.created_at < c.firstOrder) c.firstOrder = o.created_at;
-    });
-
-    const totalCustomers = Object.keys(byCustomer).length;
-    const repeatCustomers = Object.values(byCustomer).filter((c) => c.orders > 1).length;
-    const repeatRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const newCustomers30d = Object.values(byCustomer).filter(
-      (c) => new Date(c.firstOrder) >= thirtyDaysAgo,
+    const list = customers ?? [];
+    const now = new Date();
+    const newThisMonth = list.filter(
+      (c: any) => c.created_at && new Date(c.created_at).getMonth() === now.getMonth()
     ).length;
-
-    const topCustomers = Object.entries(byCustomer)
-      .map(([id, c]) => ({
-        id,
-        name: profileById[id]?.full_name ?? "Unnamed customer",
-        ...c,
-      }))
-      .sort(
-        (a, b) =>
-          Object.values(b.spend).reduce((s, n) => s + n, 0) - Object.values(a.spend).reduce((s, n) => s + n, 0),
-      )
-      .slice(0, 10);
-
-    return { totalCustomers, repeatCustomers, repeatRate, newCustomers30d, topCustomers };
-  }, [data]);
-
-  if (!roleLoading && role !== "admin") return <Navigate to="/" replace />;
+    let repeat = 0;
+    let totalCustomers = 0;
+    let totalSpend = 0;
+    let currency = "GBP";
+    orderAgg?.forEach((agg) => {
+      totalCustomers += 1;
+      totalSpend += agg.spend;
+      currency = agg.currency;
+      if (agg.count > 1) repeat += 1;
+    });
+    return {
+      total: list.length,
+      newThisMonth,
+      repeat,
+      ltv: totalCustomers ? totalSpend / totalCustomers : 0,
+      currency,
+    };
+  }, [customers, orderAgg]);
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
-        <h1 className="font-display text-2xl sm:text-3xl font-semibold mb-2">Customer insights</h1>
-        <p className="text-muted-foreground mb-6">Based on every order placed on the platform.</p>
-
-        {isLoading || !stats ? (
-          <p className="text-muted-foreground">Loading…</p>
-        ) : stats.totalCustomers === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-            No customer orders yet.
-          </div>
-        ) : (
+    <AdminShell>
+      <PageHeader
+        title="Customers"
+        description="Every customer on Naija Eats, with wallet balance, order history and complaints."
+        actions={
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Users className="h-4 w-4" /> Customers with orders
-                </div>
-                <div className="mt-2 text-2xl font-display font-semibold">{stats.totalCustomers}</div>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Repeat className="h-4 w-4" /> Repeat rate
-                </div>
-                <div className="mt-2 text-2xl font-display font-semibold">{stats.repeatRate.toFixed(1)}%</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{stats.repeatCustomers} customers, 2+ orders</div>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <UserPlus className="h-4 w-4" /> New customers (30d)
-                </div>
-                <div className="mt-2 text-2xl font-display font-semibold">{stats.newCustomers30d}</div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <h2 className="font-display text-lg font-semibold p-5 pb-3">Top customers by spend</h2>
-              <div className="divide-y divide-border">
-                {stats.topCustomers.map((c, i) => (
-                  <div key={c.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-sm font-semibold">
-                        {i + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{c.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {c.orders} orders · last on {new Date(c.lastOrder).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold text-right shrink-0">
-                      {Object.entries(c.spend)
-                        .map(([cur, amt]) => `${cur} ${(amt as number).toLocaleString(undefined, { maximumFractionDigits: 0 })}`)
-                        .join(" · ") || "—"}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <button className={btn.secondary}>Segment</button>
+            <button className={btn.primary}>Message customers</button>
           </>
-        )}
-      </div>
-    </AppShell>
+        }
+      />
+      <PageBody>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KpiCard label="Total customers" value={stats.total} Icon={Users} accent="green" />
+          <KpiCard label="New this month" value={stats.newThisMonth} Icon={UserPlus} accent="orange" />
+          <KpiCard label="Repeat customers" value={stats.repeat} Icon={Star} accent="green" />
+          <KpiCard
+            label="Avg. customer LTV"
+            value={formatMoney(stats.ltv, stats.currency)}
+            Icon={TrendingUp}
+            accent="ink"
+          />
+        </div>
+
+        <div className="mt-6">
+          <Card>
+            <CardHeader
+              title="Customer directory"
+              description="Search, segment, and manage individual customer records"
+            />
+            <div className="p-4">
+              <FilterBar
+                onSearch={setSearch}
+                filters={[{ label: "City" }, { label: "Country" }, { label: "Segment" }]}
+              />
+
+              {isLoading ? (
+                <div className="p-6 text-sm text-muted-foreground">Loading customers…</div>
+              ) : filtered.length === 0 ? (
+                <EmptyState
+                  title="No customers yet"
+                  description="When people sign up and place their first order they'll show up here."
+                />
+              ) : (
+                <TableWrap>
+                  <Thead>
+                    <tr>
+                      <Th>Customer</Th>
+                      <Th>Contact</Th>
+                      <Th>Orders</Th>
+                      <Th>Spend</Th>
+                      <Th>Last order</Th>
+                      <Th>Status</Th>
+                      <Th className="text-right">Actions</Th>
+                    </tr>
+                  </Thead>
+                  <tbody>
+                    {filtered.map((c: any) => {
+                      const agg = orderAgg?.get(c.id);
+                      return (
+                        <Tr key={c.id}>
+                          <Td className="font-medium">{c.full_name || "Unnamed customer"}</Td>
+                          <Td className="text-muted-foreground">
+                            <div>{c.email}</div>
+                            {c.phone && <div className="text-xs">{c.phone}</div>}
+                          </Td>
+                          <Td>{agg?.count ?? 0}</Td>
+                          <Td>{formatMoney(agg?.spend ?? 0, agg?.currency || "GBP")}</Td>
+                          <Td className="text-muted-foreground">
+                            {agg?.last ? new Date(agg.last).toLocaleDateString() : "—"}
+                          </Td>
+                          <Td>
+                            <StatusBadge status={agg && agg.count > 0 ? "active" : "inactive"} />
+                          </Td>
+                          <Td className="text-right">
+                            <button className="rounded-md p-1.5 hover:bg-muted">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </button>
+                          </Td>
+                        </Tr>
+                      );
+                    })}
+                  </tbody>
+                </TableWrap>
+              )}
+            </div>
+          </Card>
+        </div>
+      </PageBody>
+    </AdminShell>
   );
 }
