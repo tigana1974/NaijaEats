@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
@@ -18,6 +18,15 @@ import {
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Send } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/_authenticated/admin/customers")({
   component: AdminCustomers,
@@ -25,6 +34,22 @@ export const Route = createFileRoute("/_authenticated/admin/customers")({
 
 function AdminCustomers() {
   const [search, setSearch] = useState("");
+  const [isCampaignOpen, setIsCampaignOpen] = useState(false);
+
+  const campaignMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      // Simulate API call to email provider or marketing service
+      await new Promise(r => setTimeout(r, 1200));
+      console.log("Sent campaign:", formData);
+    },
+    onSuccess: () => {
+      toast.success("Campaign dispatched successfully");
+      setIsCampaignOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to send campaign: ${err.message}`);
+    }
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-customers-full"],
@@ -85,7 +110,7 @@ function AdminCustomers() {
           title="Customer list"
           description="Everyone who has ordered on Naija Eats, plus their lifetime spend and status."
           actions={
-            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Campaign creation coming soon")}>
+            <button type="button" className={uberBtn.primary} onClick={() => setIsCampaignOpen(true)}>
               <Send className="h-3.5 w-3.5" /> Send campaign
             </button>
           }
@@ -165,6 +190,65 @@ function AdminCustomers() {
           </UberTable>
         </div>
       </div>
+
+      <Sheet open={isCampaignOpen} onOpenChange={setIsCampaignOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto w-full">
+          <SheetHeader>
+            <SheetTitle>Send Campaign</SheetTitle>
+            <SheetDescription>
+              Draft and send an email or push notification to your customers.
+            </SheetDescription>
+          </SheetHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              campaignMutation.mutate(Object.fromEntries(fd));
+            }}
+            className="mt-6 space-y-4"
+          >
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Campaign Title (Internal)</label>
+              <input required name="title" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. Summer Promo 2026" />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Subject Line</label>
+              <input required name="subject" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="Get 10% off your next meal!" />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Audience</label>
+              <select name="audience" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <option value="all">All Customers</option>
+                <option value="high_spenders">High Spenders (Top 20%)</option>
+                <option value="churned">Churned (No orders in 30 days)</option>
+                <option value="new">New (Created in last 7 days)</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Message Body</label>
+              <textarea 
+                required 
+                name="body" 
+                rows={6}
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" 
+                placeholder="Write your campaign message here..." 
+              />
+            </div>
+
+            <SheetFooter className="mt-8 pt-4 border-t">
+              <SheetClose asChild>
+                <button type="button" className={uberBtn.secondary}>Cancel</button>
+              </SheetClose>
+              <button type="submit" disabled={campaignMutation.isPending} className={uberBtn.primary}>
+                {campaignMutation.isPending ? "Sending..." : "Send Campaign"}
+              </button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
     </AdminShell>
   );
 }

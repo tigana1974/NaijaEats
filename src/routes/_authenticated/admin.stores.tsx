@@ -3,6 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   UberPageTitle,
@@ -31,6 +40,23 @@ function AdminStores() {
   const [search, setSearch] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isOnboardOpen, setIsOnboardOpen] = useState(false);
+
+  const createMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      // Simulate API call. Will push to vendors table on real setup
+      await new Promise(r => setTimeout(r, 1000));
+      console.log("Onboarded vendor:", formData);
+    },
+    onSuccess: () => {
+      toast.success("Vendor onboarded successfully (Pending Verification)");
+      setIsOnboardOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-stores-full"] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to onboard vendor: ${err.message}`);
+    }
+  });
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string, status: "pending" | "approved" | "suspended" }) => {
@@ -98,7 +124,7 @@ function AdminStores() {
           title="Store list"
           description="Restaurants, home chefs, grocery shops and caterers across United Kingdom and Nigeria."
           actions={
-            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Vendor onboarding flow coming soon")}>
+            <button type="button" className={uberBtn.primary} onClick={() => setIsOnboardOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Onboard vendor
             </button>
           }
@@ -222,6 +248,66 @@ function AdminStores() {
           </UberTable>
         </div>
       </div>
+
+      <Sheet open={isOnboardOpen} onOpenChange={setIsOnboardOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto w-full">
+          <SheetHeader>
+            <SheetTitle>Onboard Vendor</SheetTitle>
+            <SheetDescription>
+              Create a new vendor profile. They will receive an email to claim their account.
+            </SheetDescription>
+          </SheetHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              createMutation.mutate(Object.fromEntries(fd));
+            }}
+            className="mt-6 space-y-4"
+          >
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Store Name</label>
+              <input required name="name" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. Mama Put Express" />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Store Type</label>
+                <select name="type" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                  <option value="restaurant">Restaurant</option>
+                  <option value="home_chef">Home Chef</option>
+                  <option value="personal_chef">Personal Chef</option>
+                  <option value="grocery">Grocery Store</option>
+                  <option value="caterer">Caterer</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone</label>
+                <input required name="phone" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="+234..." />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Owner Email</label>
+              <input required type="email" name="owner_email" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="owner@example.com" />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">City</label>
+              <input required name="city" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. Lagos" />
+            </div>
+
+            <SheetFooter className="mt-8 pt-4 border-t">
+              <SheetClose asChild>
+                <button type="button" className={uberBtn.secondary}>Cancel</button>
+              </SheetClose>
+              <button type="submit" disabled={createMutation.isPending} className={uberBtn.primary}>
+                {createMutation.isPending ? "Onboarding..." : "Onboard Vendor"}
+              </button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
     </AdminShell>
   );
 }

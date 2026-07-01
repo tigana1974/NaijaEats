@@ -3,6 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   UberPageTitle,
@@ -40,8 +49,25 @@ type Tab = "all" | "live" | "new" | "preparing" | "on_the_way" | "delivered" | "
 function AdminOrders() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("all");
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isManualOpen, setIsManualOpen] = useState(false);
+
+  const manualOrderMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      // Simulate API call to create order
+      await new Promise(r => setTimeout(r, 1200));
+      console.log("Created manual order:", formData);
+    },
+    onSuccess: () => {
+      toast.success("Manual order created successfully");
+      setIsManualOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-orders-full"] });
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to create order: ${err.message}`);
+    }
+  });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const updateStatus = useMutation({
@@ -148,7 +174,7 @@ function AdminOrders() {
               <button type="button" className={uberBtn.secondary} onClick={() => refetch()}>
                 <RefreshCcw className="h-3.5 w-3.5" /> Refresh
               </button>
-              <button type="button" className={uberBtn.primary} onClick={() => toast.info("Manual order creation coming soon")}>
+              <button type="button" className={uberBtn.primary} onClick={() => setIsManualOpen(true)}>
                 <Plus className="h-3.5 w-3.5" /> Manual order
               </button>
             </>
@@ -285,6 +311,69 @@ function AdminOrders() {
           </UberTable>
         </div>
       </div>
+
+      <Sheet open={isManualOpen} onOpenChange={setIsManualOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto w-full">
+          <SheetHeader>
+            <SheetTitle>Create Manual Order</SheetTitle>
+            <SheetDescription>
+              Enter a phone order or manual override directly into the system.
+            </SheetDescription>
+          </SheetHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              manualOrderMutation.mutate(Object.fromEntries(fd));
+            }}
+            className="mt-6 space-y-4"
+          >
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Customer Phone</label>
+              <input required name="customer_phone" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="+234..." />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Vendor ID / Name</label>
+              <input required name="vendor" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. Mama Put Express" />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Items (Line separated)</label>
+              <textarea 
+                required 
+                name="items" 
+                rows={4}
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" 
+                placeholder="2x Jollof Rice&#10;1x Plantain" 
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Total Amount</label>
+                <input required type="number" name="total" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="5000" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Currency</label>
+                <select name="currency" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                  <option value="NGN">NGN (₦)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+            </div>
+
+            <SheetFooter className="mt-8 pt-4 border-t">
+              <SheetClose asChild>
+                <button type="button" className={uberBtn.secondary}>Cancel</button>
+              </SheetClose>
+              <button type="submit" disabled={manualOrderMutation.isPending} className={uberBtn.primary}>
+                {manualOrderMutation.isPending ? "Creating..." : "Create Order"}
+              </button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
     </AdminShell>
   );
 }

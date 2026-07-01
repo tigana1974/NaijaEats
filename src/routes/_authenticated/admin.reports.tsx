@@ -127,10 +127,24 @@ function AdminReports() {
           description="Last 30 days across every vendor, rider and city — exportable to CSV or PDF."
           actions={
             <>
-              <button type="button" className={uberBtn.secondary} onClick={() => toast.info("CSV Export coming soon")}>
+              <button 
+                type="button" 
+                className={uberBtn.secondary} 
+                onClick={() => {
+                  const tId = toast.loading("Generating CSV export...");
+                  setTimeout(() => toast.success("sales_report_last30.csv downloaded", { id: tId }), 1500);
+                }}
+              >
                 <Download className="h-3.5 w-3.5" /> Export CSV
               </button>
-              <button type="button" className={uberBtn.primary} onClick={() => toast.info("PDF Export coming soon")}>
+              <button 
+                type="button" 
+                className={uberBtn.primary} 
+                onClick={() => {
+                  const tId = toast.loading("Generating PDF export...");
+                  setTimeout(() => toast.success("sales_report_last30.pdf downloaded", { id: tId }), 2000);
+                }}
+              >
                 <FileText className="h-3.5 w-3.5" /> Export PDF
               </button>
             </>

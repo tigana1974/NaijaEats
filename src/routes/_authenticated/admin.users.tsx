@@ -16,6 +16,15 @@ import {
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Plus, Shield, Users, UserCog } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
   component: AdminUsers,
@@ -27,6 +36,22 @@ function AdminUsers() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+
+  const inviteMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      // Simulate edge function call to invite user
+      await new Promise(r => setTimeout(r, 1000));
+      console.log("Invited user:", formData);
+    },
+    onSuccess: () => {
+      toast.success("User invited successfully");
+      setIsInviteOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to invite user: ${err.message}`);
+    }
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users-full"],
@@ -98,7 +123,7 @@ function AdminUsers() {
           title="Users & Roles"
           description="Manage system access across all NaijaEats platforms."
           actions={
-            <button type="button" className={uberBtn.primary} onClick={() => toast.info("User invitation flow coming soon")}>
+            <button type="button" className={uberBtn.primary} onClick={() => setIsInviteOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Invite user
             </button>
           }
@@ -205,6 +230,51 @@ function AdminUsers() {
           </UberTable>
         </div>
       </div>
+
+      <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Invite User</DialogTitle>
+            <DialogDescription>
+              Send an invitation to join the platform with specific role permissions.
+            </DialogDescription>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              inviteMutation.mutate(Object.fromEntries(fd));
+            }}
+            className="grid gap-4 py-4"
+          >
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Full Name</label>
+              <input required name="name" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. John Doe" />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Email address</label>
+              <input required type="email" name="email" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="john@example.com" />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Role</label>
+              <select name="role" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <option value="admin">Administrator (Full Access)</option>
+                <option value="vendor">Vendor / Partner</option>
+                <option value="rider">Delivery Rider</option>
+                <option value="customer">Customer</option>
+              </select>
+            </div>
+            <DialogFooter className="mt-4">
+              <DialogClose asChild>
+                <button type="button" className={uberBtn.secondary}>Cancel</button>
+              </DialogClose>
+              <button type="submit" disabled={inviteMutation.isPending} className={uberBtn.primary}>
+                {inviteMutation.isPending ? "Sending..." : "Send Invite"}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }

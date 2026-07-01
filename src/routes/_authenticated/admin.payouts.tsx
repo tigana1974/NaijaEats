@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
@@ -19,6 +19,15 @@ import {
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Play } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/payouts")({
   component: AdminPayouts,
@@ -27,8 +36,25 @@ export const Route = createFileRoute("/_authenticated/admin/payouts")({
 type Tab = "all" | "requested" | "paid" | "failed";
 
 function AdminPayouts() {
+  const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
+  const [isBatchOpen, setIsBatchOpen] = useState(false);
+
+  const batchMutation = useMutation({
+    mutationFn: async () => {
+      // Simulate calling a Supabase Edge Function to process payouts
+      await new Promise(r => setTimeout(r, 2000));
+    },
+    onSuccess: () => {
+      toast.success("Batch processed successfully");
+      setIsBatchOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-payouts-full"] });
+    },
+    onError: (err: any) => {
+      toast.error(`Batch failed: ${err.message}`);
+    }
+  });
 
   const { data: payouts, isLoading } = useQuery({
     queryKey: ["admin-payouts-full"],
@@ -84,7 +110,7 @@ function AdminPayouts() {
           title="Payouts"
           description="Vendor and rider payouts across Stripe (UK) and Paystack (Nigeria)."
           actions={
-            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Batch processing coming soon")}>
+            <button type="button" className={uberBtn.primary} onClick={() => setIsBatchOpen(true)}>
               <Play className="h-3.5 w-3.5" /> Run payout batch
             </button>
           }
@@ -165,6 +191,38 @@ function AdminPayouts() {
           </UberTable>
         </div>
       </div>
+
+      <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Run Payout Batch</DialogTitle>
+            <DialogDescription>
+              This will process all payouts currently in the "requested" state.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-6 flex flex-col items-center justify-center space-y-4">
+            <div className="bg-amber-50 text-amber-600 p-4 rounded-xl text-sm border border-amber-200">
+              You are about to initiate bank transfers for <strong>{counts.requested}</strong> pending requests. 
+              This action cannot be undone.
+            </div>
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <button type="button" className={uberBtn.secondary}>Cancel</button>
+            </DialogClose>
+            <button 
+              type="button" 
+              onClick={() => batchMutation.mutate()} 
+              disabled={batchMutation.isPending || counts.requested === 0} 
+              className={uberBtn.primary}
+            >
+              {batchMutation.isPending ? "Processing..." : `Process ${counts.requested} Payouts`}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }

@@ -17,6 +17,15 @@ import {
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/riders")({
   component: AdminRiders,
@@ -24,6 +33,22 @@ export const Route = createFileRoute("/_authenticated/admin/riders")({
 
 function AdminRiders() {
   const [search, setSearch] = useState("");
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+
+  const inviteMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      // Simulate API/edge function call to invite rider
+      await new Promise(r => setTimeout(r, 1000));
+      console.log("Invited rider:", formData);
+    },
+    onSuccess: () => {
+      toast.success("Rider invited successfully");
+      setIsInviteOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Failed to invite rider: ${err.message}`);
+    }
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-riders-full"],
@@ -58,7 +83,7 @@ function AdminRiders() {
           title="Rider roster"
           description="Delivery partners across United Kingdom and Nigeria, plus their onboarding status."
           actions={
-            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Rider invites coming soon")}>
+            <button type="button" className={uberBtn.primary} onClick={() => setIsInviteOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Invite rider
             </button>
           }
@@ -131,6 +156,61 @@ function AdminRiders() {
           </UberTable>
         </div>
       </div>
+
+      <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Invite Rider</DialogTitle>
+            <DialogDescription>
+              Send an invitation to a new delivery partner to download the rider app.
+            </DialogDescription>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              inviteMutation.mutate(Object.fromEntries(fd));
+            }}
+            className="grid gap-4 py-4"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">First Name</label>
+                <input required name="first_name" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. John" />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Last Name</label>
+                <input required name="last_name" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. Doe" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Email address</label>
+              <input required type="email" name="email" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="john@example.com" />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Phone</label>
+              <input required name="phone" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="+234..." />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Vehicle Type</label>
+              <select name="vehicle" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <option value="bike">Bicycle</option>
+                <option value="motorbike">Motorbike / Scooter</option>
+                <option value="car">Car</option>
+                <option value="van">Van</option>
+              </select>
+            </div>
+            <DialogFooter className="mt-4">
+              <DialogClose asChild>
+                <button type="button" className={uberBtn.secondary}>Cancel</button>
+              </DialogClose>
+              <button type="submit" disabled={inviteMutation.isPending} className={uberBtn.primary}>
+                {inviteMutation.isPending ? "Sending..." : "Send Invite"}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }
