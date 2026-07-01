@@ -332,8 +332,10 @@ function RegionSelector({
         onClick={onToggle}
         className="flex w-full items-center justify-between rounded-lg border border-[oklch(0.92_0.003_260)] bg-white px-3 py-2 text-left text-sm hover:border-[oklch(0.86_0.003_260)]"
       >
-        <span className="flex items-center gap-2 min-w-0">
-          <span className="text-base leading-none">{activeRegion.flag}</span>
+        <span className="flex items-center gap-2.5 min-w-0">
+          <div className="h-[18px] w-[18px] rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)]">
+            <span className="text-xl leading-none" style={{ transform: 'scale(1.3)' }}>{activeRegion.flag}</span>
+          </div>
           <span className="truncate font-medium">{activeRegion.label}</span>
         </span>
         <ChevronDown className={`h-4 w-4 text-neutral-500 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -349,8 +351,10 @@ function RegionSelector({
                 onClick={() => onSelect(r.id)}
                 className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-[oklch(0.965_0.003_260)] ${active ? "bg-[oklch(0.965_0.003_260)]" : ""}`}
               >
-                <span className="flex items-center gap-2">
-                  <span className="text-base leading-none">{r.flag}</span>
+                <span className="flex items-center gap-2.5">
+                  <div className="h-[18px] w-[18px] rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)]">
+                    <span className="text-xl leading-none" style={{ transform: 'scale(1.3)' }}>{r.flag}</span>
+                  </div>
                   <span>{r.label}</span>
                 </span>
                 {active && <Check className="h-4 w-4 text-[var(--naija-green)]" />}
