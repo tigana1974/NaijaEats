@@ -172,11 +172,11 @@ function AdminStores() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading stores…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading stores…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No stores match the current filter.</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No stores match the current filter.</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((v: any) => (

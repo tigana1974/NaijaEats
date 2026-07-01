@@ -123,11 +123,11 @@ function AdminDocuments() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading documents…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading documents…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No documents found.</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No documents found.</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((d) => (

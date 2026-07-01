@@ -157,11 +157,11 @@ function AdminPayouts() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading payouts…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading payouts…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No payouts match the current filter.</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No payouts match the current filter.</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((p: any) => (

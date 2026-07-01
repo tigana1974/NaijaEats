@@ -226,11 +226,11 @@ function AdminOrders() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500" >Loading orders…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500" >Loading orders…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">
                     No orders match the current filter.
                   </UberTd>
                 </UberTr>

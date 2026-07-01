@@ -111,11 +111,11 @@ function AdminMenu() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading menu items…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading menu items…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No items found.</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No items found.</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((item) => (

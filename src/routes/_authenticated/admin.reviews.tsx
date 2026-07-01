@@ -115,11 +115,11 @@ function AdminReviews() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading reviews…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading reviews…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No reviews found (or table not created yet).</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No reviews found (or table not created yet).</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((r: any) => (

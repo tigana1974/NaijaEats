@@ -140,11 +140,11 @@ function AdminOffers() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading promotions…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading promotions…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No promotions found (or table not created yet).</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No promotions found (or table not created yet).</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((p: any) => (

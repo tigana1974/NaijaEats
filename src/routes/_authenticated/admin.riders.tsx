@@ -116,11 +116,11 @@ function AdminRiders() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading riders…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading riders…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No riders yet.</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No riders yet.</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((r: any) => (

@@ -112,11 +112,11 @@ function AdminBanking() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading bank accounts…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading bank accounts…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No bank accounts found (or table not created yet).</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No bank accounts found (or table not created yet).</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((b: any) => (

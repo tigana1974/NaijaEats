@@ -146,11 +146,11 @@ function AdminCustomers() {
             <tbody>
               {isLoading ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">Loading customers…</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading customers…</UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>
-                  <UberTd className="py-8 text-center text-neutral-500">No customers match the current filter.</UberTd>
+                  <UberTd colSpan={10} className="py-8 text-center text-neutral-500">No customers match the current filter.</UberTd>
                 </UberTr>
               ) : (
                 filtered.map((c: any) => (
