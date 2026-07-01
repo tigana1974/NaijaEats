@@ -98,7 +98,7 @@ function AdminUsers() {
           title="Users & Roles"
           description="Manage system access across all NaijaEats platforms."
           actions={
-            <button type="button" className={uberBtn.primary}>
+            <button type="button" className={uberBtn.primary} onClick={() => toast.info("User invitation flow coming soon")}>
               <Plus className="h-3.5 w-3.5" /> Invite user
             </button>
           }

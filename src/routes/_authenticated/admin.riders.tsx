@@ -16,6 +16,7 @@ import {
   uberBtn,
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/riders")({
   component: AdminRiders,
@@ -57,7 +58,7 @@ function AdminRiders() {
           title="Rider roster"
           description="Delivery partners across United Kingdom and Nigeria, plus their onboarding status."
           actions={
-            <button type="button" className={uberBtn.primary}>
+            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Rider invites coming soon")}>
               <Plus className="h-3.5 w-3.5" /> Invite rider
             </button>
           }

@@ -25,6 +25,7 @@ import {
   Legend,
 } from "recharts";
 import { Download, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/reports")({
   component: AdminReports,
@@ -126,10 +127,10 @@ function AdminReports() {
           description="Last 30 days across every vendor, rider and city — exportable to CSV or PDF."
           actions={
             <>
-              <button type="button" className={uberBtn.secondary}>
+              <button type="button" className={uberBtn.secondary} onClick={() => toast.info("CSV Export coming soon")}>
                 <Download className="h-3.5 w-3.5" /> Export CSV
               </button>
-              <button type="button" className={uberBtn.primary}>
+              <button type="button" className={uberBtn.primary} onClick={() => toast.info("PDF Export coming soon")}>
                 <FileText className="h-3.5 w-3.5" /> Export PDF
               </button>
             </>

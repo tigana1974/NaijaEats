@@ -148,7 +148,7 @@ function AdminOrders() {
               <button type="button" className={uberBtn.secondary} onClick={() => refetch()}>
                 <RefreshCcw className="h-3.5 w-3.5" /> Refresh
               </button>
-              <button type="button" className={uberBtn.primary}>
+              <button type="button" className={uberBtn.primary} onClick={() => toast.info("Manual order creation coming soon")}>
                 <Plus className="h-3.5 w-3.5" /> Manual order
               </button>
             </>

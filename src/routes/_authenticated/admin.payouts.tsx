@@ -18,6 +18,7 @@ import {
   formatMoney,
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Play } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/payouts")({
   component: AdminPayouts,
@@ -83,7 +84,7 @@ function AdminPayouts() {
           title="Payouts"
           description="Vendor and rider payouts across Stripe (UK) and Paystack (Nigeria)."
           actions={
-            <button type="button" className={uberBtn.primary}>
+            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Batch processing coming soon")}>
               <Play className="h-3.5 w-3.5" /> Run payout batch
             </button>
           }

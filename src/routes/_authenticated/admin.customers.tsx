@@ -17,6 +17,7 @@ import {
   formatMoney,
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Send } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/customers")({
   component: AdminCustomers,
@@ -84,7 +85,7 @@ function AdminCustomers() {
           title="Customer list"
           description="Everyone who has ordered on Naija Eats, plus their lifetime spend and status."
           actions={
-            <button type="button" className={uberBtn.primary}>
+            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Campaign creation coming soon")}>
               <Send className="h-3.5 w-3.5" /> Send campaign
             </button>
           }

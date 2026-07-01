@@ -98,7 +98,7 @@ function AdminStores() {
           title="Store list"
           description="Restaurants, home chefs, grocery shops and caterers across United Kingdom and Nigeria."
           actions={
-            <button type="button" className={uberBtn.primary}>
+            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Vendor onboarding flow coming soon")}>
               <Plus className="h-3.5 w-3.5" /> Onboard vendor
             </button>
           }

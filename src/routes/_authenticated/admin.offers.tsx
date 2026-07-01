@@ -80,7 +80,7 @@ function AdminOffers() {
           title="Promotions & Offers"
           description="Manage discount codes, platform-wide campaigns, and user retention offers."
           actions={
-            <button type="button" className={uberBtn.primary}>
+            <button type="button" className={uberBtn.primary} onClick={() => toast.info("Offer creation is coming in a future update")}>
               <Plus className="h-3.5 w-3.5" /> Create Offer
             </button>
           }
