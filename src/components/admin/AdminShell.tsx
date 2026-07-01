@@ -63,8 +63,7 @@ const NAV: NavItem[] = [
       { to: "/admin/performance", label: "Performance" },
       { to: "/admin/sales", label: "Sales" },
       { to: "/admin/operations", label: "Operations" },
-      { to: "/admin/success", label: "Success" },
-      { to: "/admin/benchmarking", label: "Market benchmarking" },
+      { to: "/admin/success", label: "Success & Benchmarking" },
     ],
   },
   {

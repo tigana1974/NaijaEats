@@ -78,7 +78,6 @@ import { Route as AuthenticatedAdminDeliveryRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
 import { Route as AuthenticatedAdminCustomerInsightsRouteImport } from './routes/_authenticated/admin.customer-insights'
-import { Route as AuthenticatedAdminBenchmarkingRouteImport } from './routes/_authenticated/admin.benchmarking'
 import { Route as AuthenticatedAdminBankingRouteImport } from './routes/_authenticated/admin.banking'
 import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
 import { Route as VendorSlugItemItemIdRouteImport } from './routes/vendor.$slug.item.$itemId'
@@ -472,12 +471,6 @@ const AuthenticatedAdminCustomerInsightsRoute =
     path: '/admin/customer-insights',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminBenchmarkingRoute =
-  AuthenticatedAdminBenchmarkingRouteImport.update({
-    id: '/admin/benchmarking',
-    path: '/admin/benchmarking',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAdminBankingRoute =
   AuthenticatedAdminBankingRouteImport.update({
     id: '/admin/banking',
@@ -523,7 +516,6 @@ export interface FileRoutesByFullPath {
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
-  '/admin/benchmarking': typeof AuthenticatedAdminBenchmarkingRoute
   '/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -598,7 +590,6 @@ export interface FileRoutesByTo {
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
-  '/admin/benchmarking': typeof AuthenticatedAdminBenchmarkingRoute
   '/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -675,7 +666,6 @@ export interface FileRoutesById {
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/_authenticated/admin/banking': typeof AuthenticatedAdminBankingRoute
-  '/_authenticated/admin/benchmarking': typeof AuthenticatedAdminBenchmarkingRoute
   '/_authenticated/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
   '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
@@ -752,7 +742,6 @@ export interface FileRouteTypes {
     | '/vendor/$slug'
     | '/admin/ads'
     | '/admin/banking'
-    | '/admin/benchmarking'
     | '/admin/customer-insights'
     | '/admin/customers'
     | '/admin/dashboard'
@@ -827,7 +816,6 @@ export interface FileRouteTypes {
     | '/vendor/$slug'
     | '/admin/ads'
     | '/admin/banking'
-    | '/admin/benchmarking'
     | '/admin/customer-insights'
     | '/admin/customers'
     | '/admin/dashboard'
@@ -903,7 +891,6 @@ export interface FileRouteTypes {
     | '/vendor/$slug'
     | '/_authenticated/admin/ads'
     | '/_authenticated/admin/banking'
-    | '/_authenticated/admin/benchmarking'
     | '/_authenticated/admin/customer-insights'
     | '/_authenticated/admin/customers'
     | '/_authenticated/admin/dashboard'
@@ -1452,13 +1439,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCustomerInsightsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/benchmarking': {
-      id: '/_authenticated/admin/benchmarking'
-      path: '/admin/benchmarking'
-      fullPath: '/admin/benchmarking'
-      preLoaderRoute: typeof AuthenticatedAdminBenchmarkingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin/banking': {
       id: '/_authenticated/admin/banking'
       path: '/admin/banking'
@@ -1549,7 +1529,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRouteWithChildren
   AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminBankingRoute: typeof AuthenticatedAdminBankingRoute
-  AuthenticatedAdminBenchmarkingRoute: typeof AuthenticatedAdminBenchmarkingRoute
   AuthenticatedAdminCustomerInsightsRoute: typeof AuthenticatedAdminCustomerInsightsRoute
   AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
@@ -1613,7 +1592,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWalletRoute: AuthenticatedWalletRouteWithChildren,
   AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminBankingRoute: AuthenticatedAdminBankingRoute,
-  AuthenticatedAdminBenchmarkingRoute: AuthenticatedAdminBenchmarkingRoute,
   AuthenticatedAdminCustomerInsightsRoute:
     AuthenticatedAdminCustomerInsightsRoute,
   AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
