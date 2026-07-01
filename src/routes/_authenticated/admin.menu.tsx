@@ -17,7 +17,7 @@ import {
   formatMoney,
 } from "@/components/admin/AdminUI";
 import { UtensilsCrossed, ShoppingBasket, PackageOpen, AlertTriangle, EyeOff, Eye } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/menu")({
   component: AdminMenu,

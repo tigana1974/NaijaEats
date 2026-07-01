@@ -15,7 +15,7 @@ import {
   UberStatus,
 } from "@/components/admin/AdminUI";
 import { Building2, ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Landmark } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/banking")({
   component: AdminBanking,

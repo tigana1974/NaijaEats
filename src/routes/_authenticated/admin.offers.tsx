@@ -16,7 +16,7 @@ import {
   uberBtn,
 } from "@/components/admin/AdminUI";
 import { Tag, Plus, CheckCircle2, XCircle, Percent, Gift } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/offers")({
   component: AdminOffers,

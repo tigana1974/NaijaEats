@@ -16,7 +16,7 @@ import {
   uberBtn,
 } from "@/components/admin/AdminUI";
 import { FileCheck2, FileText, ShieldCheck, AlertTriangle, Eye, CheckCircle2, XCircle } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/documents")({
   component: AdminDocuments,

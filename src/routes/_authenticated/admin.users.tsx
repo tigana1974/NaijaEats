@@ -15,7 +15,7 @@ import {
   uberBtn,
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Plus, Shield, Users, UserCog } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
   component: AdminUsers,
