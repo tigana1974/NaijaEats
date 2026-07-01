@@ -1,29 +1,220 @@
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { ScaffoldPage } from "@/components/admin/AdminUI";
-import { Shield, Users, UserCog, Key } from "lucide-react";
+import {
+  UberPageTitle,
+  UberKpi,
+  UberFilterBar,
+  UberTable,
+  UberThead,
+  UberTh,
+  UberTr,
+  UberTd,
+  uberBtn,
+} from "@/components/admin/AdminUI";
+import { MoreHorizontal, Plus, Shield, Users, UserCog } from "lucide-react";
+import toast from "react-hot-toast";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
   component: AdminUsers,
 });
 
+const AVAILABLE_ROLES = ["admin", "vendor", "rider", "customer"];
+
 function AdminUsers() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-users-full"],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const [profilesRes, rolesRes] = await Promise.all([
+        supabase.from("profiles").select("id,full_name,email,phone,avatar_url,created_at"),
+        supabase.from("user_roles").select("user_id,role"),
+      ]);
+      const profiles = profilesRes.data ?? [];
+      const roles = rolesRes.data ?? [];
+      
+      const rolesByUser = new Map<string, string[]>();
+      for (const r of roles) {
+        if (!rolesByUser.has(r.user_id)) rolesByUser.set(r.user_id, []);
+        rolesByUser.get(r.user_id)!.push(r.role);
+      }
+
+      return profiles.map(p => ({
+        ...p,
+        roles: rolesByUser.get(p.id) || ["customer"], // everyone is basically a customer implicitly
+      })).sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    },
+  });
+
+  const toggleRole = useMutation({
+    mutationFn: async ({ userId, role, isAdding }: { userId: string, role: string, isAdding: boolean }) => {
+      if (isAdding) {
+        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("user_roles").delete().match({ user_id: userId, role });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Roles updated");
+      queryClient.invalidateQueries({ queryKey: ["admin-users-full"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update role");
+    }
+  });
+
+  const list = data ?? [];
+
+  const filtered = useMemo(() => {
+    if (!search) return list;
+    const s = search.toLowerCase();
+    return list.filter((r) =>
+      [r.full_name, r.email, r.phone].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s)),
+    );
+  }, [list, search]);
+
+  const kpis = useMemo(() => {
+    return {
+      total: list.length,
+      admins: list.filter(u => u.roles.includes("admin")).length,
+      vendors: list.filter(u => u.roles.includes("vendor")).length,
+      riders: list.filter(u => u.roles.includes("rider")).length,
+    };
+  }, [list]);
+
   return (
     <AdminShell>
-      <ScaffoldPage
-        title="Users & roles"
-        description="Admins, vendor staff, riders and customers with role-based access."
-        kpis={[
-          { label: "Admin users", value: "—", Icon: Shield, accent: "green" },
-          { label: "Vendor staff", value: "—", Icon: Users, accent: "orange" },
-          { label: "Rider users", value: "—", Icon: UserCog, accent: "green" },
-          { label: "Custom roles", value: "—", Icon: Key, accent: "ink" }
-        ]}
-        sections={[
-          { title: "Roles", description: "", items: ["Super admin","Admin","Finance admin","Operations admin","Support admin","Vendor owner","Vendor manager","Vendor staff","Rider","Customer"] },
-          { title: "Access controls", description: "", items: ["Per-module permissions","Two-factor enforcement","Session expiry","Audit log","Impersonation with logging","SSO (planned)"] }
-        ]}
-      />
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
+        <UberPageTitle
+          eyebrow="Access"
+          title="Users & Roles"
+          description="Manage system access across all NaijaEats platforms."
+          actions={
+            <button type="button" className={uberBtn.primary}>
+              <Plus className="h-3.5 w-3.5" /> Invite user
+            </button>
+          }
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <UberKpi label="Total Users" value={isLoading ? "…" : kpis.total} hint="Registered accounts" />
+          <UberKpi label="Admins" value={isLoading ? "…" : kpis.admins} Icon={Shield} />
+          <UberKpi label="Vendors" value={isLoading ? "…" : kpis.vendors} Icon={Users} />
+          <UberKpi label="Riders" value={isLoading ? "…" : kpis.riders} Icon={UserCog} />
+        </div>
+
+        <div className="mt-8">
+          <UberFilterBar
+            search={search}
+            onSearch={setSearch}
+            filters={[{ label: "Role" }, { label: "Status" }]}
+            onExport={() => {}}
+          />
+
+          <UberTable>
+            <UberThead>
+              <tr>
+                <UberTh>User</UberTh>
+                <UberTh>Contact</UberTh>
+                <UberTh>Roles</UberTh>
+                <UberTh>Joined</UberTh>
+                <UberTh className="w-[1%]" />
+              </tr>
+            </UberThead>
+            <tbody>
+              {isLoading ? (
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">Loading users…</UberTd>
+                </UberTr>
+              ) : filtered.length === 0 ? (
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">No users found.</UberTd>
+                </UberTr>
+              ) : (
+                filtered.map((u) => (
+                  <UberTr key={u.id}>
+                    <UberTd>
+                      <div className="flex items-center gap-2.5">
+                        <div className="grid h-8 w-8 place-items-center rounded-full bg-neutral-100 text-neutral-600 text-xs font-medium">
+                          {initials(u.full_name || u.email)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-[oklch(0.18_0.006_260)]">{u.full_name || "Unnamed"}</div>
+                          <div className="font-mono text-[11px] text-neutral-500">#{String(u.id).slice(0, 8)}</div>
+                        </div>
+                      </div>
+                    </UberTd>
+                    <UberTd className="text-neutral-600">
+                      <div className="truncate">{u.email || "—"}</div>
+                      <div className="text-[12px] text-neutral-500">{u.phone || ""}</div>
+                    </UberTd>
+                    <UberTd>
+                      {editingUserId === u.id ? (
+                        <div className="flex flex-wrap gap-2">
+                          {AVAILABLE_ROLES.map(role => (
+                            <label key={role} className="flex items-center gap-1.5 text-xs font-medium">
+                              <input 
+                                type="checkbox" 
+                                checked={u.roles.includes(role)}
+                                disabled={role === "customer" || toggleRole.isPending}
+                                onChange={(e) => toggleRole.mutate({ userId: u.id, role, isAdding: e.target.checked })}
+                              />
+                              <span className="capitalize">{role}</span>
+                            </label>
+                          ))}
+                          <button 
+                            onClick={() => setEditingUserId(null)}
+                            className="ml-2 text-xs text-brand-core underline"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {u.roles.map(r => (
+                            <span key={r} className="inline-flex items-center rounded-sm bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </UberTd>
+                    <UberTd className="text-neutral-500">
+                      {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
+                    </UberTd>
+                    <UberTd>
+                      <button 
+                        onClick={() => setEditingUserId(u.id)}
+                        className="rounded-full p-1.5 hover:bg-[oklch(0.965_0.003_260)]"
+                      >
+                        <MoreHorizontal className="h-4 w-4 text-neutral-500" />
+                      </button>
+                    </UberTd>
+                  </UberTr>
+                ))
+              )}
+            </tbody>
+          </UberTable>
+        </div>
+      </div>
     </AdminShell>
   );
+}
+
+function initials(name?: string | null) {
+  if (!name) return "?";
+  return name
+    .split(/[\s@]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("");
 }

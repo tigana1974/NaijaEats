@@ -48,7 +48,6 @@ import { Route as AuthenticatedRiderAvailableRouteImport } from './routes/_authe
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedChatsVendorIdRouteImport } from './routes/_authenticated/chats.$vendorId'
 import { Route as AuthenticatedAdminWebshopRouteImport } from './routes/_authenticated/admin.webshop'
-import { Route as AuthenticatedAdminVendorsRouteImport } from './routes/_authenticated/admin.vendors'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminSuccessRouteImport } from './routes/_authenticated/admin.success'
 import { Route as AuthenticatedAdminStoresRouteImport } from './routes/_authenticated/admin.stores'
@@ -294,12 +293,6 @@ const AuthenticatedAdminWebshopRoute =
   AuthenticatedAdminWebshopRouteImport.update({
     id: '/admin/webshop',
     path: '/admin/webshop',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminVendorsRoute =
-  AuthenticatedAdminVendorsRouteImport.update({
-    id: '/admin/vendors',
-    path: '/admin/vendors',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
@@ -561,7 +554,6 @@ export interface FileRoutesByFullPath {
   '/admin/stores': typeof AuthenticatedAdminStoresRoute
   '/admin/success': typeof AuthenticatedAdminSuccessRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
-  '/admin/vendors': typeof AuthenticatedAdminVendorsRoute
   '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -637,7 +629,6 @@ export interface FileRoutesByTo {
   '/admin/stores': typeof AuthenticatedAdminStoresRoute
   '/admin/success': typeof AuthenticatedAdminSuccessRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
-  '/admin/vendors': typeof AuthenticatedAdminVendorsRoute
   '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -715,7 +706,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/stores': typeof AuthenticatedAdminStoresRoute
   '/_authenticated/admin/success': typeof AuthenticatedAdminSuccessRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
-  '/_authenticated/admin/vendors': typeof AuthenticatedAdminVendorsRoute
   '/_authenticated/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/_authenticated/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -793,7 +783,6 @@ export interface FileRouteTypes {
     | '/admin/stores'
     | '/admin/success'
     | '/admin/users'
-    | '/admin/vendors'
     | '/admin/webshop'
     | '/chats/$vendorId'
     | '/orders/$orderId'
@@ -869,7 +858,6 @@ export interface FileRouteTypes {
     | '/admin/stores'
     | '/admin/success'
     | '/admin/users'
-    | '/admin/vendors'
     | '/admin/webshop'
     | '/chats/$vendorId'
     | '/orders/$orderId'
@@ -946,7 +934,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/stores'
     | '/_authenticated/admin/success'
     | '/_authenticated/admin/users'
-    | '/_authenticated/admin/vendors'
     | '/_authenticated/admin/webshop'
     | '/_authenticated/chats/$vendorId'
     | '/_authenticated/orders/$orderId'
@@ -1253,13 +1240,6 @@ declare module '@tanstack/react-router' {
       path: '/admin/webshop'
       fullPath: '/admin/webshop'
       preLoaderRoute: typeof AuthenticatedAdminWebshopRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/vendors': {
-      id: '/_authenticated/admin/vendors'
-      path: '/admin/vendors'
-      fullPath: '/admin/vendors'
-      preLoaderRoute: typeof AuthenticatedAdminVendorsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/users': {
@@ -1600,7 +1580,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminStoresRoute: typeof AuthenticatedAdminStoresRoute
   AuthenticatedAdminSuccessRoute: typeof AuthenticatedAdminSuccessRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
-  AuthenticatedAdminVendorsRoute: typeof AuthenticatedAdminVendorsRoute
   AuthenticatedAdminWebshopRoute: typeof AuthenticatedAdminWebshopRoute
   AuthenticatedChatsVendorIdRoute: typeof AuthenticatedChatsVendorIdRoute
   AuthenticatedRiderAvailableRoute: typeof AuthenticatedRiderAvailableRoute
@@ -1667,7 +1646,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminStoresRoute: AuthenticatedAdminStoresRoute,
   AuthenticatedAdminSuccessRoute: AuthenticatedAdminSuccessRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
-  AuthenticatedAdminVendorsRoute: AuthenticatedAdminVendorsRoute,
   AuthenticatedAdminWebshopRoute: AuthenticatedAdminWebshopRoute,
   AuthenticatedChatsVendorIdRoute: AuthenticatedChatsVendorIdRoute,
   AuthenticatedRiderAvailableRoute: AuthenticatedRiderAvailableRoute,
