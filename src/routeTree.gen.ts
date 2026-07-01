@@ -47,13 +47,41 @@ import { Route as AuthenticatedRiderDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedRiderAvailableRouteImport } from './routes/_authenticated/rider.available'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedChatsVendorIdRouteImport } from './routes/_authenticated/chats.$vendorId'
+import { Route as AuthenticatedAdminWebshopRouteImport } from './routes/_authenticated/admin.webshop'
 import { Route as AuthenticatedAdminVendorsRouteImport } from './routes/_authenticated/admin.vendors'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAdminSuccessRouteImport } from './routes/_authenticated/admin.success'
+import { Route as AuthenticatedAdminStoresRouteImport } from './routes/_authenticated/admin.stores'
+import { Route as AuthenticatedAdminStoreGroupsRouteImport } from './routes/_authenticated/admin.store-groups'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminSalesRouteImport } from './routes/_authenticated/admin.sales'
 import { Route as AuthenticatedAdminRidersRouteImport } from './routes/_authenticated/admin.riders'
+import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
 import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
+import { Route as AuthenticatedAdminPrepTimesRouteImport } from './routes/_authenticated/admin.prep-times'
+import { Route as AuthenticatedAdminPerformanceRouteImport } from './routes/_authenticated/admin.performance'
+import { Route as AuthenticatedAdminPayoutsOrdersRouteImport } from './routes/_authenticated/admin.payouts-orders'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin.payouts'
+import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
+import { Route as AuthenticatedAdminOperationsRouteImport } from './routes/_authenticated/admin.operations'
+import { Route as AuthenticatedAdminOffersRouteImport } from './routes/_authenticated/admin.offers'
+import { Route as AuthenticatedAdminMenuRouteImport } from './routes/_authenticated/admin.menu'
+import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
+import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin.invoices'
+import { Route as AuthenticatedAdminInvoiceSettingsRouteImport } from './routes/_authenticated/admin.invoice-settings'
+import { Route as AuthenticatedAdminHolidayHoursRouteImport } from './routes/_authenticated/admin.holiday-hours'
+import { Route as AuthenticatedAdminGeneralRouteImport } from './routes/_authenticated/admin.general'
+import { Route as AuthenticatedAdminFinancingRouteImport } from './routes/_authenticated/admin.financing'
+import { Route as AuthenticatedAdminDocumentsRouteImport } from './routes/_authenticated/admin.documents'
+import { Route as AuthenticatedAdminDevicesRouteImport } from './routes/_authenticated/admin.devices'
+import { Route as AuthenticatedAdminDeliveryRouteImport } from './routes/_authenticated/admin.delivery'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
 import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
+import { Route as AuthenticatedAdminCustomerInsightsRouteImport } from './routes/_authenticated/admin.customer-insights'
+import { Route as AuthenticatedAdminBenchmarkingRouteImport } from './routes/_authenticated/admin.benchmarking'
+import { Route as AuthenticatedAdminBankingRouteImport } from './routes/_authenticated/admin.banking'
+import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
 import { Route as VendorSlugItemItemIdRouteImport } from './routes/vendor.$slug.item.$itemId'
 import { Route as AuthenticatedVendorMessagesConversationIdRouteImport } from './routes/_authenticated/vendor.messages.$conversationId'
 
@@ -262,16 +290,62 @@ const AuthenticatedChatsVendorIdRoute =
     path: '/chats/$vendorId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminWebshopRoute =
+  AuthenticatedAdminWebshopRouteImport.update({
+    id: '/admin/webshop',
+    path: '/admin/webshop',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminVendorsRoute =
   AuthenticatedAdminVendorsRouteImport.update({
     id: '/admin/vendors',
     path: '/admin/vendors',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminSuccessRoute =
+  AuthenticatedAdminSuccessRouteImport.update({
+    id: '/admin/success',
+    path: '/admin/success',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminStoresRoute =
+  AuthenticatedAdminStoresRouteImport.update({
+    id: '/admin/stores',
+    path: '/admin/stores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminStoreGroupsRoute =
+  AuthenticatedAdminStoreGroupsRouteImport.update({
+    id: '/admin/store-groups',
+    path: '/admin/store-groups',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/admin/settings',
+    path: '/admin/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSalesRoute = AuthenticatedAdminSalesRouteImport.update({
+  id: '/admin/sales',
+  path: '/admin/sales',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRidersRoute =
   AuthenticatedAdminRidersRouteImport.update({
     id: '/admin/riders',
     path: '/admin/riders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminReviewsRoute =
+  AuthenticatedAdminReviewsRouteImport.update({
+    id: '/admin/reviews',
+    path: '/admin/reviews',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminReportsRoute =
@@ -280,16 +354,111 @@ const AuthenticatedAdminReportsRoute =
     path: '/admin/reports',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPrepTimesRoute =
+  AuthenticatedAdminPrepTimesRouteImport.update({
+    id: '/admin/prep-times',
+    path: '/admin/prep-times',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPerformanceRoute =
+  AuthenticatedAdminPerformanceRouteImport.update({
+    id: '/admin/performance',
+    path: '/admin/performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPayoutsOrdersRoute =
+  AuthenticatedAdminPayoutsOrdersRouteImport.update({
+    id: '/admin/payouts-orders',
+    path: '/admin/payouts-orders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPayoutsRoute =
   AuthenticatedAdminPayoutsRouteImport.update({
     id: '/admin/payouts',
     path: '/admin/payouts',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPaymentsRoute =
+  AuthenticatedAdminPaymentsRouteImport.update({
+    id: '/admin/payments',
+    path: '/admin/payments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminOrdersRoute =
   AuthenticatedAdminOrdersRouteImport.update({
     id: '/admin/orders',
     path: '/admin/orders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminOperationsRoute =
+  AuthenticatedAdminOperationsRouteImport.update({
+    id: '/admin/operations',
+    path: '/admin/operations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminOffersRoute =
+  AuthenticatedAdminOffersRouteImport.update({
+    id: '/admin/offers',
+    path: '/admin/offers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminMenuRoute = AuthenticatedAdminMenuRouteImport.update({
+  id: '/admin/menu',
+  path: '/admin/menu',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminMarketingRoute =
+  AuthenticatedAdminMarketingRouteImport.update({
+    id: '/admin/marketing',
+    path: '/admin/marketing',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminInvoicesRoute =
+  AuthenticatedAdminInvoicesRouteImport.update({
+    id: '/admin/invoices',
+    path: '/admin/invoices',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminInvoiceSettingsRoute =
+  AuthenticatedAdminInvoiceSettingsRouteImport.update({
+    id: '/admin/invoice-settings',
+    path: '/admin/invoice-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminHolidayHoursRoute =
+  AuthenticatedAdminHolidayHoursRouteImport.update({
+    id: '/admin/holiday-hours',
+    path: '/admin/holiday-hours',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminGeneralRoute =
+  AuthenticatedAdminGeneralRouteImport.update({
+    id: '/admin/general',
+    path: '/admin/general',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminFinancingRoute =
+  AuthenticatedAdminFinancingRouteImport.update({
+    id: '/admin/financing',
+    path: '/admin/financing',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDocumentsRoute =
+  AuthenticatedAdminDocumentsRouteImport.update({
+    id: '/admin/documents',
+    path: '/admin/documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDevicesRoute =
+  AuthenticatedAdminDevicesRouteImport.update({
+    id: '/admin/devices',
+    path: '/admin/devices',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDeliveryRoute =
+  AuthenticatedAdminDeliveryRouteImport.update({
+    id: '/admin/delivery',
+    path: '/admin/delivery',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminDashboardRoute =
@@ -304,6 +473,29 @@ const AuthenticatedAdminCustomersRoute =
     path: '/admin/customers',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminCustomerInsightsRoute =
+  AuthenticatedAdminCustomerInsightsRouteImport.update({
+    id: '/admin/customer-insights',
+    path: '/admin/customer-insights',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminBenchmarkingRoute =
+  AuthenticatedAdminBenchmarkingRouteImport.update({
+    id: '/admin/benchmarking',
+    path: '/admin/benchmarking',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminBankingRoute =
+  AuthenticatedAdminBankingRouteImport.update({
+    id: '/admin/banking',
+    path: '/admin/banking',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAdsRoute = AuthenticatedAdminAdsRouteImport.update({
+  id: '/admin/ads',
+  path: '/admin/ads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const VendorSlugItemItemIdRoute = VendorSlugItemItemIdRouteImport.update({
   id: '/item/$itemId',
   path: '/item/$itemId',
@@ -336,13 +528,41 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
+  '/admin/ads': typeof AuthenticatedAdminAdsRoute
+  '/admin/banking': typeof AuthenticatedAdminBankingRoute
+  '/admin/benchmarking': typeof AuthenticatedAdminBenchmarkingRoute
+  '/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/delivery': typeof AuthenticatedAdminDeliveryRoute
+  '/admin/devices': typeof AuthenticatedAdminDevicesRoute
+  '/admin/documents': typeof AuthenticatedAdminDocumentsRoute
+  '/admin/financing': typeof AuthenticatedAdminFinancingRoute
+  '/admin/general': typeof AuthenticatedAdminGeneralRoute
+  '/admin/holiday-hours': typeof AuthenticatedAdminHolidayHoursRoute
+  '/admin/invoice-settings': typeof AuthenticatedAdminInvoiceSettingsRoute
+  '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/admin/menu': typeof AuthenticatedAdminMenuRoute
+  '/admin/offers': typeof AuthenticatedAdminOffersRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/payouts-orders': typeof AuthenticatedAdminPayoutsOrdersRoute
+  '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
+  '/admin/prep-times': typeof AuthenticatedAdminPrepTimesRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/riders': typeof AuthenticatedAdminRidersRoute
+  '/admin/sales': typeof AuthenticatedAdminSalesRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/store-groups': typeof AuthenticatedAdminStoreGroupsRoute
+  '/admin/stores': typeof AuthenticatedAdminStoresRoute
+  '/admin/success': typeof AuthenticatedAdminSuccessRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/vendors': typeof AuthenticatedAdminVendorsRoute
+  '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -384,13 +604,41 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
+  '/admin/ads': typeof AuthenticatedAdminAdsRoute
+  '/admin/banking': typeof AuthenticatedAdminBankingRoute
+  '/admin/benchmarking': typeof AuthenticatedAdminBenchmarkingRoute
+  '/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/delivery': typeof AuthenticatedAdminDeliveryRoute
+  '/admin/devices': typeof AuthenticatedAdminDevicesRoute
+  '/admin/documents': typeof AuthenticatedAdminDocumentsRoute
+  '/admin/financing': typeof AuthenticatedAdminFinancingRoute
+  '/admin/general': typeof AuthenticatedAdminGeneralRoute
+  '/admin/holiday-hours': typeof AuthenticatedAdminHolidayHoursRoute
+  '/admin/invoice-settings': typeof AuthenticatedAdminInvoiceSettingsRoute
+  '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/admin/menu': typeof AuthenticatedAdminMenuRoute
+  '/admin/offers': typeof AuthenticatedAdminOffersRoute
+  '/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/payouts-orders': typeof AuthenticatedAdminPayoutsOrdersRoute
+  '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
+  '/admin/prep-times': typeof AuthenticatedAdminPrepTimesRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/riders': typeof AuthenticatedAdminRidersRoute
+  '/admin/sales': typeof AuthenticatedAdminSalesRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/store-groups': typeof AuthenticatedAdminStoreGroupsRoute
+  '/admin/stores': typeof AuthenticatedAdminStoresRoute
+  '/admin/success': typeof AuthenticatedAdminSuccessRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/vendors': typeof AuthenticatedAdminVendorsRoute
+  '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -434,13 +682,41 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
+  '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
+  '/_authenticated/admin/banking': typeof AuthenticatedAdminBankingRoute
+  '/_authenticated/admin/benchmarking': typeof AuthenticatedAdminBenchmarkingRoute
+  '/_authenticated/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
   '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/admin/delivery': typeof AuthenticatedAdminDeliveryRoute
+  '/_authenticated/admin/devices': typeof AuthenticatedAdminDevicesRoute
+  '/_authenticated/admin/documents': typeof AuthenticatedAdminDocumentsRoute
+  '/_authenticated/admin/financing': typeof AuthenticatedAdminFinancingRoute
+  '/_authenticated/admin/general': typeof AuthenticatedAdminGeneralRoute
+  '/_authenticated/admin/holiday-hours': typeof AuthenticatedAdminHolidayHoursRoute
+  '/_authenticated/admin/invoice-settings': typeof AuthenticatedAdminInvoiceSettingsRoute
+  '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
+  '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/_authenticated/admin/menu': typeof AuthenticatedAdminMenuRoute
+  '/_authenticated/admin/offers': typeof AuthenticatedAdminOffersRoute
+  '/_authenticated/admin/operations': typeof AuthenticatedAdminOperationsRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/_authenticated/admin/payouts-orders': typeof AuthenticatedAdminPayoutsOrdersRoute
+  '/_authenticated/admin/performance': typeof AuthenticatedAdminPerformanceRoute
+  '/_authenticated/admin/prep-times': typeof AuthenticatedAdminPrepTimesRoute
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/admin/riders': typeof AuthenticatedAdminRidersRoute
+  '/_authenticated/admin/sales': typeof AuthenticatedAdminSalesRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/store-groups': typeof AuthenticatedAdminStoreGroupsRoute
+  '/_authenticated/admin/stores': typeof AuthenticatedAdminStoresRoute
+  '/_authenticated/admin/success': typeof AuthenticatedAdminSuccessRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/vendors': typeof AuthenticatedAdminVendorsRoute
+  '/_authenticated/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/_authenticated/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/_authenticated/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -484,13 +760,41 @@ export interface FileRouteTypes {
     | '/settings'
     | '/wallet'
     | '/vendor/$slug'
+    | '/admin/ads'
+    | '/admin/banking'
+    | '/admin/benchmarking'
+    | '/admin/customer-insights'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/delivery'
+    | '/admin/devices'
+    | '/admin/documents'
+    | '/admin/financing'
+    | '/admin/general'
+    | '/admin/holiday-hours'
+    | '/admin/invoice-settings'
+    | '/admin/invoices'
+    | '/admin/marketing'
+    | '/admin/menu'
+    | '/admin/offers'
+    | '/admin/operations'
     | '/admin/orders'
+    | '/admin/payments'
     | '/admin/payouts'
+    | '/admin/payouts-orders'
+    | '/admin/performance'
+    | '/admin/prep-times'
     | '/admin/reports'
+    | '/admin/reviews'
     | '/admin/riders'
+    | '/admin/sales'
+    | '/admin/settings'
+    | '/admin/store-groups'
+    | '/admin/stores'
+    | '/admin/success'
+    | '/admin/users'
     | '/admin/vendors'
+    | '/admin/webshop'
     | '/chats/$vendorId'
     | '/orders/$orderId'
     | '/rider/available'
@@ -532,13 +836,41 @@ export interface FileRouteTypes {
     | '/settings'
     | '/wallet'
     | '/vendor/$slug'
+    | '/admin/ads'
+    | '/admin/banking'
+    | '/admin/benchmarking'
+    | '/admin/customer-insights'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/delivery'
+    | '/admin/devices'
+    | '/admin/documents'
+    | '/admin/financing'
+    | '/admin/general'
+    | '/admin/holiday-hours'
+    | '/admin/invoice-settings'
+    | '/admin/invoices'
+    | '/admin/marketing'
+    | '/admin/menu'
+    | '/admin/offers'
+    | '/admin/operations'
     | '/admin/orders'
+    | '/admin/payments'
     | '/admin/payouts'
+    | '/admin/payouts-orders'
+    | '/admin/performance'
+    | '/admin/prep-times'
     | '/admin/reports'
+    | '/admin/reviews'
     | '/admin/riders'
+    | '/admin/sales'
+    | '/admin/settings'
+    | '/admin/store-groups'
+    | '/admin/stores'
+    | '/admin/success'
+    | '/admin/users'
     | '/admin/vendors'
+    | '/admin/webshop'
     | '/chats/$vendorId'
     | '/orders/$orderId'
     | '/rider/available'
@@ -581,13 +913,41 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/wallet'
     | '/vendor/$slug'
+    | '/_authenticated/admin/ads'
+    | '/_authenticated/admin/banking'
+    | '/_authenticated/admin/benchmarking'
+    | '/_authenticated/admin/customer-insights'
     | '/_authenticated/admin/customers'
     | '/_authenticated/admin/dashboard'
+    | '/_authenticated/admin/delivery'
+    | '/_authenticated/admin/devices'
+    | '/_authenticated/admin/documents'
+    | '/_authenticated/admin/financing'
+    | '/_authenticated/admin/general'
+    | '/_authenticated/admin/holiday-hours'
+    | '/_authenticated/admin/invoice-settings'
+    | '/_authenticated/admin/invoices'
+    | '/_authenticated/admin/marketing'
+    | '/_authenticated/admin/menu'
+    | '/_authenticated/admin/offers'
+    | '/_authenticated/admin/operations'
     | '/_authenticated/admin/orders'
+    | '/_authenticated/admin/payments'
     | '/_authenticated/admin/payouts'
+    | '/_authenticated/admin/payouts-orders'
+    | '/_authenticated/admin/performance'
+    | '/_authenticated/admin/prep-times'
     | '/_authenticated/admin/reports'
+    | '/_authenticated/admin/reviews'
     | '/_authenticated/admin/riders'
+    | '/_authenticated/admin/sales'
+    | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/store-groups'
+    | '/_authenticated/admin/stores'
+    | '/_authenticated/admin/success'
+    | '/_authenticated/admin/users'
     | '/_authenticated/admin/vendors'
+    | '/_authenticated/admin/webshop'
     | '/_authenticated/chats/$vendorId'
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/rider/available'
@@ -888,11 +1248,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsVendorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/webshop': {
+      id: '/_authenticated/admin/webshop'
+      path: '/admin/webshop'
+      fullPath: '/admin/webshop'
+      preLoaderRoute: typeof AuthenticatedAdminWebshopRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/vendors': {
       id: '/_authenticated/admin/vendors'
       path: '/admin/vendors'
       fullPath: '/admin/vendors'
       preLoaderRoute: typeof AuthenticatedAdminVendorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/success': {
+      id: '/_authenticated/admin/success'
+      path: '/admin/success'
+      fullPath: '/admin/success'
+      preLoaderRoute: typeof AuthenticatedAdminSuccessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/stores': {
+      id: '/_authenticated/admin/stores'
+      path: '/admin/stores'
+      fullPath: '/admin/stores'
+      preLoaderRoute: typeof AuthenticatedAdminStoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/store-groups': {
+      id: '/_authenticated/admin/store-groups'
+      path: '/admin/store-groups'
+      fullPath: '/admin/store-groups'
+      preLoaderRoute: typeof AuthenticatedAdminStoreGroupsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/sales': {
+      id: '/_authenticated/admin/sales'
+      path: '/admin/sales'
+      fullPath: '/admin/sales'
+      preLoaderRoute: typeof AuthenticatedAdminSalesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/riders': {
@@ -902,11 +1311,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRidersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/reviews': {
+      id: '/_authenticated/admin/reviews'
+      path: '/admin/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AuthenticatedAdminReviewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/reports': {
       id: '/_authenticated/admin/reports'
       path: '/admin/reports'
       fullPath: '/admin/reports'
       preLoaderRoute: typeof AuthenticatedAdminReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/prep-times': {
+      id: '/_authenticated/admin/prep-times'
+      path: '/admin/prep-times'
+      fullPath: '/admin/prep-times'
+      preLoaderRoute: typeof AuthenticatedAdminPrepTimesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/performance': {
+      id: '/_authenticated/admin/performance'
+      path: '/admin/performance'
+      fullPath: '/admin/performance'
+      preLoaderRoute: typeof AuthenticatedAdminPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/payouts-orders': {
+      id: '/_authenticated/admin/payouts-orders'
+      path: '/admin/payouts-orders'
+      fullPath: '/admin/payouts-orders'
+      preLoaderRoute: typeof AuthenticatedAdminPayoutsOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/payouts': {
@@ -916,11 +1353,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/payments': {
+      id: '/_authenticated/admin/payments'
+      path: '/admin/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AuthenticatedAdminPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/orders': {
       id: '/_authenticated/admin/orders'
       path: '/admin/orders'
       fullPath: '/admin/orders'
       preLoaderRoute: typeof AuthenticatedAdminOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/operations': {
+      id: '/_authenticated/admin/operations'
+      path: '/admin/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AuthenticatedAdminOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/offers': {
+      id: '/_authenticated/admin/offers'
+      path: '/admin/offers'
+      fullPath: '/admin/offers'
+      preLoaderRoute: typeof AuthenticatedAdminOffersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/menu': {
+      id: '/_authenticated/admin/menu'
+      path: '/admin/menu'
+      fullPath: '/admin/menu'
+      preLoaderRoute: typeof AuthenticatedAdminMenuRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/marketing': {
+      id: '/_authenticated/admin/marketing'
+      path: '/admin/marketing'
+      fullPath: '/admin/marketing'
+      preLoaderRoute: typeof AuthenticatedAdminMarketingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/invoices': {
+      id: '/_authenticated/admin/invoices'
+      path: '/admin/invoices'
+      fullPath: '/admin/invoices'
+      preLoaderRoute: typeof AuthenticatedAdminInvoicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/invoice-settings': {
+      id: '/_authenticated/admin/invoice-settings'
+      path: '/admin/invoice-settings'
+      fullPath: '/admin/invoice-settings'
+      preLoaderRoute: typeof AuthenticatedAdminInvoiceSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/holiday-hours': {
+      id: '/_authenticated/admin/holiday-hours'
+      path: '/admin/holiday-hours'
+      fullPath: '/admin/holiday-hours'
+      preLoaderRoute: typeof AuthenticatedAdminHolidayHoursRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/general': {
+      id: '/_authenticated/admin/general'
+      path: '/admin/general'
+      fullPath: '/admin/general'
+      preLoaderRoute: typeof AuthenticatedAdminGeneralRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/financing': {
+      id: '/_authenticated/admin/financing'
+      path: '/admin/financing'
+      fullPath: '/admin/financing'
+      preLoaderRoute: typeof AuthenticatedAdminFinancingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/documents': {
+      id: '/_authenticated/admin/documents'
+      path: '/admin/documents'
+      fullPath: '/admin/documents'
+      preLoaderRoute: typeof AuthenticatedAdminDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/devices': {
+      id: '/_authenticated/admin/devices'
+      path: '/admin/devices'
+      fullPath: '/admin/devices'
+      preLoaderRoute: typeof AuthenticatedAdminDevicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/delivery': {
+      id: '/_authenticated/admin/delivery'
+      path: '/admin/delivery'
+      fullPath: '/admin/delivery'
+      preLoaderRoute: typeof AuthenticatedAdminDeliveryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/dashboard': {
@@ -935,6 +1463,34 @@ declare module '@tanstack/react-router' {
       path: '/admin/customers'
       fullPath: '/admin/customers'
       preLoaderRoute: typeof AuthenticatedAdminCustomersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/customer-insights': {
+      id: '/_authenticated/admin/customer-insights'
+      path: '/admin/customer-insights'
+      fullPath: '/admin/customer-insights'
+      preLoaderRoute: typeof AuthenticatedAdminCustomerInsightsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/benchmarking': {
+      id: '/_authenticated/admin/benchmarking'
+      path: '/admin/benchmarking'
+      fullPath: '/admin/benchmarking'
+      preLoaderRoute: typeof AuthenticatedAdminBenchmarkingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/banking': {
+      id: '/_authenticated/admin/banking'
+      path: '/admin/banking'
+      fullPath: '/admin/banking'
+      preLoaderRoute: typeof AuthenticatedAdminBankingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/ads': {
+      id: '/_authenticated/admin/ads'
+      path: '/admin/ads'
+      fullPath: '/admin/ads'
+      preLoaderRoute: typeof AuthenticatedAdminAdsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/vendor/$slug/item/$itemId': {
@@ -1011,13 +1567,41 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRouteWithChildren
+  AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
+  AuthenticatedAdminBankingRoute: typeof AuthenticatedAdminBankingRoute
+  AuthenticatedAdminBenchmarkingRoute: typeof AuthenticatedAdminBenchmarkingRoute
+  AuthenticatedAdminCustomerInsightsRoute: typeof AuthenticatedAdminCustomerInsightsRoute
   AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminDeliveryRoute: typeof AuthenticatedAdminDeliveryRoute
+  AuthenticatedAdminDevicesRoute: typeof AuthenticatedAdminDevicesRoute
+  AuthenticatedAdminDocumentsRoute: typeof AuthenticatedAdminDocumentsRoute
+  AuthenticatedAdminFinancingRoute: typeof AuthenticatedAdminFinancingRoute
+  AuthenticatedAdminGeneralRoute: typeof AuthenticatedAdminGeneralRoute
+  AuthenticatedAdminHolidayHoursRoute: typeof AuthenticatedAdminHolidayHoursRoute
+  AuthenticatedAdminInvoiceSettingsRoute: typeof AuthenticatedAdminInvoiceSettingsRoute
+  AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
+  AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
+  AuthenticatedAdminMenuRoute: typeof AuthenticatedAdminMenuRoute
+  AuthenticatedAdminOffersRoute: typeof AuthenticatedAdminOffersRoute
+  AuthenticatedAdminOperationsRoute: typeof AuthenticatedAdminOperationsRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
+  AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
+  AuthenticatedAdminPayoutsOrdersRoute: typeof AuthenticatedAdminPayoutsOrdersRoute
+  AuthenticatedAdminPerformanceRoute: typeof AuthenticatedAdminPerformanceRoute
+  AuthenticatedAdminPrepTimesRoute: typeof AuthenticatedAdminPrepTimesRoute
   AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
+  AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
   AuthenticatedAdminRidersRoute: typeof AuthenticatedAdminRidersRoute
+  AuthenticatedAdminSalesRoute: typeof AuthenticatedAdminSalesRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminStoreGroupsRoute: typeof AuthenticatedAdminStoreGroupsRoute
+  AuthenticatedAdminStoresRoute: typeof AuthenticatedAdminStoresRoute
+  AuthenticatedAdminSuccessRoute: typeof AuthenticatedAdminSuccessRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminVendorsRoute: typeof AuthenticatedAdminVendorsRoute
+  AuthenticatedAdminWebshopRoute: typeof AuthenticatedAdminWebshopRoute
   AuthenticatedChatsVendorIdRoute: typeof AuthenticatedChatsVendorIdRoute
   AuthenticatedRiderAvailableRoute: typeof AuthenticatedRiderAvailableRoute
   AuthenticatedRiderDashboardRoute: typeof AuthenticatedRiderDashboardRoute
@@ -1048,13 +1632,43 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRouteWithChildren,
+  AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
+  AuthenticatedAdminBankingRoute: AuthenticatedAdminBankingRoute,
+  AuthenticatedAdminBenchmarkingRoute: AuthenticatedAdminBenchmarkingRoute,
+  AuthenticatedAdminCustomerInsightsRoute:
+    AuthenticatedAdminCustomerInsightsRoute,
   AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminDeliveryRoute: AuthenticatedAdminDeliveryRoute,
+  AuthenticatedAdminDevicesRoute: AuthenticatedAdminDevicesRoute,
+  AuthenticatedAdminDocumentsRoute: AuthenticatedAdminDocumentsRoute,
+  AuthenticatedAdminFinancingRoute: AuthenticatedAdminFinancingRoute,
+  AuthenticatedAdminGeneralRoute: AuthenticatedAdminGeneralRoute,
+  AuthenticatedAdminHolidayHoursRoute: AuthenticatedAdminHolidayHoursRoute,
+  AuthenticatedAdminInvoiceSettingsRoute:
+    AuthenticatedAdminInvoiceSettingsRoute,
+  AuthenticatedAdminInvoicesRoute: AuthenticatedAdminInvoicesRoute,
+  AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
+  AuthenticatedAdminMenuRoute: AuthenticatedAdminMenuRoute,
+  AuthenticatedAdminOffersRoute: AuthenticatedAdminOffersRoute,
+  AuthenticatedAdminOperationsRoute: AuthenticatedAdminOperationsRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
+  AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
+  AuthenticatedAdminPayoutsOrdersRoute: AuthenticatedAdminPayoutsOrdersRoute,
+  AuthenticatedAdminPerformanceRoute: AuthenticatedAdminPerformanceRoute,
+  AuthenticatedAdminPrepTimesRoute: AuthenticatedAdminPrepTimesRoute,
   AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
+  AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   AuthenticatedAdminRidersRoute: AuthenticatedAdminRidersRoute,
+  AuthenticatedAdminSalesRoute: AuthenticatedAdminSalesRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedAdminStoreGroupsRoute: AuthenticatedAdminStoreGroupsRoute,
+  AuthenticatedAdminStoresRoute: AuthenticatedAdminStoresRoute,
+  AuthenticatedAdminSuccessRoute: AuthenticatedAdminSuccessRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminVendorsRoute: AuthenticatedAdminVendorsRoute,
+  AuthenticatedAdminWebshopRoute: AuthenticatedAdminWebshopRoute,
   AuthenticatedChatsVendorIdRoute: AuthenticatedChatsVendorIdRoute,
   AuthenticatedRiderAvailableRoute: AuthenticatedRiderAvailableRoute,
   AuthenticatedRiderDashboardRoute: AuthenticatedRiderDashboardRoute,

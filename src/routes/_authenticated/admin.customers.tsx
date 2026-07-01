@@ -1,148 +1,179 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AppShell } from "@/components/naija/AppShell";
-import { useMyRole } from "@/hooks/useMyRole";
-import { Users, Repeat, UserPlus } from "lucide-react";
+import { AdminShell } from "@/components/admin/AdminShell";
+import {
+  UberPageTitle,
+  UberKpi,
+  UberFilterBar,
+  UberTable,
+  UberThead,
+  UberTh,
+  UberTr,
+  UberTd,
+  UberStatus,
+  uberBtn,
+  formatMoney,
+} from "@/components/admin/AdminUI";
+import { MoreHorizontal, Send } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/customers")({
   component: AdminCustomers,
 });
 
 function AdminCustomers() {
-  const { data: role, isLoading: roleLoading } = useMyRole();
+  const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-customers"],
-    enabled: role === "admin",
+    queryKey: ["admin-customers-full"],
+    staleTime: 60_000,
     queryFn: async () => {
-      const { data: orders, error } = await supabase
-        .from("orders")
-        .select("customer_id,total,currency,status,created_at")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-
-      const customerIds = Array.from(new Set((orders ?? []).map((o: any) => o.customer_id)));
-      const { data: profiles } = customerIds.length
-        ? await supabase.from("profiles").select("id,full_name,created_at").in("id", customerIds)
-        : { data: [] as any[] };
-      const profileById: Record<string, any> = {};
-      (profiles ?? []).forEach((p: any) => (profileById[p.id] = p));
-
-      return { orders: orders ?? [], profileById };
+      const [profilesRes, ordersRes] = await Promise.all([
+        supabase.from("profiles").select("id,full_name,email,phone,avatar_url,created_at").limit(500),
+        supabase.from("orders").select("customer_id,total,currency,created_at,status"),
+      ]);
+      const profiles = profilesRes.data ?? [];
+      const orders = ordersRes.data ?? [];
+      const byCustomer = new Map<string, { count: number; spend: number; currency: string; last: string | null }>();
+      for (const o of orders as any[]) {
+        if (!o.customer_id) continue;
+        const cur = byCustomer.get(o.customer_id) ?? { count: 0, spend: 0, currency: "GBP", last: null };
+        cur.count += 1;
+        cur.spend += Number(o.total ?? 0);
+        cur.currency = (o.currency as string) || cur.currency;
+        if (!cur.last || new Date(o.created_at) > new Date(cur.last)) cur.last = o.created_at;
+        byCustomer.set(o.customer_id, cur);
+      }
+      return { profiles, byCustomer };
     },
   });
 
-  const stats = useMemo(() => {
-    if (!data) return null;
-    const { orders, profileById } = data;
-    const byCustomer: Record<
-      string,
-      { orders: number; spend: Record<string, number>; lastOrder: string; firstOrder: string }
-    > = {};
-    orders.forEach((o: any) => {
-      byCustomer[o.customer_id] ||= { orders: 0, spend: {}, lastOrder: o.created_at, firstOrder: o.created_at };
-      const c = byCustomer[o.customer_id];
-      c.orders++;
-      if (o.status !== "cancelled") {
-        c.spend[o.currency] = (c.spend[o.currency] ?? 0) + Number(o.total || 0);
-      }
-      if (o.created_at > c.lastOrder) c.lastOrder = o.created_at;
-      if (o.created_at < c.firstOrder) c.firstOrder = o.created_at;
-    });
-
-    const totalCustomers = Object.keys(byCustomer).length;
-    const repeatCustomers = Object.values(byCustomer).filter((c) => c.orders > 1).length;
-    const repeatRate = totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0;
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const newCustomers30d = Object.values(byCustomer).filter(
-      (c) => new Date(c.firstOrder) >= thirtyDaysAgo,
-    ).length;
-
-    const topCustomers = Object.entries(byCustomer)
-      .map(([id, c]) => ({
-        id,
-        name: profileById[id]?.full_name ?? "Unnamed customer",
-        ...c,
-      }))
-      .sort(
-        (a, b) =>
-          Object.values(b.spend).reduce((s, n) => s + n, 0) - Object.values(a.spend).reduce((s, n) => s + n, 0),
-      )
-      .slice(0, 10);
-
-    return { totalCustomers, repeatCustomers, repeatRate, newCustomers30d, topCustomers };
+  const rows = useMemo(() => {
+    if (!data) return [];
+    return (data.profiles as any[]).map((p) => ({
+      ...p,
+      ...(data.byCustomer.get(p.id) ?? { count: 0, spend: 0, currency: "GBP", last: null }),
+    }));
   }, [data]);
 
-  if (!roleLoading && role !== "admin") return <Navigate to="/" replace />;
+  const filtered = useMemo(() => {
+    if (!search) return rows;
+    const s = search.toLowerCase();
+    return rows.filter((r: any) =>
+      [r.full_name, r.email, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
+    );
+  }, [rows, search]);
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    const newThisMonth = rows.filter((r: any) => r.created_at && new Date(r.created_at) >= monthAgo).length;
+    const repeat = rows.filter((r: any) => r.count >= 2).length;
+    const spenders = rows.filter((r: any) => r.count > 0);
+    const avgLtv = spenders.length ? spenders.reduce((s: number, r: any) => s + r.spend, 0) / spenders.length : 0;
+    const currency = (spenders[0]?.currency as string) || "GBP";
+    return { total: rows.length, newThisMonth, repeat, avgLtv, currency };
+  }, [rows]);
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
-        <h1 className="font-display text-2xl sm:text-3xl font-semibold mb-2">Customer insights</h1>
-        <p className="text-muted-foreground mb-6">Based on every order placed on the platform.</p>
+    <AdminShell>
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
+        <UberPageTitle
+          eyebrow="Customers"
+          title="Customer list"
+          description="Everyone who has ordered on Naija Eats, plus their lifetime spend and status."
+          actions={
+            <button type="button" className={uberBtn.primary}>
+              <Send className="h-3.5 w-3.5" /> Send campaign
+            </button>
+          }
+        />
 
-        {isLoading || !stats ? (
-          <p className="text-muted-foreground">Loading…</p>
-        ) : stats.totalCustomers === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-            No customer orders yet.
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Users className="h-4 w-4" /> Customers with orders
-                </div>
-                <div className="mt-2 text-2xl font-display font-semibold">{stats.totalCustomers}</div>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Repeat className="h-4 w-4" /> Repeat rate
-                </div>
-                <div className="mt-2 text-2xl font-display font-semibold">{stats.repeatRate.toFixed(1)}%</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{stats.repeatCustomers} customers, 2+ orders</div>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <UserPlus className="h-4 w-4" /> New customers (30d)
-                </div>
-                <div className="mt-2 text-2xl font-display font-semibold">{stats.newCustomers30d}</div>
-              </div>
-            </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <UberKpi label="Total customers" value={isLoading ? "…" : stats.total.toLocaleString()} hint="Registered accounts" />
+          <UberKpi label="New this month" value={isLoading ? "…" : stats.newThisMonth.toLocaleString()} hint="Joined in the last 30 days" />
+          <UberKpi label="Repeat customers" value={isLoading ? "…" : stats.repeat.toLocaleString()} hint="2 or more completed orders" />
+          <UberKpi label="Avg lifetime value" value={isLoading ? "…" : formatMoney(stats.avgLtv, stats.currency)} hint="Per repeat customer" />
+        </div>
 
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <h2 className="font-display text-lg font-semibold p-5 pb-3">Top customers by spend</h2>
-              <div className="divide-y divide-border">
-                {stats.topCustomers.map((c, i) => (
-                  <div key={c.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-sm font-semibold">
-                        {i + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{c.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {c.orders} orders · last on {new Date(c.lastOrder).toLocaleDateString()}
+        <div className="mt-8">
+          <UberFilterBar
+            search={search}
+            onSearch={setSearch}
+            filters={[{ label: "Segment" }, { label: "City" }, { label: "Signup" }]}
+            onExport={() => {}}
+          />
+
+          <UberTable>
+            <UberThead>
+              <tr>
+                <UberTh>Customer</UberTh>
+                <UberTh>Contact</UberTh>
+                <UberTh>Orders</UberTh>
+                <UberTh>Spend</UberTh>
+                <UberTh>Last order</UberTh>
+                <UberTh>Status</UberTh>
+                <UberTh className="w-[1%]" />
+              </tr>
+            </UberThead>
+            <tbody>
+              {isLoading ? (
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">Loading customers…</UberTd>
+                </UberTr>
+              ) : filtered.length === 0 ? (
+                <UberTr>
+                  <UberTd className="py-8 text-center text-neutral-500">No customers match the current filter.</UberTd>
+                </UberTr>
+              ) : (
+                filtered.map((c: any) => (
+                  <UberTr key={c.id}>
+                    <UberTd>
+                      <div className="flex items-center gap-2.5">
+                        <div className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.95_0.05_145)] text-[var(--naija-green-dark)] text-xs font-medium">
+                          {initials(c.full_name || c.email)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-[oklch(0.18_0.006_260)]">{c.full_name || "Unnamed"}</div>
+                          <div className="font-mono text-[11px] text-neutral-500">#{String(c.id).slice(0, 8)}</div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-sm font-semibold text-right shrink-0">
-                      {Object.entries(c.spend)
-                        .map(([cur, amt]) => `${cur} ${(amt as number).toLocaleString(undefined, { maximumFractionDigits: 0 })}`)
-                        .join(" · ") || "—"}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+                    </UberTd>
+                    <UberTd className="text-neutral-600">
+                      <div className="truncate">{c.email || "—"}</div>
+                      <div className="text-[12px] text-neutral-500">{c.phone || ""}</div>
+                    </UberTd>
+                    <UberTd className="text-neutral-700">{c.count}</UberTd>
+                    <UberTd className="font-medium">{formatMoney(c.spend, c.currency)}</UberTd>
+                    <UberTd className="text-neutral-500">
+                      {c.last ? new Date(c.last).toLocaleDateString([], { day: "numeric", month: "short" }) : "—"}
+                    </UberTd>
+                    <UberTd>
+                      <UberStatus status={c.count > 0 ? "active" : "inactive"} />
+                    </UberTd>
+                    <UberTd>
+                      <button className="rounded-full p-1.5 hover:bg-[oklch(0.965_0.003_260)]">
+                        <MoreHorizontal className="h-4 w-4 text-neutral-500" />
+                      </button>
+                    </UberTd>
+                  </UberTr>
+                ))
+              )}
+            </tbody>
+          </UberTable>
+        </div>
       </div>
-    </AppShell>
+    </AdminShell>
   );
+}
+
+function initials(name?: string | null) {
+  if (!name) return "?";
+  return name
+    .split(/[\s@]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("");
 }

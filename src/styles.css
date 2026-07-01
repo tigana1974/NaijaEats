@@ -25,6 +25,9 @@
   --color-brand-cream: var(--brand-cream);
   --color-brand-ink: var(--brand-ink);
   --color-brand-sage: var(--brand-sage);
+  --color-naija-green: var(--naija-green);
+  --color-naija-orange: var(--naija-orange);
+  --color-naija-ink: var(--naija-ink);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-script: var(--font-script);
@@ -114,6 +117,14 @@
   --brand-cream: oklch(0.985 0.002 90);
   --brand-ink: oklch(0.20 0.002 90);         /* #1d1d1b */
   --brand-sage: oklch(0.77 0.20 130);
+
+  /* Naija Eats admin palette: green, orange, ink, white */
+  --naija-green: oklch(0.62 0.18 145);   /* Nigeria green */
+  --naija-green-dark: oklch(0.48 0.16 145);
+  --naija-orange: oklch(0.72 0.18 55);   /* Warm orange */
+  --naija-orange-dark: oklch(0.62 0.19 45);
+  --naija-ink: oklch(0.18 0.006 260);
+  --naija-surface: oklch(0.985 0.002 90);
 
   --gradient-warm: linear-gradient(135deg, oklch(0.66 0.245 25) 0%, oklch(0.7 0.22 30) 100%);
   --gradient-ember: linear-gradient(160deg, oklch(0.55 0.22 28) 0%, oklch(0.66 0.245 25) 100%);
