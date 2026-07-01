@@ -23,7 +23,7 @@ const STATUS_LABEL: Record<Status, string> = {
 };
 
 function getNextActions(vendorType?: string): Partial<Record<Status, { to: Status; label: string }>> {
-  const isChef = vendorType === "home_chef" || vendorType === "personal_chef";
+  const isChef = vendorType === "chef";
   const isGrocery = vendorType === "grocery";
   return {
     pending: { to: "accepted", label: "Accept" },

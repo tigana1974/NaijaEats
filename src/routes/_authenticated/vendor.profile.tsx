@@ -15,7 +15,7 @@ type Form = {
   slug: string;
   tagline: string;
   description: string;
-  type: "restaurant" | "home_chef" | "grocery" | "personal_chef";
+  type: "restaurant" | "chef" | "grocery";
   country: "NG" | "UK";
   city: string;
   address_line: string;
@@ -50,6 +50,11 @@ const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function normalizeVendorType(type: unknown): Form["type"] {
+  if (type === "grocery" || type === "restaurant" || type === "chef") return type;
+  return "restaurant";
 }
 
 function VendorProfilePage() {
@@ -97,7 +102,7 @@ function VendorProfilePage() {
         slug: existing.slug ?? "",
         tagline: existing.tagline ?? "",
         description: existing.description ?? "",
-        type: existing.type,
+        type: normalizeVendorType(existing.type),
         country: existing.country,
         city: existing.city ?? "",
         address_line: existing.address_line ?? "",
@@ -109,15 +114,15 @@ function VendorProfilePage() {
     } else {
       // Set type based on auth metadata if available
       const vt = user.user_metadata?.vendor_type;
-      if (vt === "grocery" || vt === "restaurant") {
-        setForm(f => ({ ...f, type: vt }));
+      if (vt) {
+        setForm(f => ({ ...f, type: normalizeVendorType(vt) }));
       }
     }
   }, [existing, user.user_metadata?.vendor_type]);
 
   if (!roleLoading && role !== "vendor") return <Navigate to="/" replace />;
 
-  const isChef = form.type === "home_chef" || form.type === "personal_chef";
+  const isChef = form.type === "chef";
   const isGrocery = form.type === "grocery";
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -289,7 +294,7 @@ function VendorProfilePage() {
                   ) : (
                     <>
                       <option value="restaurant">Restaurant</option>
-                      <option value="home_chef">Chef</option>
+                      <option value="chef">Chef</option>
                     </>
                   )}
                 </select>

@@ -75,7 +75,7 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         const dbRole = role === "chef" || role === "grocery" ? "vendor" : role;
-        const vendor_type = role === "grocery" ? "grocery" : role === "chef" ? "restaurant" : null;
+        const vendor_type = role === "grocery" ? "grocery" : role === "chef" ? "chef" : null;
 
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -169,7 +169,7 @@ function AuthPage() {
               Delivered hot.
             </h1>
             <p className="mt-5 text-white/75 text-lg leading-relaxed max-w-md">
-              Order from home chefs, restaurants and grocers across Nigeria and the UK —
+              Order from chefs, restaurants and grocers across Nigeria and the UK —
               all on one platform built for African food culture.
             </p>
 
@@ -247,7 +247,7 @@ function AuthPage() {
                       className="input"
                     >
                       <option value="customer">Customer</option>
-                      <option value="chef">Chef / Restaurant</option>
+                      <option value="chef">Chef</option>
                       <option value="grocery">Groceries Market</option>
                       <option value="rider">Delivery rider</option>
                     </select>

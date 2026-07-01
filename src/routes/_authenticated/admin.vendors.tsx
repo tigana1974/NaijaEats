@@ -12,12 +12,11 @@ export const Route = createFileRoute("/_authenticated/admin/vendors")({
 });
 
 type Filter = "pending" | "approved" | "suspended" | "all";
-type TypeFilter = "all" | "restaurant" | "home_chef" | "personal_chef" | "grocery";
+type TypeFilter = "all" | "restaurant" | "chef" | "grocery";
 
 const typeLabels: Record<string, string> = {
   restaurant: "Restaurant",
-  home_chef: "Home chef",
-  personal_chef: "Personal chef",
+  chef: "Chef",
   grocery: "Grocery",
 };
 
@@ -158,8 +157,7 @@ function AdminVendors() {
           {([
             { key: "all", label: "All types" },
             { key: "restaurant", label: "Restaurants" },
-            { key: "home_chef", label: "Home chefs" },
-            { key: "personal_chef", label: "Personal chefs" },
+            { key: "chef", label: "Chefs" },
             { key: "grocery", label: "Grocery" },
           ] as { key: TypeFilter; label: string }[]).map((t) => (
             <button

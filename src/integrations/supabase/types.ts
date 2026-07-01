@@ -854,7 +854,7 @@ export type Database = {
         | "food_safety_certificate"
         | "other"
       vendor_status: "pending" | "approved" | "suspended"
-      vendor_type: "restaurant" | "home_chef" | "grocery" | "personal_chef"
+      vendor_type: "restaurant" | "chef" | "grocery"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1001,7 +1001,7 @@ export const Constants = {
         "cancelled",
       ],
       vendor_status: ["pending", "approved", "suspended"],
-      vendor_type: ["restaurant", "home_chef", "grocery", "personal_chef"],
+      vendor_type: ["restaurant", "chef", "grocery"],
     },
   },
 } as const

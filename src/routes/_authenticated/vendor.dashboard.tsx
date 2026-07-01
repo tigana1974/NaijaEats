@@ -152,7 +152,7 @@ function QuickLink({ to, Icon, title, desc }: { to: string; Icon: React.Componen
 }
 
 function vendorConfig(type: string) {
-  const isChef = type === "home_chef" || type === "personal_chef";
+  const isChef = type === "chef";
   const isGrocery = type === "grocery";
   if (isChef) return {
     title: "Chef dashboard",

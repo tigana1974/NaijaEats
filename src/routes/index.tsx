@@ -47,9 +47,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Naija Eats — The Home of African & Authentic Food, Delivered" },
-      { name: "description", content: "Order from home chefs, African & Caribbean restaurants, and ethnic grocers. Book personal chefs. Cooked with culture, delivered fresh." },
+      { name: "description", content: "Order from chefs, African & Caribbean restaurants, and ethnic grocers. Cooked with culture, delivered fresh." },
       { property: "og:title", content: "Naija Eats — Cooked with Culture, Delivered Fresh" },
-      { property: "og:description", content: "The food ecosystem for African & authentic cuisine. Home chefs, restaurants, groceries, and personal chef experiences." },
+      { property: "og:description", content: "The food ecosystem for African & authentic cuisine. Chefs, restaurants, and groceries." },
     ],
   }),
   component: Index,
@@ -381,7 +381,7 @@ function Hero() {
             One African <span className="text-primary">Marketplace.</span>
           </h1>
           <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-            Order restaurant meals, discover home chefs, shop groceries, and enjoy fast delivery—all from a platform built for African food culture.
+            Order restaurant meals, discover chefs, shop groceries, and enjoy fast delivery—all from a platform built for African food culture.
           </p>
           <form
             onSubmit={(e) => {
@@ -440,7 +440,7 @@ function Hero() {
             />
             <div>
               <div className="text-sm font-semibold leading-tight">Chef Amaka</div>
-              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Home Chef · Lagos</div>
+              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Chef · Lagos</div>
             </div>
           </div>
         </div>
@@ -486,7 +486,7 @@ function Hero() {
 function Story() {
   const stats = [
     ["10K+", "Orders Delivered"],
-    ["500+", "Home Chefs"],
+    ["500+", "Chefs"],
     ["50+", "Cities Covered"],
     ["4.9★", "Average Rating"],
   ];
@@ -559,7 +559,7 @@ function SpecialDishes() {
             Special Dishes from <span className="text-primary">Our Kitchens</span>
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Bestsellers cooked by home chefs and African restaurants across Lagos, Abuja, London and Manchester.
+            Bestsellers cooked by chefs and African restaurants across Lagos, Abuja, London and Manchester.
           </p>
         </div>
 
@@ -601,10 +601,10 @@ function SpecialDishes() {
 
 function WhyUs() {
   const tiles = [
-    { icon: ChefHat, title: "Home Chefs", copy: "Authentic recipes from grandmothers and aunties." },
+    { icon: ChefHat, title: "Chefs", copy: "Authentic recipes from grandmothers and aunties." },
     { icon: Utensils, title: "African Restaurants", copy: "Lagos buka to Caribbean roti — at your door." },
     { icon: ShoppingBasket, title: "Ethnic Grocery", copy: "Egusi, palm oil, plantains and scotch bonnets." },
-    { icon: CalendarHeart, title: "Personal Chef", copy: "Book a chef for your dinner or celebration." },
+    { icon: CalendarHeart, title: "Chef Booking", copy: "Book a chef for your dinner or celebration." },
   ];
   return (
     <section id="why" className="relative py-20 md:py-28 bg-[oklch(0.95_0.035_75)]">
@@ -733,9 +733,9 @@ function OfferBanner() {
 
 function Testimonials() {
   const cards = [
-    { name: "Tunde Bakare", role: "Foodie · Lagos", avatar: avatarTunde, text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave home chefs a stage." },
+    { name: "Tunde Bakare", role: "Foodie · Lagos", avatar: avatarTunde, text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave chefs a stage." },
     { name: "Rahim Hassan", role: "Chef · London", avatar: avatarRahim, text: "I started cooking from my kitchen in Peckham. Within a month, I had 80 regulars ordering my egusi every weekend." },
-    { name: "Emily Carter", role: "Customer · Manchester", avatar: avatarEmily, text: "I found African chefs I never knew existed in my city. The personal chef booking made my birthday unforgettable." },
+    { name: "Emily Carter", role: "Customer · Manchester", avatar: avatarEmily, text: "I found African chefs I never knew existed in my city. The chef booking made my birthday unforgettable." },
     { name: "Sade Ojo", role: "Foodie · Abuja", avatar: avatarSade, text: "Fast delivery, real flavour, and stories about every dish. This is more than an app." },
   ];
   return (
@@ -877,9 +877,9 @@ function Footer() {
             <div className="text-sm font-semibold text-white">Verticals</div>
             <ul className="mt-5 space-y-3 text-sm text-white/60">
               <li><a href="#" className="hover:text-white transition">Restaurants</a></li>
-              <li><a href="#" className="hover:text-white transition">Home Chefs</a></li>
+              <li><a href="#" className="hover:text-white transition">Chefs</a></li>
               <li><a href="#" className="hover:text-white transition">Grocery</a></li>
-              <li><a href="#" className="hover:text-white transition">Personal Chefs</a></li>
+              <li><a href="#" className="hover:text-white transition">Chef Booking</a></li>
               <li><a href="#" className="hover:text-white transition">Affiliate</a></li>
             </ul>
           </div>

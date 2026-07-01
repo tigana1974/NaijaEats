@@ -186,7 +186,7 @@ function VendorMenu() {
 
 function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any; categories: any[]; item: any | null; onClose: () => void; onSaved: () => void }) {
   const isGrocery = vendor.type === "grocery";
-  const isChef = vendor.type === "home_chef" || vendor.type === "personal_chef";
+  const isChef = vendor.type === "chef";
   const [form, setForm] = useState({
     name: item?.name ?? "",
     description: item?.description ?? "",

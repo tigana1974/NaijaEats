@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 const roles = [
   { value: "customer", label: "I want to order" },
-  { value: "chef", label: "I'm a home chef" },
+  { value: "chef", label: "I'm a chef" },
   { value: "vendor", label: "Restaurant / grocer" },
   { value: "rider", label: "I want to deliver" },
 ] as const;

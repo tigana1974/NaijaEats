@@ -89,7 +89,6 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       { to: "/wallet", label: "Wallet", Icon: Wallet },
     ],
     vendor: (() => {
-      const isChef = vendorType === "home_chef" || vendorType === "personal_chef";
       const isGrocery = vendorType === "grocery";
       return [
         { to: "/vendor/dashboard", label: "Dashboard", Icon: LayoutDashboard },

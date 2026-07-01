@@ -47,7 +47,7 @@ function ChatsList() {
               <MessageCircle className="h-8 w-8 mx-auto text-muted-foreground" />
               <p className="mt-3 font-medium">No conversations yet</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Tap “Message chef” from any restaurant or home chef to start a chat.
+                Tap “Message chef” from any restaurant or chef to start a chat.
               </p>
               <Link
                 to="/discover"

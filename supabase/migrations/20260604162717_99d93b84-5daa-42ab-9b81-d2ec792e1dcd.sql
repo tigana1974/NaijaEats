@@ -3,7 +3,7 @@
 -- ENUMS
 -- =========================================
 CREATE TYPE public.app_role AS ENUM ('customer', 'vendor', 'rider', 'admin');
-CREATE TYPE public.vendor_type AS ENUM ('restaurant', 'home_chef', 'grocery', 'personal_chef');
+CREATE TYPE public.vendor_type AS ENUM ('restaurant', 'chef', 'grocery');
 CREATE TYPE public.vendor_status AS ENUM ('pending', 'approved', 'suspended');
 CREATE TYPE public.country_code AS ENUM ('NG', 'UK');
 
@@ -247,7 +247,7 @@ CREATE TABLE public.menu_items (
   is_available BOOLEAN NOT NULL DEFAULT true,
   is_featured BOOLEAN NOT NULL DEFAULT false,
   prep_time_minutes INTEGER,
-  spice_level INTEGER, -- 0-3, for restaurants/home chefs
+  spice_level INTEGER, -- 0-3, for restaurants/chefs
   unit TEXT,           -- for grocery: "kg", "pack", "bottle"
   stock INTEGER,       -- for grocery
   tags TEXT[],

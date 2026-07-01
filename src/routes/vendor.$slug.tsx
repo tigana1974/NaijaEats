@@ -86,7 +86,7 @@ function VendorPage() {
 
   if (vendor.type === "grocery") {
     return <GroceryStoreLayout {...commonProps} />;
-  } else if (vendor.type === "home_chef" || vendor.type === "personal_chef") {
+  } else if (vendor.type === "chef") {
     return <ChefProfileLayout {...commonProps} />;
   }
   return <RestaurantLayout {...commonProps} />;
@@ -285,8 +285,8 @@ function ChefProfileLayout({ vendor, grouped, cartIsForThisVendor, itemCount, su
                )}
             </div>
             <h1 className="font-display text-3xl font-bold mt-5 text-zinc-900">{vendor.name}</h1>
-            <p className="text-zinc-500 font-medium mt-1">Personal Chef • {vendor.city}</p>
-            <p className="max-w-xl text-sm text-zinc-500 mt-4 leading-relaxed">{vendor.description || "Crafting personalized culinary experiences. Authentic African cuisine made with passion."}</p>
+            <p className="text-zinc-500 font-medium mt-1">Chef • {vendor.city}</p>
+            <p className="max-w-xl text-sm text-zinc-500 mt-4 leading-relaxed">{vendor.description || "Authentic African cuisine made with passion."}</p>
             
             <div className="mt-6 flex items-center justify-center gap-4">
                <Link
@@ -447,4 +447,3 @@ function HorizontalFoodCard({
     </Link>
   );
 }
-

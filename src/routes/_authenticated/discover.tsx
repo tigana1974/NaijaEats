@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/discover")({
   component: DiscoverPage,
 });
 
-type VendorType = "restaurant" | "home_chef" | "grocery" | "personal_chef" | "chef";
+type VendorType = "restaurant" | "grocery" | "chef";
 
 const TYPE_OPTIONS: { key: VendorType; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { key: "restaurant", label: "Restaurants", Icon: IoFastFood },
@@ -59,9 +59,7 @@ function DiscoverPage() {
         .order("is_featured", { ascending: false })
         .order("rating", { ascending: false });
       
-      if (typeFilter === "chef") {
-        q = q.in("type", ["home_chef", "personal_chef"]);
-      } else if (typeFilter) {
+      if (typeFilter) {
         q = q.eq("type", typeFilter);
       }
       
