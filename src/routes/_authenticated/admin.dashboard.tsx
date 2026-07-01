@@ -3,12 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
-  PageHeader,
-  PageBody,
-  KpiCard,
-  Card,
-  CardHeader,
-  QuickActionRow,
+  UberKpi,
+  CurrentTierCard,
+  UberOpportunityCard,
+  UberQuickAction,
   StatusBadge,
   TableWrap,
   Thead,
@@ -16,7 +14,6 @@ import {
   Tr,
   Td,
   formatMoney,
-  ComingSoon,
 } from "@/components/admin/AdminUI";
 import {
   Megaphone,
@@ -25,13 +22,14 @@ import {
   Clock,
   Bike,
   Users,
-  MessageSquare,
   Banknote,
   ShoppingBag,
-  TrendingUp,
   Store,
-  AlertTriangle,
-  CheckCircle2,
+  HandCoins,
+  GraduationCap,
+  ClipboardList,
+  BookOpen,
+  Trophy,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
@@ -68,7 +66,28 @@ function AdminDashboard() {
       ]);
       const liveOrders = orders.filter((o: any) => liveStatuses.has(o.status));
       const currency = (ordersToday[0]?.currency as string) || "GBP";
-      const pendingPayouts = (payoutsRes.data ?? []).reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0);
+      const pendingPayouts = (payoutsRes.data ?? []).reduce(
+        (s: number, p: any) => s + Number(p.amount ?? 0),
+        0,
+      );
+
+      // Simple platform-health score → tier
+      const completed = orders.filter((o: any) =>
+        ["delivered", "completed"].includes(o.status),
+      ).length;
+      const cancelled = orders.filter((o: any) =>
+        ["cancelled", "refunded"].includes(o.status),
+      ).length;
+      const success = orders.length ? completed / orders.length : 0.5;
+      const tierProgress = Math.max(0, Math.min(1, success));
+      const tier =
+        tierProgress >= 0.9
+          ? "Excellent"
+          : tierProgress >= 0.75
+            ? "Good"
+            : tierProgress >= 0.55
+              ? "Fair"
+              : "Needs attention";
 
       return {
         currency,
@@ -82,305 +101,291 @@ function AdminDashboard() {
         pendingDocs: (docsRes.data ?? []).length,
         pendingPayoutsCount: (payoutsRes.data ?? []).length,
         pendingPayoutsAmount: pendingPayouts,
-        openComplaints: 0, // support_tickets table not yet in schema
-        recentOrders: [...orders].slice(0, 6),
+        openComplaints: 0,
+        completed,
+        cancelled,
+        tier,
+        tierProgress,
       };
     },
   });
 
+  const currency = data?.currency ?? "GBP";
+  const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
   return (
     <AdminShell>
-      <PageHeader
-        title={greetingTitle()}
-        description={`Today's summary • Last updated ${new Date().toLocaleTimeString()}`}
-      />
-      <PageBody>
-        {/* Top KPI row */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            label="Sales today"
-            value={data ? formatMoney(data.salesToday, data.currency) : "—"}
-            Icon={TrendingUp}
-            hint="Total value of items sold today"
-            accent="green"
-          />
-          <KpiCard
-            label="Orders today"
-            value={isLoading ? "…" : data?.ordersToday ?? 0}
-            Icon={ShoppingBag}
-            hint="Orders received today"
-            accent="orange"
-          />
-          <KpiCard
-            label="Average ticket"
-            value={data ? formatMoney(data.avgTicket, data.currency) : "—"}
-            Icon={ShoppingBag}
-            hint="Average value per order"
-            accent="ink"
-          />
-          <KpiCard
-            label="Pending payouts"
-            value={data ? formatMoney(data.pendingPayoutsAmount, data.currency) : "—"}
-            Icon={Banknote}
-            hint={`${data?.pendingPayoutsCount ?? 0} awaiting settlement`}
-            accent="orange"
-          />
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
+        {/* Top: greeting + tier card side by side (matches Uber Eats layout) */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
+          <div>
+            <div className="text-[15px] text-neutral-600">{greeting()}, Admin</div>
+            <h1 className="mt-1 text-[34px] font-semibold leading-tight tracking-tight text-[oklch(0.18_0.006_260)]">
+              Today's summary
+            </h1>
+            <div className="mt-1 text-[13px] text-neutral-500">
+              Last updated {nowStr}
+            </div>
+          </div>
+          <div className="lg:min-w-[440px]">
+            <CurrentTierCard
+              tier={data?.tier ?? "Good"}
+              benefitsLabel="Core platform tools"
+              benefitsCount={3}
+              progress={data?.tierProgress ?? 0.5}
+            />
+          </div>
         </div>
 
-        {/* Second KPI row - operational */}
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            label="Live orders"
-            value={data?.liveOrders?.length ?? 0}
-            Icon={Clock}
-            hint="Currently in progress"
-            accent="green"
-          />
-          <KpiCard
-            label="Active vendors"
-            value={data?.activeVendors ?? 0}
-            Icon={Store}
-            hint={`${data?.pendingVendors ?? 0} pending verification`}
-            accent="green"
-          />
-          <KpiCard
-            label="Active riders"
-            value={data?.activeRiders ?? 0}
-            Icon={Bike}
-            hint="Available for delivery"
-            accent="ink"
-          />
-          <KpiCard
-            label="Customer complaints"
-            value={data?.openComplaints ?? 0}
-            Icon={MessageSquare}
-            hint="Open tickets"
-            accent={data && data.openComplaints > 0 ? "orange" : "muted"}
-          />
-        </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          {/* Live orders table */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader
-                title="Live orders"
-                description="Real-time view of orders in progress across all vendors"
-                action={
-                  <a
-                    href="/admin/orders"
-                    className="text-sm font-medium text-[var(--naija-green)] hover:underline"
-                  >
-                    View all →
-                  </a>
-                }
+        {/* Main content: three KPI cards + opportunities on the left, quick actions right */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+          <div>
+            {/* Three primary KPI cards */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <UberKpi
+                label="Sales"
+                value={isLoading ? "…" : formatMoney(data?.salesToday ?? 0, currency)}
+                hint="Total value of items sold"
               />
-              {isLoading ? (
-                <div className="p-6 text-sm text-muted-foreground">Loading…</div>
-              ) : !data?.liveOrders?.length ? (
-                <div className="p-6 text-sm text-muted-foreground">No live orders right now.</div>
-              ) : (
-                <TableWrap>
-                  <Thead>
-                    <tr>
-                      <Th>Order</Th>
-                      <Th>Status</Th>
-                      <Th>Total</Th>
-                      <Th>Created</Th>
-                    </tr>
-                  </Thead>
-                  <tbody>
-                    {data.liveOrders.slice(0, 8).map((o: any) => (
-                      <Tr key={o.id}>
-                        <Td className="font-mono text-xs">#{o.id.slice(0, 8)}</Td>
-                        <Td>
-                          <StatusBadge status={humaniseStatus(o.status)} />
-                        </Td>
-                        <Td>{formatMoney(Number(o.total), o.currency || "GBP")}</Td>
-                        <Td className="text-muted-foreground">
-                          {new Date(o.created_at).toLocaleTimeString()}
-                        </Td>
-                      </Tr>
-                    ))}
-                  </tbody>
-                </TableWrap>
-              )}
-            </Card>
-
-            {/* Top opportunities (like Uber's list) */}
-            <Card className="mt-4">
-              <CardHeader
-                title="Top opportunities"
-                description="Grow platform performance with recommended actions"
+              <UberKpi
+                label="Booked Orders"
+                value={isLoading ? "…" : (data?.ordersToday ?? 0).toLocaleString()}
+                hint="Orders that generated sales"
               />
-              <div className="divide-y divide-border">
-                <OpportunityRow
+              <UberKpi
+                label="Average ticket size"
+                value={isLoading ? "…" : formatMoney(data?.avgTicket ?? 0, currency)}
+                hint="Average value of items sold per order"
+              />
+            </div>
+
+            {/* Secondary operational KPI cards */}
+            <div className="mt-4 grid gap-4 sm:grid-cols-4">
+              <UberKpi
+                label="Live orders"
+                value={data?.liveOrders?.length ?? 0}
+                hint="Currently in progress"
+              />
+              <UberKpi
+                label="Active vendors"
+                value={data?.activeVendors ?? 0}
+                hint={`${data?.pendingVendors ?? 0} pending`}
+              />
+              <UberKpi
+                label="Active riders"
+                value={data?.activeRiders ?? 0}
+                hint="Available for delivery"
+              />
+              <UberKpi
+                label="Pending payouts"
+                value={formatMoney(data?.pendingPayoutsAmount ?? 0, currency)}
+                hint={`${data?.pendingPayoutsCount ?? 0} awaiting settlement`}
+              />
+            </div>
+
+            {/* Top opportunities section */}
+            <div className="mt-8">
+              <h2 className="text-[22px] font-semibold tracking-tight text-[oklch(0.18_0.006_260)]">
+                Top opportunities
+              </h2>
+              <p className="mt-1 text-[13.5px] text-neutral-600">
+                Improve your business on the platform with opportunities.
+              </p>
+
+              <div className="mt-4 space-y-4">
+                <UberOpportunityCard
                   tag="Growth"
-                  title="Create a citywide ad campaign"
-                  body="Boost featured stores in Lagos and London this weekend. Estimated +12% orders."
-                  cta={{ label: "Create ad", href: "/admin/ads" }}
+                  title="Create an ad"
+                  body="Ads boost your featured stores higher up in the customer feed. Pause or cancel at any time."
+                  ctaLabel="Create"
+                  ctaHref="/admin/ads"
                   Icon={Megaphone}
-                  color="green"
+                  iconColor="blue"
                 />
-                <OpportunityRow
+                <UberOpportunityCard
+                  tag="Growth"
+                  title="Access Merchant Financing to fuel your business"
+                  body="Merchant Financing is a cash advance programme available to vetted vendors on Naija Eats."
+                  ctaLabel="Apply Now"
+                  ctaHref="/admin/financing"
+                  Icon={HandCoins}
+                  iconColor="green"
+                />
+                <UberOpportunityCard
                   tag="Retention"
                   title="Launch a first-order discount"
-                  body="First-time customers convert 3× when offered £5 off their first order."
-                  cta={{ label: "Create offer", href: "/admin/offers" }}
+                  body="First-time customers convert 3× when offered £5 off their first order. Set city-wide caps to control spend."
+                  ctaLabel="Create offer"
+                  ctaHref="/admin/offers"
                   Icon={Tag}
-                  color="orange"
+                  iconColor="orange"
                 />
-                <OpportunityRow
+                <UberOpportunityCard
                   tag="Quality"
                   title="Review menu photos with low quality scores"
-                  body="12 vendors have dishes without high-quality images. Improve conversion by 8%."
-                  cta={{ label: "Open menus", href: "/admin/menu" }}
+                  body="12 vendors have dishes without high-quality images. Improving photos can lift conversion by up to 8%."
+                  ctaLabel="Open menus"
+                  ctaHref="/admin/menu"
                   Icon={UtensilsCrossed}
-                  color="ink"
+                  iconColor="pink"
                 />
               </div>
-            </Card>
+            </div>
+
+            {/* Live orders table */}
+            <div className="mt-8">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h2 className="text-[22px] font-semibold tracking-tight text-[oklch(0.18_0.006_260)]">
+                  Live orders
+                </h2>
+                <a href="/admin/orders" className="text-[13px] font-medium text-[var(--naija-green)] hover:underline">
+                  View all →
+                </a>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-[oklch(0.92_0.003_260)] bg-white">
+                {isLoading ? (
+                  <div className="p-6 text-sm text-neutral-500">Loading…</div>
+                ) : !data?.liveOrders?.length ? (
+                  <div className="p-8 text-center text-sm text-neutral-500">
+                    No live orders right now.
+                  </div>
+                ) : (
+                  <TableWrap>
+                    <Thead>
+                      <tr>
+                        <Th>Order</Th>
+                        <Th>Status</Th>
+                        <Th>Total</Th>
+                        <Th>Created</Th>
+                      </tr>
+                    </Thead>
+                    <tbody>
+                      {data.liveOrders.slice(0, 8).map((o: any) => (
+                        <Tr key={o.id}>
+                          <Td className="font-mono text-xs">#{o.id.slice(0, 8)}</Td>
+                          <Td>
+                            <StatusBadge status={humanise(o.status)} />
+                          </Td>
+                          <Td>{formatMoney(Number(o.total), o.currency || "GBP")}</Td>
+                          <Td className="text-neutral-500">
+                            {new Date(o.created_at).toLocaleTimeString()}
+                          </Td>
+                        </Tr>
+                      ))}
+                    </tbody>
+                  </TableWrap>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Right rail - Quick actions */}
-          <div>
-            <Card>
-              <CardHeader title="Quick actions" />
-              <div className="space-y-2 p-3">
-                <QuickActionRow label="Create ad" to="/admin/ads" Icon={Megaphone} />
-                <QuickActionRow label="Create offer" to="/admin/offers" Icon={Tag} />
-                <QuickActionRow label="Edit menu" to="/admin/menu" Icon={UtensilsCrossed} />
-                <QuickActionRow label="Review payouts" to="/admin/payouts" Icon={Banknote} />
-                <QuickActionRow label="Approve vendors" to="/admin/stores" Icon={Store} />
-                <QuickActionRow label="Rider status" to="/admin/riders" Icon={Bike} />
-                <QuickActionRow label="Customer complaints" to="/admin/reviews" Icon={MessageSquare} />
-                <QuickActionRow label="Add admin user" to="/admin/users" Icon={Users} />
+          {/* Right rail: Quick actions */}
+          <aside>
+            <div className="rounded-xl border border-[oklch(0.92_0.003_260)] bg-white p-2">
+              <div className="px-3 pt-2 pb-1 text-[15px] font-semibold text-[oklch(0.18_0.006_260)]">
+                Quick actions
               </div>
-            </Card>
-
-            {/* Alerts */}
-            <Card className="mt-4">
-              <CardHeader title="Alerts" />
-              <div className="divide-y divide-border">
-                <AlertRow
-                  label="Documents to verify"
-                  value={data?.pendingDocs ?? 0}
-                  href="/admin/documents"
-                  danger={(data?.pendingDocs ?? 0) > 0}
-                />
-                <AlertRow
-                  label="Vendors awaiting approval"
-                  value={data?.pendingVendors ?? 0}
-                  href="/admin/stores"
-                  danger={(data?.pendingVendors ?? 0) > 0}
-                />
-                <AlertRow
-                  label="Payouts to process"
-                  value={data?.pendingPayoutsCount ?? 0}
-                  href="/admin/payouts"
-                  danger={(data?.pendingPayoutsCount ?? 0) > 0}
-                />
-                <AlertRow
-                  label="Open complaints"
-                  value={data?.openComplaints ?? 0}
-                  href="/admin/reviews"
-                  danger={(data?.openComplaints ?? 0) > 0}
-                />
+              <div className="space-y-0.5">
+                <UberQuickAction label="Create ad" to="/admin/ads" Icon={Megaphone} iconColor="blue" />
+                <UberQuickAction label="Create offer" to="/admin/offers" Icon={Tag} iconColor="pink" />
+                <UberQuickAction label="Edit item" to="/admin/menu" Icon={UtensilsCrossed} iconColor="orange" />
+                <UberQuickAction label="Edit menu hours" to="/admin/holiday-hours" Icon={Clock} iconColor="purple" />
+                <UberQuickAction label="Top eats" to="/admin/performance" Icon={Trophy} iconColor="green" />
+                <UberQuickAction label="Learning guide" to="/admin/success" Icon={BookOpen} iconColor="blue" />
+                <UberQuickAction label="Review payouts" to="/admin/payouts" Icon={Banknote} iconColor="green" />
+                <UberQuickAction label="Approve vendors" to="/admin/stores" Icon={Store} iconColor="orange" />
+                <UberQuickAction label="Rider roster" to="/admin/riders" Icon={Bike} iconColor="pink" />
+                <UberQuickAction label="Order Manager" to="/admin/orders" Icon={ClipboardList} iconColor="purple" />
               </div>
-            </Card>
-          </div>
-        </div>
+            </div>
 
-        <div className="mt-6">
-          <ComingSoon
-            title="More modules mapped and ready"
-            description="The full sidebar covers Store, Orders, Analytics, Customers, Marketing, Menu, Finance and System settings. Each page has been scaffolded — real data is wired to Supabase where the table already exists."
-          />
+            {/* Alerts card */}
+            <div className="mt-4 rounded-xl border border-[oklch(0.92_0.003_260)] bg-white">
+              <div className="border-b border-[oklch(0.94_0.003_260)] px-4 py-3 text-[15px] font-semibold text-[oklch(0.18_0.006_260)]">
+                Needs your attention
+              </div>
+              <AlertRow
+                label="Documents to verify"
+                value={data?.pendingDocs ?? 0}
+                href="/admin/documents"
+              />
+              <AlertRow
+                label="Vendors awaiting approval"
+                value={data?.pendingVendors ?? 0}
+                href="/admin/stores"
+              />
+              <AlertRow
+                label="Payouts to process"
+                value={data?.pendingPayoutsCount ?? 0}
+                href="/admin/payouts"
+              />
+              <AlertRow
+                label="Open complaints"
+                value={data?.openComplaints ?? 0}
+                href="/admin/reviews"
+                last
+              />
+            </div>
+
+            {/* Onboarding card */}
+            <div className="mt-4 rounded-xl border border-[oklch(0.92_0.003_260)] bg-white p-5">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-[oklch(0.94_0.05_155)] text-[oklch(0.5_0.14_155)]">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <div className="mt-3 text-[15px] font-semibold text-[oklch(0.18_0.006_260)]">
+                Vendor success playbook
+              </div>
+              <div className="mt-1 text-[13px] text-neutral-600">
+                Onboarding checklists, photo-quality tips, and sales improvement templates for your account managers.
+              </div>
+              <a
+                href="/admin/success"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.18_0.006_260)] bg-white px-3 py-1.5 text-[13px] font-medium hover:bg-[oklch(0.965_0.003_260)]"
+              >
+                Open playbook
+              </a>
+            </div>
+          </aside>
         </div>
-      </PageBody>
+      </div>
     </AdminShell>
   );
 }
 
-function greetingTitle() {
+function greeting() {
   const h = new Date().getHours();
-  const g = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-  return `${g}, Admin`;
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
-
-function humaniseStatus(s: string) {
+function humanise(s: string) {
   return (s || "").replaceAll("_", " ");
-}
-
-function OpportunityRow({
-  tag,
-  title,
-  body,
-  cta,
-  Icon,
-  color,
-}: {
-  tag: string;
-  title: string;
-  body: string;
-  cta: { label: string; href: string };
-  Icon: React.ComponentType<{ className?: string }>;
-  color: "green" | "orange" | "ink";
-}) {
-  const bubble =
-    color === "green"
-      ? "bg-[var(--naija-green)]/10 text-[var(--naija-green)]"
-      : color === "orange"
-        ? "bg-[var(--naija-orange)]/10 text-[var(--naija-orange)]"
-        : "bg-muted text-foreground";
-  return (
-    <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-start gap-4">
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${bubble}`}>
-          <Icon className="h-5 w-5" />
-        </span>
-        <div>
-          <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-            {tag}
-          </span>
-          <div className="mt-1 text-sm font-medium">{title}</div>
-          <div className="mt-0.5 text-sm text-muted-foreground">{body}</div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <a
-          href={cta.href}
-          className="rounded-lg bg-[var(--naija-green)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--naija-green-dark)]"
-        >
-          {cta.label}
-        </a>
-      </div>
-    </div>
-  );
 }
 
 function AlertRow({
   label,
   value,
   href,
-  danger,
+  last,
 }: {
   label: string;
   value: number;
   href: string;
-  danger: boolean;
+  last?: boolean;
 }) {
+  const critical = value > 0;
   return (
-    <a href={href} className="flex items-center justify-between px-4 py-3 hover:bg-muted/40">
-      <span className="flex items-center gap-2 text-sm">
-        {danger ? (
-          <AlertTriangle className="h-4 w-4 text-[var(--naija-orange)]" />
-        ) : (
-          <CheckCircle2 className="h-4 w-4 text-[var(--naija-green)]" />
-        )}
+    <a
+      href={href}
+      className={`flex items-center justify-between px-4 py-3 hover:bg-[oklch(0.965_0.003_260)] ${last ? "" : "border-b border-[oklch(0.94_0.003_260)]"}`}
+    >
+      <span className="flex items-center gap-2 text-[13.5px] text-[oklch(0.28_0.006_260)]">
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${critical ? "bg-[var(--naija-orange)]" : "bg-[var(--naija-green)]"}`}
+        />
         {label}
       </span>
-      <span className={`text-sm font-semibold ${danger ? "text-[var(--naija-orange)]" : "text-muted-foreground"}`}>
+      <span
+        className={`text-[13.5px] font-semibold ${critical ? "text-[var(--naija-orange)]" : "text-neutral-500"}`}
+      >
         {value}
       </span>
     </a>

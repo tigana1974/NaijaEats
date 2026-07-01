@@ -403,3 +403,208 @@ export function ScaffoldPage({
     </>
   );
 }
+
+/* ============================================================================
+ *  Uber-Eats-Manager-style components used by the admin dashboard homepage.
+ * ========================================================================== */
+
+/** Clean KPI card matching Uber Eats: small label + info dot, big number, small hint. */
+export function UberKpi({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-[oklch(0.92_0.003_260)] bg-white px-5 py-4">
+      <div className="flex items-center gap-1.5 text-[13px] text-neutral-500">
+        <span>{label}</span>
+        <span className="grid h-3.5 w-3.5 place-items-center rounded-full border border-neutral-300 text-[9px] font-semibold text-neutral-400">
+          i
+        </span>
+      </div>
+      <div className="mt-1 text-[28px] font-semibold leading-tight tracking-tight text-[oklch(0.18_0.006_260)]">
+        {value}
+      </div>
+      {hint && <div className="mt-1 text-[12px] text-neutral-500">{hint}</div>}
+    </div>
+  );
+}
+
+/** The distinctive Uber Eats "Current tier" card with an SVG circular gauge. */
+export function CurrentTierCard({
+  tier,
+  benefitsLabel,
+  benefitsCount,
+  progress,
+}: {
+  tier: string;
+  benefitsLabel: string;
+  benefitsCount: number;
+  /** 0 to 1 */
+  progress: number;
+}) {
+  const size = 76;
+  const stroke = 8;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const dash = c * Math.max(0, Math.min(1, progress));
+
+  return (
+    <div className="flex items-center gap-4 rounded-xl border border-[oklch(0.9_0.05_85)] bg-[oklch(0.985_0.03_85)] p-4">
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.9_0.03_85)" strokeWidth={stroke} fill="none" />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            stroke="oklch(0.78_0.16_75)"
+            strokeWidth={stroke}
+            fill="none"
+            strokeDasharray={`${dash} ${c}`}
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+      <div className="flex flex-1 items-center gap-6 min-w-0">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1 text-[13px] text-neutral-600">
+            Current tier
+            <span className="grid h-3.5 w-3.5 place-items-center rounded-full border border-neutral-300 text-[9px] font-semibold text-neutral-400">
+              i
+            </span>
+          </div>
+          <div className="mt-0.5 text-[22px] font-semibold leading-tight tracking-tight text-[oklch(0.18_0.006_260)]">
+            {tier}
+          </div>
+        </div>
+        <div className="mx-2 hidden h-10 w-px bg-[oklch(0.9_0.05_85)] sm:block" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-1 text-[13px] text-neutral-600">
+            Current tier benefits
+            <span className="grid h-3.5 w-3.5 place-items-center rounded-full border border-neutral-300 text-[9px] font-semibold text-neutral-400">
+              i
+            </span>
+          </div>
+          <div className="mt-0.5 truncate text-[15px] font-semibold text-[oklch(0.18_0.006_260)]">
+            {benefitsLabel}
+          </div>
+          <div className="text-[12px] text-neutral-500">{benefitsCount} benefits</div>
+        </div>
+      </div>
+      <ArrowUpRight className="hidden shrink-0 text-neutral-400 sm:block" />
+    </div>
+  );
+}
+
+/** Opportunity card matching Uber Eats: tag pill, title, body, primary button, big circle icon on the right, Helpful/Not helpful feedback. */
+export function UberOpportunityCard({
+  tag,
+  title,
+  body,
+  ctaLabel,
+  ctaHref,
+  Icon,
+  iconColor = "orange",
+}: {
+  tag: string;
+  title: string;
+  body: string;
+  ctaLabel: string;
+  ctaHref: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  iconColor?: "orange" | "green" | "blue" | "pink";
+}) {
+  const bubbleBg = {
+    orange: "bg-[oklch(0.94_0.05_65)]",
+    green: "bg-[oklch(0.94_0.05_155)]",
+    blue: "bg-[oklch(0.94_0.04_240)]",
+    pink: "bg-[oklch(0.94_0.04_15)]",
+  }[iconColor];
+  const bubbleFg = {
+    orange: "text-[oklch(0.55_0.19_55)]",
+    green: "text-[oklch(0.5_0.14_155)]",
+    blue: "text-[oklch(0.5_0.14_240)]",
+    pink: "text-[oklch(0.55_0.15_15)]",
+  }[iconColor];
+
+  return (
+    <div className="rounded-xl border border-[oklch(0.92_0.003_260)] bg-white p-5">
+      <div className="flex items-start gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="inline-block rounded-full bg-[oklch(0.965_0.003_260)] px-2.5 py-0.5 text-[11px] font-medium text-neutral-600">
+            {tag}
+          </div>
+          <div className="mt-2 text-[17px] font-semibold leading-snug text-[oklch(0.18_0.006_260)]">
+            {title}
+          </div>
+          <div className="mt-1 text-[13.5px] text-neutral-600">{body}</div>
+          <a
+            href={ctaHref}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.18_0.006_260)] bg-white px-4 py-1.5 text-[13.5px] font-medium text-[oklch(0.18_0.006_260)] hover:bg-[oklch(0.965_0.003_260)]"
+          >
+            {ctaLabel}
+          </a>
+        </div>
+        <div className={`grid h-20 w-20 shrink-0 place-items-center rounded-full ${bubbleBg} ${bubbleFg}`}>
+          <Icon className="h-8 w-8" />
+        </div>
+      </div>
+      <div className="mt-4 flex items-center gap-6 border-t border-[oklch(0.94_0.003_260)] pt-3 text-[13px] text-neutral-500">
+        <button type="button" className="inline-flex items-center gap-1.5 hover:text-neutral-800">
+          <span className="text-base leading-none">👍</span> Helpful
+        </button>
+        <button type="button" className="inline-flex items-center gap-1.5 hover:text-neutral-800">
+          <span className="text-base leading-none">👎</span> Not helpful
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Right-rail Quick Action row matching Uber Eats: colored square icon + label + chevron. */
+export function UberQuickAction({
+  label,
+  to,
+  Icon,
+  iconColor = "orange",
+}: {
+  label: string;
+  to: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  iconColor?: "orange" | "green" | "blue" | "pink" | "purple";
+}) {
+  const bg = {
+    orange: "bg-[oklch(0.94_0.05_65)] text-[oklch(0.55_0.19_55)]",
+    green: "bg-[oklch(0.94_0.05_155)] text-[oklch(0.5_0.14_155)]",
+    blue: "bg-[oklch(0.94_0.04_240)] text-[oklch(0.5_0.14_240)]",
+    pink: "bg-[oklch(0.94_0.04_15)] text-[oklch(0.55_0.15_15)]",
+    purple: "bg-[oklch(0.94_0.05_310)] text-[oklch(0.5_0.16_310)]",
+  }[iconColor];
+  return (
+    <a
+      href={to}
+      className="flex items-center justify-between rounded-xl px-3 py-2.5 hover:bg-[oklch(0.965_0.003_260)]"
+    >
+      <span className="flex items-center gap-3">
+        <span className={`grid h-8 w-8 place-items-center rounded-lg ${bg}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <span className="text-[14px] font-medium text-[oklch(0.18_0.006_260)]">{label}</span>
+      </span>
+      <ChevronRightArrow />
+    </a>
+  );
+}
+
+function ChevronRightArrow() {
+  return (
+    <svg className="h-4 w-4 text-neutral-400" viewBox="0 0 20 20" fill="none">
+      <path d="M7.5 5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
