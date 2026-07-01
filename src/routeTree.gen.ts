@@ -57,6 +57,7 @@ import { Route as AuthenticatedAdminSalesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminRidersRouteImport } from './routes/_authenticated/admin.riders'
 import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
 import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
+import { Route as AuthenticatedAdminProfileRouteImport } from './routes/_authenticated/admin.profile'
 import { Route as AuthenticatedAdminPrepTimesRouteImport } from './routes/_authenticated/admin.prep-times'
 import { Route as AuthenticatedAdminPerformanceRouteImport } from './routes/_authenticated/admin.performance'
 import { Route as AuthenticatedAdminPayoutsOrdersRouteImport } from './routes/_authenticated/admin.payouts-orders'
@@ -346,6 +347,12 @@ const AuthenticatedAdminReportsRoute =
     path: '/admin/reports',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminProfileRoute =
+  AuthenticatedAdminProfileRouteImport.update({
+    id: '/admin/profile',
+    path: '/admin/profile',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPrepTimesRoute =
   AuthenticatedAdminPrepTimesRouteImport.update({
     id: '/admin/prep-times',
@@ -537,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/admin/payouts-orders': typeof AuthenticatedAdminPayoutsOrdersRoute
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/admin/prep-times': typeof AuthenticatedAdminPrepTimesRoute
+  '/admin/profile': typeof AuthenticatedAdminProfileRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/riders': typeof AuthenticatedAdminRidersRoute
@@ -611,6 +619,7 @@ export interface FileRoutesByTo {
   '/admin/payouts-orders': typeof AuthenticatedAdminPayoutsOrdersRoute
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/admin/prep-times': typeof AuthenticatedAdminPrepTimesRoute
+  '/admin/profile': typeof AuthenticatedAdminProfileRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/riders': typeof AuthenticatedAdminRidersRoute
@@ -687,6 +696,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/payouts-orders': typeof AuthenticatedAdminPayoutsOrdersRoute
   '/_authenticated/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/_authenticated/admin/prep-times': typeof AuthenticatedAdminPrepTimesRoute
+  '/_authenticated/admin/profile': typeof AuthenticatedAdminProfileRoute
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/admin/riders': typeof AuthenticatedAdminRidersRoute
@@ -763,6 +773,7 @@ export interface FileRouteTypes {
     | '/admin/payouts-orders'
     | '/admin/performance'
     | '/admin/prep-times'
+    | '/admin/profile'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/riders'
@@ -837,6 +848,7 @@ export interface FileRouteTypes {
     | '/admin/payouts-orders'
     | '/admin/performance'
     | '/admin/prep-times'
+    | '/admin/profile'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/riders'
@@ -912,6 +924,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/payouts-orders'
     | '/_authenticated/admin/performance'
     | '/_authenticated/admin/prep-times'
+    | '/_authenticated/admin/profile'
     | '/_authenticated/admin/reports'
     | '/_authenticated/admin/reviews'
     | '/_authenticated/admin/riders'
@@ -1292,6 +1305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/profile': {
+      id: '/_authenticated/admin/profile'
+      path: '/admin/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AuthenticatedAdminProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/prep-times': {
       id: '/_authenticated/admin/prep-times'
       path: '/admin/prep-times'
@@ -1550,6 +1570,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPayoutsOrdersRoute: typeof AuthenticatedAdminPayoutsOrdersRoute
   AuthenticatedAdminPerformanceRoute: typeof AuthenticatedAdminPerformanceRoute
   AuthenticatedAdminPrepTimesRoute: typeof AuthenticatedAdminPrepTimesRoute
+  AuthenticatedAdminProfileRoute: typeof AuthenticatedAdminProfileRoute
   AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
   AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
   AuthenticatedAdminRidersRoute: typeof AuthenticatedAdminRidersRoute
@@ -1615,6 +1636,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPayoutsOrdersRoute: AuthenticatedAdminPayoutsOrdersRoute,
   AuthenticatedAdminPerformanceRoute: AuthenticatedAdminPerformanceRoute,
   AuthenticatedAdminPrepTimesRoute: AuthenticatedAdminPrepTimesRoute,
+  AuthenticatedAdminProfileRoute: AuthenticatedAdminProfileRoute,
   AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
   AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   AuthenticatedAdminRidersRoute: AuthenticatedAdminRidersRoute,

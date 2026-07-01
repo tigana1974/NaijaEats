@@ -228,16 +228,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <MenuIcon className="h-5 w-5" />
         </button>
         <div className="font-semibold text-[15px]">Naija Eats Manager</div>
-        <Link
-          to="/notifications"
-          aria-label="Notifications"
-          className="relative rounded-md p-2 hover:bg-[oklch(0.965_0.003_260)]"
-        >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[var(--naija-orange)]" />
-          )}
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            to="/notifications"
+            aria-label="Notifications"
+            className="relative rounded-md p-2 hover:bg-[oklch(0.965_0.003_260)]"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[var(--naija-orange)]" />
+            )}
+          </Link>
+          <Link to="/admin/profile" className="ml-1 rounded-full overflow-hidden">
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={me?.avatar_url ?? undefined} />
+              <AvatarFallback className="bg-[var(--naija-green)] text-white text-[10px]">
+                {initials || "A"}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -314,12 +324,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </span>
               )}
             </Link>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={me?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-[var(--naija-green)] text-white text-xs">
-                {initials || "A"}
-              </AvatarFallback>
-            </Avatar>
+            <Link to="/admin/profile" className="rounded-full overflow-hidden hover:ring-2 hover:ring-[var(--naija-green)] transition-all ml-1">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={me?.avatar_url ?? undefined} />
+                <AvatarFallback className="bg-[var(--naija-green)] text-white text-xs">
+                  {initials || "A"}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
           </header>
 
           <main className="min-h-screen">{children}</main>
