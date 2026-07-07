@@ -4,22 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyRole } from "@/hooks/useMyRole";
 import {
-  Home,
-  Store as StoreIcon,
-  ClipboardList,
-  BarChart3,
-  Users as UsersIcon,
-  FileText,
-  Megaphone,
-  Tag,
-  Send,
-  UtensilsCrossed,
-  CreditCard,
-  HandCoins,
-  Bike,
-  Shield,
-  Truck,
-  Settings,
   ChevronDown,
   ChevronRight,
   Bell,
@@ -27,25 +11,42 @@ import {
   Menu as MenuIcon,
   X,
   Check,
-  type LucideIcon,
 } from "lucide-react";
+import {
+  PiHouseDuotone,
+  PiStorefrontDuotone,
+  PiClipboardTextDuotone,
+  PiChartBarDuotone,
+  PiUsersThreeDuotone,
+  PiFilesDuotone,
+  PiMegaphoneDuotone,
+  PiTagDuotone,
+  PiPaperPlaneTiltDuotone,
+  PiForkKnifeDuotone,
+  PiCreditCardDuotone,
+  PiHandCoinsDuotone,
+  PiMopedDuotone,
+  PiShieldCheckDuotone,
+  PiTruckDuotone,
+  PiGearSixDuotone,
+} from "react-icons/pi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/naija/Logo";
 
 type NavItem = {
   to: string;
   label: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   children?: { to: string; label: string }[];
 };
 
 /** Uber-Eats-style flat sidebar. Parent items with children are expandable. */
 const NAV: NavItem[] = [
-  { to: "/admin/dashboard", label: "Home", icon: Home },
+  { to: "/admin/dashboard", label: "Home", icon: PiHouseDuotone },
   {
     to: "/admin/stores",
     label: "Store",
-    icon: StoreIcon,
+    icon: PiStorefrontDuotone,
     children: [
       { to: "/admin/stores", label: "Store list" },
       { to: "/admin/store-groups", label: "Store groups" },
@@ -53,12 +54,12 @@ const NAV: NavItem[] = [
       { to: "/admin/devices", label: "Devices" },
     ],
   },
-  { to: "/admin/orders", label: "Orders", icon: ClipboardList },
-  { to: "/admin/riders", label: "Riders", icon: Bike },
+  { to: "/admin/orders", label: "Orders", icon: PiClipboardTextDuotone },
+  { to: "/admin/riders", label: "Riders", icon: PiMopedDuotone },
   {
     to: "/admin/performance",
     label: "Performance",
-    icon: BarChart3,
+    icon: PiChartBarDuotone,
     children: [
       { to: "/admin/performance", label: "Performance" },
       { to: "/admin/sales", label: "Sales" },
@@ -69,22 +70,22 @@ const NAV: NavItem[] = [
   {
     to: "/admin/customers",
     label: "Customers",
-    icon: UsersIcon,
+    icon: PiUsersThreeDuotone,
     children: [
       { to: "/admin/customers", label: "Customer list" },
       { to: "/admin/customer-insights", label: "Customer insights" },
       { to: "/admin/reviews", label: "Reviews" },
     ],
   },
-  { to: "/admin/reports", label: "Reports", icon: FileText },
-  { to: "/admin/ads", label: "Ads", icon: Megaphone },
-  { to: "/admin/offers", label: "Offers", icon: Tag },
-  { to: "/admin/marketing", label: "Marketing", icon: Send },
-  { to: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
+  { to: "/admin/reports", label: "Reports", icon: PiFilesDuotone },
+  { to: "/admin/ads", label: "Ads", icon: PiMegaphoneDuotone },
+  { to: "/admin/offers", label: "Offers", icon: PiTagDuotone },
+  { to: "/admin/marketing", label: "Marketing", icon: PiPaperPlaneTiltDuotone },
+  { to: "/admin/menu", label: "Menu", icon: PiForkKnifeDuotone },
   {
     to: "/admin/payments",
     label: "Payments",
-    icon: CreditCard,
+    icon: PiCreditCardDuotone,
     children: [
       { to: "/admin/payments", label: "Payments" },
       { to: "/admin/payouts", label: "Payouts" },
@@ -94,13 +95,13 @@ const NAV: NavItem[] = [
       { to: "/admin/banking", label: "Banking" },
     ],
   },
-  { to: "/admin/financing", label: "Financing", icon: HandCoins },
-  { to: "/admin/users", label: "Users & roles", icon: Shield },
-  { to: "/admin/delivery", label: "Delivery settings", icon: Truck },
+  { to: "/admin/financing", label: "Financing", icon: PiHandCoinsDuotone },
+  { to: "/admin/users", label: "Users & roles", icon: PiShieldCheckDuotone },
+  { to: "/admin/delivery", label: "Delivery settings", icon: PiTruckDuotone },
   {
     to: "/admin/settings",
     label: "Settings",
-    icon: Settings,
+    icon: PiGearSixDuotone,
     children: [
       { to: "/admin/settings", label: "Settings" },
       { to: "/admin/general", label: "General" },
@@ -437,13 +438,16 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: (to: string) => b
       <li>
         <Link
           to={item.to as unknown as never}
-          className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors ${
+          className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors ${
             active
-              ? "bg-[oklch(0.945_0.003_260)] font-medium text-[oklch(0.18_0.006_260)]"
+              ? "bg-[oklch(0.96_0.03_145)] font-semibold text-[oklch(0.32_0.10_145)]"
               : "text-[oklch(0.28_0.006_260)] hover:bg-[oklch(0.965_0.003_260)]"
           }`}
         >
-          <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={active ? 2.25 : 2} />
+          {active && (
+            <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--naija-green)]" />
+          )}
+          <Icon className={`h-5 w-5 shrink-0 ${active ? "text-[var(--naija-green)]" : "text-[oklch(0.42_0.006_260)] group-hover:text-[oklch(0.28_0.006_260)]"}`} />
           <span className="truncate">{item.label}</span>
         </Link>
       </li>
@@ -455,13 +459,16 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: (to: string) => b
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors ${
+        className={`group relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition-colors ${
           active
-            ? "bg-[oklch(0.945_0.003_260)] font-medium text-[oklch(0.18_0.006_260)]"
+            ? "bg-[oklch(0.96_0.03_145)] font-semibold text-[oklch(0.32_0.10_145)]"
             : "text-[oklch(0.28_0.006_260)] hover:bg-[oklch(0.965_0.003_260)]"
         }`}
       >
-        <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={active ? 2.25 : 2} />
+        {active && (
+          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--naija-green)]" />
+        )}
+        <Icon className={`h-5 w-5 shrink-0 ${active ? "text-[var(--naija-green)]" : "text-[oklch(0.42_0.006_260)] group-hover:text-[oklch(0.28_0.006_260)]"}`} />
         <span className="flex-1 truncate text-left">{item.label}</span>
         {open ? (
           <ChevronDown className="h-4 w-4 text-neutral-400" />
@@ -479,7 +486,7 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: (to: string) => b
                   to={c.to as unknown as never}
                   className={`flex items-center gap-2 rounded-lg py-1.5 pl-11 pr-3 text-[13.5px] transition-colors ${
                     cActive
-                      ? "bg-[oklch(0.945_0.003_260)] font-medium text-[oklch(0.18_0.006_260)]"
+                      ? "bg-[oklch(0.96_0.03_145)] font-medium text-[oklch(0.32_0.10_145)]"
                       : "text-[oklch(0.38_0.006_260)] hover:bg-[oklch(0.965_0.003_260)]"
                   }`}
                 >

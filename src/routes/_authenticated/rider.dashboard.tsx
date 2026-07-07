@@ -5,7 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
 import { toast } from "sonner";
-import { Bike, MapPin, Package, CheckCircle2, PackageSearch, Wallet, FileText } from "lucide-react";
+import { MapPin } from "lucide-react";
+import {
+  PiMopedDuotone,
+  PiPackageDuotone,
+  PiCheckCircleDuotone,
+  PiWalletDuotone,
+  PiFilesDuotone,
+  PiChartLineUpDuotone,
+} from "react-icons/pi";
 
 export const Route = createFileRoute("/_authenticated/rider/dashboard")({
   component: RiderDashboard,
@@ -92,8 +100,10 @@ function RiderDashboard() {
           </div>
           <button
             onClick={() => setOnline((v) => !v)}
-            className={`rounded-full px-5 py-2.5 font-semibold inline-flex items-center gap-2 transition ${
-              online ? "bg-green-600 text-white" : "bg-muted text-foreground"
+            className={`rounded-full px-5 py-2.5 font-semibold inline-flex items-center gap-2 transition-all duration-200 ${
+              online
+                ? "bg-green-600 text-white shadow-lg shadow-green-600/30"
+                : "bg-muted text-foreground ring-1 ring-border hover:ring-green-600/40"
             }`}
           >
             <span className={`h-2 w-2 rounded-full ${online ? "bg-white animate-pulse" : "bg-muted-foreground"}`} />
@@ -102,9 +112,9 @@ function RiderDashboard() {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <Stat label="Earnings today" value={`${symbol}${(data?.earningsToday ?? 0).toLocaleString()}`} Icon={Wallet} />
-          <Stat label="Deliveries today" value={data?.deliveriesToday ?? 0} Icon={Package} />
-          <Stat label="Total deliveries" value={data?.totalDeliveries ?? 0} Icon={CheckCircle2} />
+          <Stat label="Earnings today" value={`${symbol}${(data?.earningsToday ?? 0).toLocaleString()}`} Icon={PiWalletDuotone} tone="green" />
+          <Stat label="Deliveries today" value={data?.deliveriesToday ?? 0} Icon={PiPackageDuotone} tone="clay" />
+          <Stat label="Total deliveries" value={data?.totalDeliveries ?? 0} Icon={PiCheckCircleDuotone} tone="blue" />
         </div>
 
         {/* Active delivery */}
@@ -114,7 +124,7 @@ function RiderDashboard() {
             <p className="mt-2 text-muted-foreground">Loading…</p>
           ) : !data?.active ? (
             <div className="mt-3 rounded-2xl border border-border bg-card p-6 text-center">
-              <Bike className="h-8 w-8 mx-auto text-muted-foreground" />
+              <PiMopedDuotone className="h-9 w-9 mx-auto text-muted-foreground" />
               <p className="mt-2 text-muted-foreground">No active delivery.</p>
               {online ? (
                 <Link to="/rider/available" className="mt-4 inline-block rounded-full bg-[var(--brand-clay)] text-[var(--brand-cream)] px-4 py-2 text-sm font-semibold">
@@ -130,27 +140,9 @@ function RiderDashboard() {
         </section>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          <Link to="/rider/available" className="rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-soft)] transition flex gap-3 items-center">
-            <PackageSearch className="h-6 w-6 text-[var(--brand-clay)]" />
-            <div>
-              <div className="font-semibold">Available jobs</div>
-              <div className="text-sm text-muted-foreground">Browse pickups nearby.</div>
-            </div>
-          </Link>
-          <Link to="/rider/earnings" className="rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-soft)] transition flex gap-3 items-center">
-            <Wallet className="h-6 w-6 text-[var(--brand-clay)]" />
-            <div>
-              <div className="font-semibold">Earnings</div>
-              <div className="text-sm text-muted-foreground">View your payouts.</div>
-            </div>
-          </Link>
-          <Link to="/rider/documents" className="rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-soft)] transition flex gap-3 items-center">
-            <FileText className="h-6 w-6 text-[var(--brand-clay)]" />
-            <div>
-              <div className="font-semibold">Documents</div>
-              <div className="text-sm text-muted-foreground">Upload for verification.</div>
-            </div>
-          </Link>
+          <QuickLink to="/rider/available" Icon={PiPackageDuotone} title="Available jobs" desc="Browse pickups nearby." />
+          <QuickLink to="/rider/earnings" Icon={PiChartLineUpDuotone} title="Earnings" desc="View your payouts." />
+          <QuickLink to="/rider/documents" Icon={PiFilesDuotone} title="Documents" desc="Upload for verification." />
         </div>
       </div>
     </AppShell>
@@ -202,15 +194,40 @@ function ActiveCard({ delivery, symbol, onAdvance }: { delivery: any; symbol: st
   );
 }
 
-function Stat({ label, value, Icon }: { label: string; value: string | number; Icon: React.ComponentType<{ className?: string }> }) {
+const statTones = {
+  clay: "bg-[oklch(0.96_0.03_25)] text-[var(--brand-clay)]",
+  green: "bg-[oklch(0.95_0.04_145)] text-[oklch(0.52_0.16_145)]",
+  blue: "bg-[oklch(0.95_0.03_250)] text-[oklch(0.55_0.15_250)]",
+} as const;
+
+function Stat({ label, value, Icon, tone = "clay" }: { label: string; value: string | number; Icon: React.ComponentType<{ className?: string }>; tone?: keyof typeof statTones }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="flex items-center justify-between text-muted-foreground">
-        <span className="text-xs">{label}</span>
-        <Icon className="h-4 w-4" />
+    <div className="rounded-2xl border border-border bg-card p-4 transition hover:shadow-[var(--shadow-soft)]">
+      <div className="flex items-center gap-2.5">
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${statTones[tone]}`}>
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="text-xs text-muted-foreground">{label}</span>
       </div>
-      <div className="mt-1 font-display text-xl font-semibold">{value}</div>
+      <div className="mt-2.5 font-display text-xl font-semibold tracking-tight">{value}</div>
     </div>
+  );
+}
+
+function QuickLink({ to, Icon, title, desc }: { to: string; Icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
+  return (
+    <Link
+      to={to}
+      className="group rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:shadow-[var(--shadow-card)] hover:border-[var(--brand-clay)]/30 hover:-translate-y-0.5 flex gap-3 items-center"
+    >
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[oklch(0.96_0.03_25)] text-[var(--brand-clay)] transition-transform duration-200 group-hover:scale-105">
+        <Icon className="h-6 w-6" />
+      </span>
+      <div>
+        <div className="font-semibold">{title}</div>
+        <div className="text-sm text-muted-foreground">{desc}</div>
+      </div>
+    </Link>
   );
 }
 
