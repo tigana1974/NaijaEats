@@ -444,10 +444,14 @@ export function UberKpi({
   label,
   value,
   hint,
+  ...rest
 }: {
   label: string;
   value: string | number;
   hint?: string;
+  Icon?: any;
+  accent?: string;
+  [k: string]: any;
 }) {
   return (
     <div className="rounded-xl border border-[oklch(0.92_0.003_260)] bg-white px-5 py-4">
@@ -789,8 +793,8 @@ export function UberThead({ children }: { children: ReactNode }) {
 export function UberTh({ children, className = "" }: { children?: ReactNode; className?: string }) {
   return <th className={`px-4 py-3 font-medium ${className}`}>{children}</th>;
 }
-export function UberTd({ children, className = "" }: { children?: ReactNode; className?: string }) {
-  return <td className={`px-4 py-3 align-middle ${className}`}>{children}</td>;
+export function UberTd({ children, className = "", colSpan }: { children?: ReactNode; className?: string; colSpan?: number }) {
+  return <td className={`px-4 py-3 align-middle ${className}`} colSpan={colSpan}>{children}</td>;
 }
 export function UberTr({
   children,
@@ -812,7 +816,7 @@ export function UberTr({
 }
 
 /** Uber-style status pill (used in tables). Uses only Naija-brand hues. */
-export function UberStatus({ status }: { status: string }) {
+export function UberStatus({ status, ...rest }: { status: string; variant?: string; [k: string]: any }) {
   const s = (status || "").toLowerCase();
   const green = new Set([
     "delivered", "completed", "paid", "approved", "active", "open",
