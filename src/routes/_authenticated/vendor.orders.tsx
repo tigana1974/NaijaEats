@@ -39,6 +39,7 @@ function VendorOrders() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["vendor-orders"],
+    refetchInterval: 15_000, // live queue: poll for new orders
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
@@ -62,6 +63,26 @@ function VendorOrders() {
     if (status === "cancelled") patch.cancelled_at = new Date().toISOString();
     const { error } = await supabase.from("orders").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
+
+    // When the food is ready, publish a delivery job for riders (unless one
+    // already exists, e.g. created by a DB trigger).
+    if (status === "ready") {
+      const { data: existing } = await supabase.from("deliveries").select("id").eq("order_id", id).maybeSingle();
+      if (!existing) {
+        const order = (data?.orders ?? []).find((o: any) => o.id === id);
+        const v = data?.vendor;
+        const { error: dErr } = await supabase.from("deliveries").insert({
+          order_id: id,
+          status: "unassigned",
+          currency: order?.currency || v?.currency || "NGN",
+          fee: Number(order?.delivery_fee ?? v?.delivery_fee ?? 0),
+          pickup_address: [v?.address_line, v?.city].filter(Boolean).join(", ") || null,
+          dropoff_address: order?.delivery_address ?? null,
+        });
+        if (dErr) console.warn("Could not create delivery job:", dErr.message);
+      }
+    }
+
     toast.success(`Order ${STATUS_LABEL[status].toLowerCase()}`);
     qc.invalidateQueries({ queryKey: ["vendor-orders"] });
     qc.invalidateQueries({ queryKey: ["vendor-dashboard"] });
@@ -109,17 +130,56 @@ function VendorOrders() {
           {orders.map((o: any) => {
             const symbol = o.currency === "GBP" ? "£" : "₦";
             const next = getNextActions(data?.vendor?.type)[o.status as Status];
+            const ageMin = Math.floor((Date.now() - new Date(o.created_at).getTime()) / 60000);
+            const isNew = o.status === "pending";
+            const urgent = isNew && ageMin >= 5;
+            const itemCount = (o.order_items ?? []).reduce((s: number, it: any) => s + Number(it.quantity ?? 0), 0);
             return (
-              <div key={o.id} className="rounded-2xl border border-border bg-card p-5">
+              <div
+                key={o.id}
+                className={`rounded-2xl border bg-card p-5 ${
+                  urgent
+                    ? "border-[var(--brand-clay)] ring-1 ring-[var(--brand-clay)]/30"
+                    : isNew
+                      ? "border-[var(--brand-clay)]/40"
+                      : "border-border"
+                }`}
+              >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
                       <span className="text-xs rounded-full px-2 py-0.5 bg-muted">{STATUS_LABEL[o.status as Status]}</span>
+                      <span
+                        className={`text-xs rounded-full px-2 py-0.5 ${
+                          o.payment_status === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {o.payment_status === "paid" ? "Paid" : "Unpaid"}
+                      </span>
+                      {isNew && (
+                        <span
+                          className={`text-xs rounded-full px-2 py-0.5 font-medium ${
+                            urgent ? "bg-[var(--brand-clay)] text-white" : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {ageMin < 1 ? "Just now" : `${ageMin} min waiting`}
+                        </span>
+                      )}
                     </div>
                     <div className="font-display text-xl font-semibold mt-1">
                       {symbol}{Number(o.total).toLocaleString()}
+                      <span className="ml-2 text-sm font-normal text-muted-foreground">
+                        {itemCount} item{itemCount === 1 ? "" : "s"}
+                      </span>
                     </div>
+                    {o.delivery_address && (
+                      <div className="text-xs text-muted-foreground mt-1 max-w-md truncate">
+                        📍 {o.delivery_address}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground mt-1">
                       {new Date(o.created_at).toLocaleString()}
                     </div>

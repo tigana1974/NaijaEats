@@ -103,7 +103,7 @@ function AdminReports() {
     }));
 
     const total = orders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-    const refunded = orders.filter((o: any) => ["cancelled", "refunded"].includes(o.status)).length;
+    const refunded = orders.filter((o: any) => o.status === "cancelled").length;
 
     return {
       trend,
@@ -140,7 +140,7 @@ function AdminReports() {
           <UberKpi label="Gross sales" value={isLoading ? "…" : formatMoney(kpiTotal, currency)} hint="Across all vendors" />
           <UberKpi label="Orders" value={isLoading ? "…" : kpiOrders.toLocaleString()} hint="Last 30 days" />
           <UberKpi label="Avg ticket" value={isLoading ? "…" : formatMoney(kpiAvg, currency)} hint="Per order" />
-          <UberKpi label="Refunds / cancels" value={isLoading ? "…" : kpiRefund.toLocaleString()} hint="30-day count" />
+          <UberKpi label="Cancellations" value={isLoading ? "…" : kpiRefund.toLocaleString()} hint="30-day count" />
         </div>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">

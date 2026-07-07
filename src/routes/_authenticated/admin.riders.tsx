@@ -31,11 +31,22 @@ function AdminRiders() {
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "rider");
       const ids = (roles ?? []).map((r: any) => r.user_id).filter(Boolean);
       if (ids.length === 0) return [];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id,full_name,email,phone,avatar_url,created_at")
-        .in("id", ids);
-      return profiles ?? [];
+      const [{ data: profiles }, { data: docs }] = await Promise.all([
+        supabase.from("profiles").select("id,full_name,phone,avatar_url,country,default_city,created_at").in("id", ids),
+        supabase.from("rider_documents").select("rider_id,status").in("rider_id", ids),
+      ]);
+      const docsByRider = new Map<string, { pending: number; verified: number; rejected: number }>();
+      for (const d of (docs ?? []) as any[]) {
+        const cur = docsByRider.get(d.rider_id) ?? { pending: 0, verified: 0, rejected: 0 };
+        if (d.status in cur) (cur as any)[d.status]++;
+        docsByRider.set(d.rider_id, cur);
+      }
+      return ((profiles ?? []) as any[]).map((p) => {
+        const dd = docsByRider.get(p.id) ?? { pending: 0, verified: 0, rejected: 0 };
+        const docStatus =
+          dd.pending > 0 ? "pending" : dd.rejected > 0 && dd.verified === 0 ? "rejected" : dd.verified > 0 ? "verified" : "no documents";
+        return { ...p, ...dd, docStatus };
+      });
     },
   });
 
@@ -45,7 +56,7 @@ function AdminRiders() {
     if (!search) return list;
     const s = search.toLowerCase();
     return list.filter((r: any) =>
-      [r.full_name, r.email, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
+      [r.full_name, r.phone, r.default_city].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
     );
   }, [list, search]);
 
@@ -65,8 +76,8 @@ function AdminRiders() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <UberKpi label="Total riders" value={isLoading ? "…" : list.length.toLocaleString()} hint="Onboarded on the platform" />
-          <UberKpi label="Active today" value={isLoading ? "…" : Math.max(0, Math.floor(list.length * 0.35))} hint="Available for delivery" />
-          <UberKpi label="Awaiting verification" value={0} hint="Documents to review" />
+          <UberKpi label="Fully verified" value={isLoading ? "…" : list.filter((r: any) => r.docStatus === "verified").length} hint="All documents approved" />
+          <UberKpi label="Awaiting verification" value={isLoading ? "…" : list.filter((r: any) => r.docStatus === "pending").length} hint="Documents to review" />
         </div>
 
         <div className="mt-8">
@@ -82,7 +93,7 @@ function AdminRiders() {
               <tr>
                 <UberTh>Rider</UberTh>
                 <UberTh>Contact</UberTh>
-                <UberTh>Status</UberTh>
+                <UberTh>Documents</UberTh>
                 <UberTh>Joined</UberTh>
                 <UberTh className="w-[1%]" />
               </tr>
@@ -102,7 +113,7 @@ function AdminRiders() {
                     <UberTd>
                       <div className="flex items-center gap-2.5">
                         <div className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.95_0.05_65)] text-[var(--naija-orange-dark)] text-xs font-medium">
-                          {initials(r.full_name || r.email)}
+                          {initials(r.full_name)}
                         </div>
                         <div>
                           <div className="font-medium text-[oklch(0.18_0.006_260)]">{r.full_name || "Unnamed rider"}</div>
@@ -111,10 +122,15 @@ function AdminRiders() {
                       </div>
                     </UberTd>
                     <UberTd className="text-neutral-600">
-                      <div className="truncate">{r.email || "—"}</div>
-                      <div className="text-[12px] text-neutral-500">{r.phone || ""}</div>
+                      <div className="truncate">{r.phone || "—"}</div>
+                      <div className="text-[12px] text-neutral-500">{[r.default_city, r.country].filter(Boolean).join(", ")}</div>
                     </UberTd>
-                    <UberTd><UberStatus status="active" /></UberTd>
+                    <UberTd>
+                      <UberStatus status={r.docStatus} />
+                      {r.pending > 0 && (
+                        <div className="mt-1 text-[11px] text-neutral-500">{r.pending} doc{r.pending > 1 ? "s" : ""} pending</div>
+                      )}
+                    </UberTd>
                     <UberTd className="text-neutral-500">
                       {r.created_at ? new Date(r.created_at).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }) : "—"}
                     </UberTd>

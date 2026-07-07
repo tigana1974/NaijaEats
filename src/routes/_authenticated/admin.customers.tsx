@@ -30,7 +30,7 @@ function AdminCustomers() {
     staleTime: 60_000,
     queryFn: async () => {
       const [profilesRes, ordersRes] = await Promise.all([
-        supabase.from("profiles").select("id,full_name,email,phone,avatar_url,created_at").limit(500),
+        supabase.from("profiles").select("id,full_name,phone,avatar_url,country,default_city,created_at").limit(500),
         supabase.from("orders").select("customer_id,total,currency,created_at,status"),
       ]);
       const profiles = profilesRes.data ?? [];
@@ -61,7 +61,7 @@ function AdminCustomers() {
     if (!search) return rows;
     const s = search.toLowerCase();
     return rows.filter((r: any) =>
-      [r.full_name, r.email, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
+      [r.full_name, r.phone, r.default_city].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
     );
   }, [rows, search]);
 
@@ -132,7 +132,7 @@ function AdminCustomers() {
                     <UberTd>
                       <div className="flex items-center gap-2.5">
                         <div className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.95_0.05_145)] text-[var(--naija-green-dark)] text-xs font-medium">
-                          {initials(c.full_name || c.email)}
+                          {initials(c.full_name)}
                         </div>
                         <div>
                           <div className="font-medium text-[oklch(0.18_0.006_260)]">{c.full_name || "Unnamed"}</div>
@@ -141,8 +141,8 @@ function AdminCustomers() {
                       </div>
                     </UberTd>
                     <UberTd className="text-neutral-600">
-                      <div className="truncate">{c.email || "—"}</div>
-                      <div className="text-[12px] text-neutral-500">{c.phone || ""}</div>
+                      <div className="truncate">{c.phone || "—"}</div>
+                      <div className="text-[12px] text-neutral-500">{[c.default_city, c.country].filter(Boolean).join(", ")}</div>
                     </UberTd>
                     <UberTd className="text-neutral-700">{c.count}</UberTd>
                     <UberTd className="font-medium">{formatMoney(c.spend, c.currency)}</UberTd>

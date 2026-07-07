@@ -7,7 +7,7 @@ import {
   CurrentTierCard,
   UberOpportunityCard,
   UberQuickAction,
-  StatusBadge,
+  UberStatus,
   TableWrap,
   Thead,
   Th,
@@ -54,16 +54,8 @@ function AdminDashboard() {
       const isToday = (d: string) => new Date(d).toDateString() === now.toDateString();
       const ordersToday = orders.filter((o: any) => isToday(o.created_at));
       const salesToday = ordersToday.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-      const liveStatuses = new Set([
-        "new",
-        "awaiting_acceptance",
-        "accepted",
-        "preparing",
-        "ready_for_pickup",
-        "assigned",
-        "picked_up",
-        "on_the_way",
-      ]);
+      // Matches the actual order_status enum in Supabase.
+      const liveStatuses = new Set(["pending", "accepted", "preparing", "ready", "picked_up"]);
       const liveOrders = orders.filter((o: any) => liveStatuses.has(o.status));
       const currency = (ordersToday[0]?.currency as string) || "GBP";
       const pendingPayouts = (payoutsRes.data ?? []).reduce(
@@ -72,12 +64,8 @@ function AdminDashboard() {
       );
 
       // Simple platform-health score → tier
-      const completed = orders.filter((o: any) =>
-        ["delivered", "completed"].includes(o.status),
-      ).length;
-      const cancelled = orders.filter((o: any) =>
-        ["cancelled", "refunded"].includes(o.status),
-      ).length;
+      const completed = orders.filter((o: any) => o.status === "delivered").length;
+      const cancelled = orders.filter((o: any) => o.status === "cancelled").length;
       const success = orders.length ? completed / orders.length : 0.5;
       const tierProgress = Math.max(0, Math.min(1, success));
       const tier =
@@ -264,7 +252,7 @@ function AdminDashboard() {
                         <Tr key={o.id}>
                           <Td className="font-mono text-xs">#{o.id.slice(0, 8)}</Td>
                           <Td>
-                            <StatusBadge status={humanise(o.status)} />
+                            <UberStatus status={o.status} />
                           </Td>
                           <Td>{formatMoney(Number(o.total), o.currency || "GBP")}</Td>
                           <Td className="text-neutral-500">

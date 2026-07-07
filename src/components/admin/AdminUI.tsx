@@ -811,15 +811,15 @@ export function UberTr({
   );
 }
 
-/** Uber-style status pill (used in tables). Uses only Naija-brand hues. */
+/** Uber-style status pill (used in tables). Mapped to the real DB enums; Naija-brand hues only. */
 export function UberStatus({ status }: { status: string }) {
-  const s = (status || "").toLowerCase();
+  const s = (status || "").toLowerCase().replaceAll("_", " ");
   const green = new Set([
-    "delivered", "completed", "paid", "approved", "active", "open",
+    "delivered", "completed", "paid", "approved", "active", "open", "verified", "success",
   ]);
   const orange = new Set([
-    "new", "awaiting acceptance", "accepted", "preparing", "ready for pickup",
-    "assigned to rider", "picked up", "on the way", "pending", "requested",
+    "pending", "accepted", "preparing", "ready", "ready for pickup", "picked up",
+    "on the way", "requested", "processing", "assigned", "unpaid",
   ]);
   const danger = new Set([
     "cancelled", "refunded", "rejected", "suspended", "failed", "closed",
@@ -838,7 +838,7 @@ export function UberStatus({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-medium ${cls}`}>
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-90" />
-      {status}
+      {s}
     </span>
   );
 }
