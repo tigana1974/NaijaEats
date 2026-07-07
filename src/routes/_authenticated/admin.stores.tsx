@@ -80,7 +80,7 @@ function AdminStores() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vendors")
-        .select("id,name,type,status,city,country,commission_rate,created_at,street_address,state,zip_code,phone,description")
+        .select("id,name,type,status,city,country,created_at,address_line,description")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as any[];
@@ -192,7 +192,7 @@ function AdminStores() {
                         {[v.city, v.country].filter(Boolean).join(", ") || "—"}
                       </UberTd>
                       <UberTd className="text-neutral-700">
-                        {v.commission_rate != null ? `${Number(v.commission_rate).toFixed(1)}%` : "—"}
+                        —
                       </UberTd>
                       <UberTd className="text-neutral-500">
                         {v.created_at ? new Date(v.created_at).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }) : "—"}
@@ -230,8 +230,8 @@ function AdminStores() {
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <div className="font-medium mb-1">Contact & Location</div>
-                              <div className="text-neutral-600">{v.phone || "No phone provided"}</div>
-                              <div className="text-neutral-600">{[v.street_address, v.city, v.state, v.zip_code, v.country].filter(Boolean).join(", ") || "No address provided"}</div>
+                              <div className="text-neutral-600">No phone provided (see owner profile)</div>
+                              <div className="text-neutral-600">{[v.address_line, v.city, v.country].filter(Boolean).join(", ") || "No address provided"}</div>
                             </div>
                             <div>
                               <div className="font-medium mb-1">Description</div>
