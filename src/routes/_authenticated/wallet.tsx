@@ -138,10 +138,42 @@ function WalletPage() {
 
           {/* Quick actions */}
           <div className="relative mt-7 grid grid-cols-4 gap-2 sm:gap-3">
-            <WalletAction to="/wallet/top-up" Icon={Plus} label="Top up" primary />
-            <WalletAction to="/wallet/send" Icon={ArrowUpRight} label="Send" />
-            <WalletAction to="/wallet/request" Icon={ArrowDownLeft} label="Request" />
-            <WalletAction to="/referrals" Icon={Gift} label="Refer" />
+            <Link
+              to="/wallet/top-up"
+              className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white text-foreground shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--brand-clay)] text-white group-hover:scale-105 transition-transform duration-200">
+                <Plus className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-semibold">Top up</span>
+            </Link>
+            <Link
+              to="/wallet/send"
+              className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white/10 text-white border border-white/10 backdrop-blur hover:bg-white/15 transition-all duration-200"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 group-hover:scale-105 transition-transform duration-200">
+                <ArrowUpRight className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-semibold">Send</span>
+            </Link>
+            <Link
+              to="/wallet/request"
+              className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white/10 text-white border border-white/10 backdrop-blur hover:bg-white/15 transition-all duration-200"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 group-hover:scale-105 transition-transform duration-200">
+                <ArrowDownLeft className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-semibold">Request</span>
+            </Link>
+            <Link
+              to="/referrals"
+              className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white/10 text-white border border-white/10 backdrop-blur hover:bg-white/15 transition-all duration-200"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 group-hover:scale-105 transition-transform duration-200">
+                <Gift className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-semibold">Refer</span>
+            </Link>
           </div>
         </div>
 
@@ -222,38 +254,6 @@ function WalletPage() {
         </div>
       </div>
     </RoleShell>
-  );
-}
-
-function WalletAction({
-  to,
-  Icon,
-  label,
-  primary,
-}: {
-  to: string;
-  Icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  primary?: boolean;
-}) {
-  return (
-    <Link
-      to={to}
-      className={`group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 backdrop-blur transition-all duration-200 ${
-        primary
-          ? "bg-white text-foreground shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-          : "bg-white/10 text-white hover:bg-white/15 border border-white/10"
-      }`}
-    >
-      <span
-        className={`grid h-9 w-9 place-items-center rounded-xl transition-transform duration-200 group-hover:scale-105 ${
-          primary ? "bg-[var(--brand-clay)] text-white" : "bg-white/15"
-        }`}
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <span className="text-xs font-semibold">{label}</span>
-    </Link>
   );
 }
 
