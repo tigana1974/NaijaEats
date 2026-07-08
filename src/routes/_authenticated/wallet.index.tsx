@@ -80,11 +80,11 @@ function WalletPage() {
 
   return (
     <RoleShell>
-      <div className="mx-auto max-w-5xl px-3 sm:px-4 pt-4 sm:pt-6 pb-12">
+      <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 pt-3 sm:pt-6 pb-10">
         <div className="flex items-end justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-semibold">Wallet</div>
-            <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight mt-1">Your balance</h1>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-semibold">Wallet</div>
+            <h1 className="font-display text-xl sm:text-3xl font-semibold tracking-tight mt-0.5">Your balance</h1>
           </div>
           <div className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-[var(--brand-forest)]" /> Bank-grade encryption
@@ -92,7 +92,7 @@ function WalletPage() {
         </div>
 
         {/* Balance card */}
-        <div className="relative mt-5 overflow-hidden rounded-2xl p-5 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
+        <div className="relative mt-4 overflow-hidden rounded-2xl p-4 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
           <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/30 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
@@ -102,8 +102,8 @@ function WalletPage() {
               <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-white/70">
                 <PiWalletDuotone className="h-4 w-4" /> Available balance
               </div>
-              <div className="mt-3 flex items-baseline gap-3">
-                <span className="font-display text-5xl sm:text-6xl font-semibold tabular-nums leading-none">
+              <div className="mt-2 flex items-baseline gap-2 sm:gap-3">
+                <span className="font-display text-[2.5rem] leading-none sm:text-6xl font-semibold tabular-nums">
                   {hidden ? "•••••" : fmt(wallet.balance)}
                 </span>
                 <button

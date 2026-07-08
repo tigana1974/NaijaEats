@@ -75,8 +75,8 @@ function ChatsList() {
 
   return (
     <CustomerShell hideBottomNav>
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-4 pb-24">
-        <div className="mb-4">
+      <div className="mx-auto w-full max-w-2xl px-3 sm:px-5 pt-3 pb-24">
+        <div className="mb-3">
           <Link
             to="/account"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-border bg-white hover:bg-muted transition shadow-sm"
@@ -86,22 +86,22 @@ function ChatsList() {
           </Link>
         </div>
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-[2rem] p-5 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
-          <div className="pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-52 w-52 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
+          <div className="pointer-events-none absolute -top-14 -right-14 h-40 w-40 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-14 -left-14 h-40 w-40 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
 
-          <div className="relative flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/12 backdrop-blur border border-white/15">
-              <PiChatCircleDotsDuotone className="h-7 w-7 text-[var(--brand-gold)]" />
+          <div className="relative flex items-center gap-2.5">
+            <span className="grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-2xl bg-white/12 backdrop-blur border border-white/15">
+              <PiChatCircleDotsDuotone className="h-5 w-5 sm:h-7 sm:w-7 text-[var(--brand-gold)]" />
             </span>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-white/70">Inbox</div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
+              <div className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-white/70">Inbox</div>
+              <h1 className="font-display text-lg sm:text-3xl font-bold tracking-tight leading-tight truncate">
                 Chat with your chefs
               </h1>
             </div>
             {totalUnread > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white text-[var(--brand-clay)] px-3 py-1.5 text-xs font-bold shadow-lg">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white text-[var(--brand-clay)] px-2 py-1 text-[10px] sm:text-xs font-bold shadow-lg shrink-0">
                 {totalUnread} new
               </span>
             )}

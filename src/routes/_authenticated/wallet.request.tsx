@@ -106,7 +106,7 @@ function RequestPage() {
 
           <div className="mt-5">
             <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Request</div>
-            <h1 className="font-display text-3xl font-bold tracking-tight mt-1">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
               {step === "form" ? "Get paid instantly" : "Share your link"}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -214,7 +214,7 @@ function FormStep({
   return (
     <>
       {/* Amount hero */}
-      <div className="relative mt-6 overflow-hidden rounded-[28px] p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_100%,oklch(0.78_0.19_60/0.5),transparent_55%),linear-gradient(140deg,#1a1208,#3a230d_55%,#a65a1e)]">
+      <div className="relative mt-6 overflow-hidden rounded-2xl sm:rounded-[28px] p-4 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_100%,oklch(0.78_0.19_60/0.5),transparent_55%),linear-gradient(140deg,#1a1208,#3a230d_55%,#a65a1e)]">
         <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-amber-300/25 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
         <div className="relative">
@@ -225,7 +225,7 @@ function FormStep({
               type="text"
               readOnly
               value={amount ? amount.toLocaleString() : "0"}
-              className="w-full bg-transparent font-display text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
+              className="w-full bg-transparent font-display text-4xl sm:text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
             />
           </div>
           <div className="mt-3 text-[11px] text-white/70">
@@ -430,7 +430,7 @@ function ShareStep({ request, onDone }: { request: MoneyRequest; onDone: () => v
   return (
     <>
       {/* Amount + QR */}
-      <div className="mt-6 relative overflow-hidden rounded-[28px] bg-white border border-amber-100 p-6 text-center shadow-[0_20px_60px_-24px_rgba(245,158,11,0.35)]">
+      <div className="mt-6 relative overflow-hidden rounded-2xl sm:rounded-[28px] bg-white border border-amber-100 p-6 text-center shadow-[0_20px_60px_-24px_rgba(245,158,11,0.35)]">
         <div className="pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full bg-amber-200/30 blur-3xl" />
         <div className="relative">
           <div className="text-[10px] uppercase tracking-widest text-amber-700 font-extrabold">Payment request</div>

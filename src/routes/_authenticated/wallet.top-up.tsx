@@ -129,7 +129,7 @@ function TopUpPage() {
           {step !== "success" && (
             <div className="mt-5">
               <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Top up</div>
-              <h1 className="font-display text-3xl font-bold tracking-tight mt-1">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
                 {step === "amount" && "How much?"}
                 {step === "method" && "Pay with"}
                 {step === "details" && (method === "card" ? "Card details" : method === "bank" ? "Bank transfer" : "USSD instructions")}
@@ -245,7 +245,7 @@ function AmountStep({
   return (
     <>
       {/* Balance preview */}
-      <div className="relative mt-6 overflow-hidden rounded-[28px] p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
+      <div className="relative mt-6 overflow-hidden rounded-2xl sm:rounded-[28px] p-4 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
         <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
 
@@ -257,7 +257,7 @@ function AmountStep({
               type="text"
               readOnly
               value={amount ? amount.toLocaleString() : "0"}
-              className="w-full bg-transparent font-display text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
+              className="w-full bg-transparent font-display text-4xl sm:text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
             />
           </div>
           <div className="mt-2 flex items-center justify-between text-[11px] text-white/70">
@@ -537,7 +537,7 @@ function BankRow({ label, value, copy }: { label: string; value: string; copy?: 
 function SuccessStep({ amount, bonus, total, balance }: { amount: number; bonus: number; total: number; balance: number }) {
   return (
     <div className="mt-8">
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-emerald-50 via-white to-white border border-emerald-100 p-7 text-center">
+      <div className="relative overflow-hidden rounded-3xl sm:rounded-[32px] bg-gradient-to-br from-emerald-50 via-white to-white border border-emerald-100 p-7 text-center">
         <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-emerald-300/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-lime-200/40 blur-3xl" />
 

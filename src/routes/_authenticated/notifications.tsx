@@ -181,7 +181,7 @@ function NotificationsPage() {
           </div>
         ) : (
           /* Empty State */
-          <div className="mt-12 flex flex-col items-center justify-center text-center p-8 rounded-[2rem] bg-zinc-50/50 border border-dashed border-zinc-200">
+          <div className="mt-12 flex flex-col items-center justify-center text-center p-8 rounded-3xl sm:rounded-[2rem] bg-zinc-50/50 border border-dashed border-zinc-200">
             <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center shadow-sm mb-5">
               <Bell className="h-8 w-8 text-zinc-300" />
             </div>

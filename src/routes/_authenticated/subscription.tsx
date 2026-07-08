@@ -300,22 +300,22 @@ function SubscriptionPage() {
         </div>
       }
     >
-      <div className="py-4 sm:py-6 pb-24">
+      <div className="py-3 sm:py-6 pb-24">
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-[2rem] p-6 sm:p-9 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)] shadow-[var(--shadow-warm)]">
-          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl p-4 sm:p-8 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)] shadow-[var(--shadow-warm)]">
+          <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
 
-          <div className="relative flex flex-wrap items-start justify-between gap-6">
+          <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4 sm:gap-6">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
-                <Sparkles className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Naija Eats premium
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+                <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Naija Eats premium
               </div>
-              <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight mt-3 leading-[1.05]">
+              <h1 className="font-display text-2xl sm:text-5xl font-bold tracking-tight mt-2 leading-[1.05]">
                 Free delivery.<br />5–10% cashback.<br />Chef VIP access.
               </h1>
-              <p className="text-white/80 text-sm sm:text-base mt-3 leading-relaxed">
+              <p className="text-white/80 text-xs sm:text-base mt-2 sm:mt-3 leading-relaxed">
                 Prices in{" "}
                 <span className="font-bold text-white">
                   {regionMeta.name} ({regionMeta.currency})
@@ -323,13 +323,13 @@ function SubscriptionPage() {
                 . Switch region below.
               </p>
 
-              <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3 py-1.5 text-xs font-semibold">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-2.5 py-1 text-[11px] font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Your plan: <span className="font-bold uppercase tracking-wider">{current === "basic" ? "Basic" : PLANS.find((p) => p.key === current)?.name}</span>
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-3">
+            <div className="flex flex-row sm:flex-col sm:items-end flex-wrap gap-2 sm:gap-3">
               <RegionSwitcher region={region} onChange={setRegion} />
               <BillingToggle billing={billing} onChange={setBilling} yearlyDiscount={yearlyDiscount} />
             </div>
@@ -337,7 +337,7 @@ function SubscriptionPage() {
         </div>
 
         {/* Plans */}
-        <div className="mt-6 grid gap-5 lg:grid-cols-3">
+        <div className="mt-4 sm:mt-6 grid gap-3 sm:gap-5 lg:grid-cols-3">
           {PLANS.map((plan) => (
             <PlanCard
               key={plan.key}
@@ -581,7 +581,7 @@ function PlanCard({
 
   return (
     <div
-      className={`relative rounded-[2rem] p-6 sm:p-7 transition-all duration-300 flex flex-col ${
+      className={`relative rounded-3xl p-5 sm:p-7 transition-all duration-300 flex flex-col ${
         featured
           ? "bg-gradient-to-br from-white via-white to-[oklch(0.98_0.02_25)] border-2 border-[var(--brand-clay)] shadow-[0_24px_60px_-24px_rgba(217,75,58,0.35)] lg:scale-[1.02]"
           : `bg-gradient-to-br ${plan.gradient} border border-border`

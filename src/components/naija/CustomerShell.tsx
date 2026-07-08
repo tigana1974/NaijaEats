@@ -55,7 +55,7 @@ export function CustomerShell({
 
       <main
         className={
-          containerClassName ?? "mx-auto max-w-6xl px-4 sm:px-6 pb-32 lg:pb-10 lg:pt-2"
+          containerClassName ?? "mx-auto w-full max-w-2xl px-3 sm:px-5 pb-28 lg:pb-10 lg:pt-2"
         }
       >
         {children}

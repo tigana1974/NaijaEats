@@ -78,7 +78,7 @@ function GroceriesPage() {
         </div>
       }
     >
-      <div className="pt-3 lg:grid lg:grid-cols-[1fr] lg:gap-8 max-w-3xl mx-auto">
+      <div className="pt-3 lg:grid lg:grid-cols-[1fr] lg:gap-8 w-full max-w-2xl mx-auto">
         <div className="space-y-8">
           {/* Quick Categories */}
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">

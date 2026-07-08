@@ -113,19 +113,19 @@ function ReferralsPage() {
         </Link>
 
         {/* Hero */}
-        <div className="relative mt-4 overflow-hidden rounded-[32px] p-7 sm:p-9 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(110%_110%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(150deg,#1a1108,#3a1a14_55%,#7c2d12)]">
-          <div className="pointer-events-none absolute -top-32 -right-32 h-80 w-80 rounded-full bg-[var(--brand-gold)]/30 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
+        <div className="relative mt-4 overflow-hidden rounded-3xl sm:rounded-[32px] p-4 sm:p-9 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(110%_110%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(150deg,#1a1108,#3a1a14_55%,#7c2d12)]">
+          <div className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-[var(--brand-gold)]/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-52 w-52 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.08)_50%,transparent_60%)]" />
 
           <div className="relative">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur px-2.5 py-1 text-[11px] uppercase tracking-[0.18em] font-semibold">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur px-2 py-1 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] font-semibold">
               <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Refer & feast
             </div>
-            <h1 className="font-display text-3xl sm:text-5xl font-semibold tracking-tight mt-3 leading-[1.05]">
+            <h1 className="font-display text-2xl sm:text-5xl font-semibold tracking-tight mt-2 sm:mt-3 leading-[1.05]">
               Invite 5 friends.<br />Eat on us.
             </h1>
-            <p className="text-sm sm:text-base text-white/80 mt-3 max-w-md">
+            <p className="text-xs sm:text-base text-white/80 mt-2 sm:mt-3 max-w-md">
               For every friend who orders, we credit your wallet up to ₦8,000 toward your next meal. Hit 5 and unlock a full feast on the house.
             </p>
 

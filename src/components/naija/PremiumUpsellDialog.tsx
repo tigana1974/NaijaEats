@@ -89,9 +89,9 @@ export function PremiumUpsellDialog() {
         onClick={close}
       />
 
-      <div className="relative w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden shadow-[0_40px_80px_-30px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-2 fade-in duration-300 bg-white">
+      <div className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-2 fade-in duration-300 bg-white">
         {/* Hero */}
-        <div className="relative overflow-hidden p-6 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
+        <div className="relative overflow-hidden p-4 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
           <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
@@ -108,17 +108,17 @@ export function PremiumUpsellDialog() {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
               <Sparkles className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Members-only offer
             </div>
-            <h2 id="upsell-title" className="font-display text-3xl sm:text-[34px] font-bold tracking-tight mt-3 leading-[1.05]">
+            <h2 id="upsell-title" className="font-display text-xl sm:text-3xl font-bold tracking-tight mt-2 leading-[1.05]">
               Try Naija Eats Plus<br />free for 7 days
             </h2>
-            <p className="text-white/80 text-sm mt-2 max-w-xs">
-              Free delivery, 5% cashback, and members-only chef drops. Cancel anytime.
+            <p className="text-white/80 text-xs sm:text-sm mt-2 max-w-xs">
+              Free delivery, 5% cashback, and members-only chef drops.
             </p>
           </div>
         </div>
 
         {/* Body */}
-        <div className="p-6 sm:p-7">
+        <div className="p-4 sm:p-7">
           <div className="space-y-3">
             <Perk
               Icon={PiTruckDuotone}
@@ -224,7 +224,7 @@ export function PremiumAccountBanner() {
     return (
       <Link
         to="/subscription"
-        className="relative block overflow-hidden rounded-[2rem] p-5 text-white bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 shadow-[0_20px_50px_-20px_rgba(147,51,234,0.45)]"
+        className="relative block overflow-hidden rounded-2xl p-4 text-white bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 shadow-[0_20px_50px_-20px_rgba(147,51,234,0.45)]"
       >
         <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
         <div className="relative flex items-center gap-4">
@@ -246,7 +246,7 @@ export function PremiumAccountBanner() {
     return (
       <Link
         to="/subscription"
-        className="relative block overflow-hidden rounded-[2rem] p-5 text-white bg-gradient-to-br from-[var(--brand-clay)] to-orange-500 shadow-[0_20px_50px_-20px_rgba(217,75,58,0.45)]"
+        className="relative block overflow-hidden rounded-2xl p-4 text-white bg-gradient-to-br from-[var(--brand-clay)] to-orange-500 shadow-[0_20px_50px_-20px_rgba(217,75,58,0.45)]"
       >
         <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
         <div className="relative flex items-center gap-4">
@@ -267,7 +267,7 @@ export function PremiumAccountBanner() {
   return (
     <Link
       to="/subscription"
-      className="group relative block overflow-hidden rounded-[2rem] p-5 text-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.35)] bg-[radial-gradient(110%_110%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]"
+      className="group relative block overflow-hidden rounded-2xl p-4 text-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.35)] bg-[radial-gradient(110%_110%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]"
     >
       <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />

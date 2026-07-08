@@ -231,22 +231,22 @@ function MealPlannerPage() {
         </div>
       }
     >
-      <div className="mx-auto max-w-3xl pt-4 px-2 sm:px-4 pb-8">
+      <div className="mx-auto w-full max-w-2xl pt-3 px-3 sm:px-4 pb-8">
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-[2rem] p-5 sm:p-7 text-white shadow-[0_24px_60px_-24px_rgba(255,77,77,0.45)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
-          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white shadow-[0_16px_40px_-20px_rgba(255,77,77,0.4)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
+          <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
 
           <div className="relative flex items-start justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
-                <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Chef-prepared, home-delivered
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+                <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Chef-prepared
               </div>
-              <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight mt-3 leading-[1.05]">
+              <h1 className="font-display text-xl sm:text-4xl font-bold tracking-tight mt-2 leading-[1.05]">
                 Plan the whole week.<br />Eat without thinking.
               </h1>
-              <p className="mt-3 text-sm sm:text-[15px] text-white/80 max-w-md leading-relaxed">
-                Add meals to breakfast, lunch, and dinner slots. We deliver on time — every time.
+              <p className="mt-2 text-xs sm:text-[15px] text-white/80 max-w-md leading-relaxed">
+                Add meals to breakfast, lunch, and dinner slots.
               </p>
             </div>
             <div className="hidden sm:flex flex-col items-end gap-2 shrink-0">

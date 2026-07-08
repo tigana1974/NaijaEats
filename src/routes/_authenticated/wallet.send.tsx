@@ -122,7 +122,7 @@ function SendPage() {
           {step !== "success" && (
             <div className="mt-5">
               <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Send money</div>
-              <h1 className="font-display text-3xl font-bold tracking-tight mt-1">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
                 {step === "pick" && "Who's it for?"}
                 {step === "amount" && "How much?"}
                 {step === "review" && "Confirm & send"}
@@ -397,7 +397,7 @@ function AmountStep({
       </div>
 
       {/* Amount hero */}
-      <div className="relative mt-4 overflow-hidden rounded-[28px] p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_100%_0%,oklch(0.75_0.15_160/0.55),transparent_55%),linear-gradient(140deg,#0a2d1f,#14463a_55%,#1f7a5d)]">
+      <div className="relative mt-4 overflow-hidden rounded-2xl sm:rounded-[28px] p-4 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_100%_0%,oklch(0.75_0.15_160/0.55),transparent_55%),linear-gradient(140deg,#0a2d1f,#14463a_55%,#1f7a5d)]">
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
         <div className="relative">
@@ -408,7 +408,7 @@ function AmountStep({
               type="text"
               readOnly
               value={amount ? amount.toLocaleString() : "0"}
-              className="w-full bg-transparent font-display text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
+              className="w-full bg-transparent font-display text-4xl sm:text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
             />
           </div>
           <div className="mt-3 flex items-center justify-between text-[11px]">
@@ -463,7 +463,7 @@ function ReviewStep({
   return (
     <>
       {/* Big amount */}
-      <div className="mt-6 relative overflow-hidden rounded-[28px] p-7 text-center bg-gradient-to-br from-emerald-50 via-white to-white border border-emerald-100">
+      <div className="mt-6 relative overflow-hidden rounded-2xl sm:rounded-[28px] p-7 text-center bg-gradient-to-br from-emerald-50 via-white to-white border border-emerald-100">
         <div className="pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full bg-emerald-200/30 blur-3xl" />
         <div className="relative">
           <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-white shadow-lg ring-1 ring-emerald-100">
@@ -531,7 +531,7 @@ function BreakdownRow({ label, value, tone, bold }: { label: string; value: stri
 function SuccessStep({ recipient, amount, balance }: { recipient: Contact; amount: number; balance: number }) {
   return (
     <div className="mt-8">
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-emerald-50 via-white to-white border border-emerald-100 p-7 text-center">
+      <div className="relative overflow-hidden rounded-3xl sm:rounded-[32px] bg-gradient-to-br from-emerald-50 via-white to-white border border-emerald-100 p-7 text-center">
         <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-emerald-300/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-lime-200/40 blur-3xl" />
 
