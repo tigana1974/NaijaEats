@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   IoStar, IoTime, IoLocation, IoChevronBack, IoChatbubbleEllipses,
   IoCartOutline, IoFlame, IoAdd, IoHeartOutline, IoShareOutline,
@@ -449,89 +449,131 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 }
 
 function MenuSection({ grouped, vendor }: any) {
-  const [active, setActive] = useState<string | null>(grouped[0]?.category?.id ?? null);
-  const observers = useRef<IntersectionObserver | null>(null);
+  const [tab, setTab] = useState<"menu" | "new" | "trending">("menu");
 
-  useEffect(() => {
-    if (observers.current) observers.current.disconnect();
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) setActive(e.target.id.replace("category-", ""));
-        }
-      },
-      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
-    );
-    grouped.forEach(({ category }: any) => {
-      const el = document.getElementById(`category-${category.id}`);
-      if (el) obs.observe(el);
-    });
-    observers.current = obs;
-    return () => obs.disconnect();
-  }, [grouped]);
+  // Flatten all items for the New / Trending filters
+  const allItems: any[] = grouped.flatMap(({ items }: any) => items);
+
+  // "New" = created in the last 30 days; fallback to the newest 12 items
+  const NEW_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const sortedByNew = [...allItems].sort(
+    (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime(),
+  );
+  const newItems = sortedByNew.filter(
+    (i) => i.created_at && now - new Date(i.created_at).getTime() < NEW_WINDOW_MS,
+  );
+  const newFallback = sortedByNew.slice(0, 12);
+
+  // "Trending" = flagged featured; fallback to first 12
+  const trendingItems = allItems.filter((i) => i.is_featured);
+
+  const pills = [
+    { id: "menu" as const, label: "Menu", count: allItems.length },
+    { id: "new" as const, label: "New", count: (newItems.length || newFallback.length) },
+    { id: "trending" as const, label: "Trending", count: trendingItems.length },
+  ];
+
+  const fmtPrice = (n: number) =>
+    `${vendor.currency === "GBP" ? "£" : "₦"}${Number(n).toLocaleString()}`;
 
   return (
     <>
-      <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-zinc-100 mt-10">
+      {/* Filter pill row — no top/bottom borders, brand-clay active */}
+      <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl mt-8">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
-            {grouped.map(({ category }: any) => {
-              const isActive = active === category.id;
+          <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
+            {pills.map((p) => {
+              const isActive = tab === p.id;
               return (
-                <a
-                  key={category.id}
-                  href={`#category-${category.id}`}
-                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setTab(p.id)}
+                  className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 sm:px-5 py-2 text-sm font-bold transition-all ${
                     isActive
-                      ? "bg-zinc-900 text-white shadow-lg shadow-black/20 scale-105"
-                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+                      ? "bg-[var(--brand-clay)] text-white shadow-lg shadow-[var(--brand-clay)]/30 scale-[1.02]"
+                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                   }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(`category-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
                 >
-                  {category.name}
-                </a>
+                  {p.label}
+                  {p.count > 0 && (
+                    <span
+                      className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 ${
+                        isActive
+                          ? "bg-white/25 text-white"
+                          : "bg-white text-zinc-500"
+                      }`}
+                    >
+                      {p.count}
+                    </span>
+                  )}
+                </button>
               );
             })}
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-8 space-y-14">
-        {grouped.map(({ category, items }: any) => (
-          <section key={category.id} id={`category-${category.id}`} className="scroll-mt-24">
-            <div className="flex items-end justify-between gap-3 mb-6">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Menu</div>
-                <h3 className="font-display text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight mt-1">{category.name}</h3>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-6 space-y-14">
+        {tab === "menu" ? (
+          // Full menu grouped by category
+          grouped.map(({ category, items }: any) => (
+            <section key={category.id} id={`category-${category.id}`} className="scroll-mt-24">
+              <div className="flex items-end justify-between gap-3 mb-6">
+                <h3 className="font-display text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight">
+                  {category.name}
+                </h3>
+                <span className="text-xs font-semibold text-zinc-400">
+                  {items.length} item{items.length === 1 ? "" : "s"}
+                </span>
               </div>
-              <span className="text-xs font-semibold text-zinc-400">{items.length} item{items.length === 1 ? "" : "s"}</span>
-            </div>
-            {items.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-zinc-200 bg-white p-10 text-center text-zinc-400 text-sm">
-                Nothing in this section yet.
-              </div>
-            ) : (
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                {items.map((item: any) => (
-                  <HorizontalFoodCard
-                    key={item.id}
-                    vendorSlug={vendor.slug}
-                    itemId={item.id}
-                    name={item.name}
-                    imageUrl={item.image_url}
-                    priceLabel={`${vendor.currency === "GBP" ? "£" : "₦"}${Number(item.price).toLocaleString()}`}
-                    description={item.description}
-                    badge={item.is_featured ? "Top" : undefined}
-                    isAvailable={item.is_available}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
+              {items.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-zinc-200 bg-white p-10 text-center text-zinc-400 text-sm">
+                  Nothing in this section yet.
+                </div>
+              ) : (
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  {items.map((item: any) => (
+                    <HorizontalFoodCard
+                      key={item.id}
+                      vendorSlug={vendor.slug}
+                      itemId={item.id}
+                      name={item.name}
+                      imageUrl={item.image_url}
+                      priceLabel={fmtPrice(item.price)}
+                      description={item.description}
+                      badge={item.is_featured ? "Top" : undefined}
+                      isAvailable={item.is_available}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          ))
+        ) : (
+          // New / Trending flat list
+          <FilteredList
+            title={tab === "new" ? "Fresh on the menu" : "Trending right now"}
+            subtitle={
+              tab === "new"
+                ? "Just added by the kitchen"
+                : "What everyone's ordering this week"
+            }
+            items={
+              tab === "new"
+                ? (newItems.length > 0 ? newItems : newFallback)
+                : trendingItems
+            }
+            vendorSlug={vendor.slug}
+            fmtPrice={fmtPrice}
+            emptyMsg={
+              tab === "new"
+                ? "No new items yet — check back soon."
+                : "Nothing trending right now."
+            }
+          />
+        )}
       </div>
     </>
   );
@@ -566,6 +608,59 @@ function GroceryMenuSection({ grouped, vendor }: any) {
         </section>
       ))}
     </div>
+  );
+}
+
+function FilteredList({
+  title,
+  subtitle,
+  items,
+  vendorSlug,
+  fmtPrice,
+  emptyMsg,
+}: {
+  title: string;
+  subtitle: string;
+  items: any[];
+  vendorSlug: string;
+  fmtPrice: (n: number) => string;
+  emptyMsg: string;
+}) {
+  return (
+    <section className="scroll-mt-24">
+      <div className="flex items-end justify-between gap-3 mb-6">
+        <div>
+          <h3 className="font-display text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight">
+            {title}
+          </h3>
+          <p className="text-xs text-zinc-500 mt-1">{subtitle}</p>
+        </div>
+        <span className="text-xs font-semibold text-zinc-400 shrink-0">
+          {items.length} item{items.length === 1 ? "" : "s"}
+        </span>
+      </div>
+      {items.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-zinc-200 bg-white p-10 text-center text-zinc-400 text-sm">
+          {emptyMsg}
+        </div>
+      ) : (
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+          {items.map((item: any) => (
+            <HorizontalFoodCard
+              key={item.id}
+              vendorSlug={vendorSlug}
+              itemId={item.id}
+              name={item.name}
+              imageUrl={item.image_url}
+              priceLabel={fmtPrice(item.price)}
+              description={item.description}
+              badge={item.is_featured ? "Top" : undefined}
+              isAvailable={item.is_available}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
