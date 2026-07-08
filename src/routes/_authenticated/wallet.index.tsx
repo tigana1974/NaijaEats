@@ -23,7 +23,7 @@ import {
 } from "react-icons/pi";
 import { loadWallet, WALLET_EVENT, type WalletState, type WalletTxn } from "@/lib/wallet";
 
-export const Route = createFileRoute("/_authenticated/wallet")({
+export const Route = createFileRoute("/_authenticated/wallet/")({
   component: WalletPage,
 });
 
