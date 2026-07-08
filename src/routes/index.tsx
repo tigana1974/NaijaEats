@@ -318,7 +318,7 @@ function Sparkle({ className = "" }: { className?: string }) {
 function Nav() {
   const search = useSearchModal();
   return (
-    <header className="relative z-30">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-6 py-5 flex items-center justify-between">
         <a href="#top" className="flex items-center gap-2">
           <Logo className="h-10 w-10" />
