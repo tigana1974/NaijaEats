@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { ChevronLeft, Send, ShieldCheck, Search } from "lucide-react";
 import { toast } from "sonner";
+import { addWalletTxn, loadWallet } from "@/lib/wallet";
 
 export const Route = createFileRoute("/_authenticated/wallet/send")({
   component: SendPage,
@@ -36,8 +37,10 @@ function SendPage() {
   const submit = async () => {
     if (!recipient) return toast.error("Pick a recipient");
     if (!amount || amount < 100) return toast.error("Minimum send is ₦100");
+    if (loadWallet().balance < amount) return toast.error("Not enough balance — top up first");
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
+    addWalletTxn({ type: "send", title: `Sent to ${recipient}`, note: note || undefined, amount: -amount });
     toast.success(`Sent ${fmt(amount)} to ${recipient}`);
     navigate({ to: "/wallet" });
   };

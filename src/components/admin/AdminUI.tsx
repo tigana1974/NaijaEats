@@ -397,9 +397,6 @@ export function ScaffoldPage({
           <UberSection key={i} title={s.title} description={s.description} items={s.items} />
         ))}
       </div>
-      <div className="mt-6">
-        <ComingSoon description="Full CRUD, filters, and Supabase wiring for this module are staged and will land in follow-up pushes. All sections listed here map directly to the Naija Eats spec." />
-      </div>
     </div>
   );
 }

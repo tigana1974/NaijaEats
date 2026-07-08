@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { ChevronLeft, Plus, Sparkles, ShieldCheck, CreditCard, Building2, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import { addWalletTxn } from "@/lib/wallet";
 
 export const Route = createFileRoute("/_authenticated/wallet/top-up")({
   component: TopUpPage,
@@ -32,6 +33,9 @@ function TopUpPage() {
     if (!amount || amount < 500) return toast.error("Minimum top-up is ₦500");
     setLoading(true);
     await new Promise((r) => setTimeout(r, 900));
+    const methodLabel = METHODS.find((m) => m.id === method)?.label ?? "Top-up";
+    addWalletTxn({ type: "topup", title: "Wallet top-up", note: methodLabel, amount });
+    if (bonus > 0) addWalletTxn({ type: "bonus", title: "Gold bonus", note: "10% top-up bonus", amount: bonus });
     toast.success(`Topped up ${fmt(amount)}${bonus ? ` + ${fmt(bonus)} bonus` : ""}`);
     navigate({ to: "/wallet" });
   };

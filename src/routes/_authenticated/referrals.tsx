@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { RoleShell } from "@/components/naija/RoleShell";
-import { ComingSoonBanner } from "@/components/naija/ComingSoonBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useMemo, useState } from "react";
@@ -112,8 +111,6 @@ function ReferralsPage() {
         <Link to="/wallet" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Wallet
         </Link>
-
-        <ComingSoonBanner feature="Referrals" />
 
         {/* Hero */}
         <div className="relative mt-4 overflow-hidden rounded-[32px] p-7 sm:p-9 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(110%_110%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(150deg,#1a1108,#3a1a14_55%,#7c2d12)]">
