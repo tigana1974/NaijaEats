@@ -140,8 +140,6 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     }
   };
 
-  };
-
   const sendInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(invoiceAmount);
@@ -424,7 +422,6 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                 tone="bg-[oklch(0.96_0.04_20)] text-[var(--brand-clay)]"
                 onClick={() => openAttach("camera")}
               />
-            </div>
             </div>
           </div>
         )}
