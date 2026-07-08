@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorSlugRouteImport } from './routes/vendor.$slug'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
@@ -35,6 +36,7 @@ import { Route as ApiWebhooksPaystackRouteImport } from './routes/api/webhooks/p
 import { Route as AuthenticatedWalletTopUpRouteImport } from './routes/_authenticated/wallet.top-up'
 import { Route as AuthenticatedWalletSendRouteImport } from './routes/_authenticated/wallet.send'
 import { Route as AuthenticatedWalletRequestRouteImport } from './routes/_authenticated/wallet.request'
+import { Route as AuthenticatedVendorSubscriptionRouteImport } from './routes/_authenticated/vendor.subscription'
 import { Route as AuthenticatedVendorShopsRouteImport } from './routes/_authenticated/vendor.shops'
 import { Route as AuthenticatedVendorProfileRouteImport } from './routes/_authenticated/vendor.profile'
 import { Route as AuthenticatedVendorOrdersRouteImport } from './routes/_authenticated/vendor.orders'
@@ -114,6 +116,12 @@ const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSubscriptionRoute =
+  AuthenticatedSubscriptionRouteImport.update({
+    id: '/subscription',
+    path: '/subscription',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -218,6 +226,12 @@ const AuthenticatedWalletRequestRoute =
     id: '/request',
     path: '/request',
     getParentRoute: () => AuthenticatedWalletRoute,
+  } as any)
+const AuthenticatedVendorSubscriptionRoute =
+  AuthenticatedVendorSubscriptionRouteImport.update({
+    id: '/vendor/subscription',
+    path: '/vendor/subscription',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedVendorShopsRoute =
   AuthenticatedVendorShopsRouteImport.update({
@@ -526,6 +540,7 @@ export interface FileRoutesByFullPath {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
@@ -575,6 +590,7 @@ export interface FileRoutesByFullPath {
   '/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/vendor/profile': typeof AuthenticatedVendorProfileRoute
   '/vendor/shops': typeof AuthenticatedVendorShopsRoute
+  '/vendor/subscription': typeof AuthenticatedVendorSubscriptionRoute
   '/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/wallet/send': typeof AuthenticatedWalletSendRoute
   '/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
@@ -602,6 +618,7 @@ export interface FileRoutesByTo {
   '/referrals': typeof AuthenticatedReferralsRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
@@ -651,6 +668,7 @@ export interface FileRoutesByTo {
   '/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/vendor/profile': typeof AuthenticatedVendorProfileRoute
   '/vendor/shops': typeof AuthenticatedVendorShopsRoute
+  '/vendor/subscription': typeof AuthenticatedVendorSubscriptionRoute
   '/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/wallet/send': typeof AuthenticatedWalletSendRoute
   '/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
@@ -680,6 +698,7 @@ export interface FileRoutesById {
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
@@ -729,6 +748,7 @@ export interface FileRoutesById {
   '/_authenticated/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/_authenticated/vendor/profile': typeof AuthenticatedVendorProfileRoute
   '/_authenticated/vendor/shops': typeof AuthenticatedVendorShopsRoute
+  '/_authenticated/vendor/subscription': typeof AuthenticatedVendorSubscriptionRoute
   '/_authenticated/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/_authenticated/wallet/send': typeof AuthenticatedWalletSendRoute
   '/_authenticated/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
@@ -758,6 +778,7 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/search'
     | '/settings'
+    | '/subscription'
     | '/wallet'
     | '/vendor/$slug'
     | '/admin/ads'
@@ -807,6 +828,7 @@ export interface FileRouteTypes {
     | '/vendor/orders'
     | '/vendor/profile'
     | '/vendor/shops'
+    | '/vendor/subscription'
     | '/wallet/request'
     | '/wallet/send'
     | '/wallet/top-up'
@@ -834,6 +856,7 @@ export interface FileRouteTypes {
     | '/referrals'
     | '/search'
     | '/settings'
+    | '/subscription'
     | '/wallet'
     | '/vendor/$slug'
     | '/admin/ads'
@@ -883,6 +906,7 @@ export interface FileRouteTypes {
     | '/vendor/orders'
     | '/vendor/profile'
     | '/vendor/shops'
+    | '/vendor/subscription'
     | '/wallet/request'
     | '/wallet/send'
     | '/wallet/top-up'
@@ -911,6 +935,7 @@ export interface FileRouteTypes {
     | '/_authenticated/referrals'
     | '/_authenticated/search'
     | '/_authenticated/settings'
+    | '/_authenticated/subscription'
     | '/_authenticated/wallet'
     | '/vendor/$slug'
     | '/_authenticated/admin/ads'
@@ -960,6 +985,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendor/orders'
     | '/_authenticated/vendor/profile'
     | '/_authenticated/vendor/shops'
+    | '/_authenticated/vendor/subscription'
     | '/_authenticated/wallet/request'
     | '/_authenticated/wallet/send'
     | '/_authenticated/wallet/top-up'
@@ -1022,6 +1048,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/subscription': {
+      id: '/_authenticated/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof AuthenticatedSubscriptionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -1163,6 +1196,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/wallet/request'
       preLoaderRoute: typeof AuthenticatedWalletRequestRouteImport
       parentRoute: typeof AuthenticatedWalletRoute
+    }
+    '/_authenticated/vendor/subscription': {
+      id: '/_authenticated/vendor/subscription'
+      path: '/vendor/subscription'
+      fullPath: '/vendor/subscription'
+      preLoaderRoute: typeof AuthenticatedVendorSubscriptionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vendor/shops': {
       id: '/_authenticated/vendor/shops'
@@ -1566,6 +1606,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRouteWithChildren
   AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminBankingRoute: typeof AuthenticatedAdminBankingRoute
@@ -1613,6 +1654,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendorOrdersRoute: typeof AuthenticatedVendorOrdersRoute
   AuthenticatedVendorProfileRoute: typeof AuthenticatedVendorProfileRoute
   AuthenticatedVendorShopsRoute: typeof AuthenticatedVendorShopsRoute
+  AuthenticatedVendorSubscriptionRoute: typeof AuthenticatedVendorSubscriptionRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
 }
 
@@ -1631,6 +1673,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRouteWithChildren,
   AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminBankingRoute: AuthenticatedAdminBankingRoute,
@@ -1681,6 +1724,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVendorOrdersRoute: AuthenticatedVendorOrdersRoute,
   AuthenticatedVendorProfileRoute: AuthenticatedVendorProfileRoute,
   AuthenticatedVendorShopsRoute: AuthenticatedVendorShopsRoute,
+  AuthenticatedVendorSubscriptionRoute: AuthenticatedVendorSubscriptionRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
 }
 

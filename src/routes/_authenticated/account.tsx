@@ -4,11 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, ShoppingBag, MapPin, CreditCard, Settings, HelpCircle, ChevronRight, Camera } from "lucide-react";
+import { LogOut, User, ShoppingBag, MapPin, CreditCard, Settings, HelpCircle, ChevronRight, Camera, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { AvatarCropDialog } from "@/components/naija/AvatarCropDialog";
+import { PremiumAccountBanner } from "@/components/naija/PremiumUpsellDialog";
 
 export const Route = createFileRoute("/_authenticated/account")({
   component: AccountPage,
@@ -119,6 +120,7 @@ function AccountPage() {
     { label: "My Orders", Icon: ShoppingBag, to: "/orders" },
     { label: "Addresses", Icon: MapPin, to: "/addresses" },
     { label: "Payment Methods", Icon: CreditCard, to: "/payment-methods" },
+    { label: "Naija Eats Premium", Icon: Sparkles, to: "/subscription", hint: "Free delivery, cashback, VIP" },
     { label: "Settings", Icon: Settings, to: "/settings" },
     { label: "Help & Support", Icon: HelpCircle, to: "/help" },
   ];
@@ -186,15 +188,35 @@ function AccountPage() {
           </span>
         </div>
 
-        <ul className="mt-8 space-y-3">
+        <div className="mt-8">
+          <PremiumAccountBanner />
+        </div>
+
+        <ul className="mt-6 space-y-3">
           {menuItems.map(({ label, Icon, to, hint }) => {
+            const isPremium = to === "/subscription";
             const inner = (
-              <div className="flex items-center gap-4 rounded-2xl bg-card border border-border px-4 py-4 hover:border-[var(--brand-clay)]/40 transition">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-foreground">
+              <div className={`flex items-center gap-4 rounded-2xl border px-4 py-4 transition ${
+                isPremium
+                  ? "bg-gradient-to-br from-[oklch(0.98_0.02_25)] to-white border-[var(--brand-clay)]/30 hover:border-[var(--brand-clay)]/60"
+                  : "bg-card border-border hover:border-[var(--brand-clay)]/40"
+              }`}>
+                <span className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                  isPremium
+                    ? "bg-gradient-to-br from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/25"
+                    : "bg-muted text-foreground"
+                }`}>
                   <Icon className="h-5 w-5" />
                 </span>
-                <div className="flex-1 text-left">
-                  <div className="text-sm font-medium">{label}</div>
+                <div className="flex-1 text-left min-w-0">
+                  <div className="text-sm font-medium flex items-center gap-1.5">
+                    {label}
+                    {isPremium && (
+                      <span className="rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5">
+                        New
+                      </span>
+                    )}
+                  </div>
                   {hint ? <div className="text-xs text-muted-foreground truncate">{hint}</div> : null}
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />

@@ -314,7 +314,7 @@ export function VendorStoreSwitcher({ userId, plan }: { userId?: string; plan?: 
               </Link>
             ) : (
               <Link
-                to="/vendor/shops"
+                to="/vendor/subscription"
                 onClick={() => setOpen(false)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-50 transition"
               >

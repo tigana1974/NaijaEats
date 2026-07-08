@@ -25,6 +25,7 @@ import {
   PiCompassDuotone,
   PiBagDuotone,
   PiUserCircleDuotone,
+  PiSealCheckDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -161,6 +162,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       { to: "/vendor/shops", label: "My shops", Icon: PiSquaresFourDuotone },
       { to: "/vendor/messages", label: "Messages", Icon: PiChatCircleDotsDuotone },
       { to: "/vendor/profile", label: vendorType === "grocery" ? "Store profile" : vendorType === "chef" ? "Kitchen profile" : "Restaurant profile", Icon: PiStorefrontDuotone },
+      { to: "/vendor/subscription", label: "Subscription & billing", Icon: PiSealCheckDuotone },
     ],
     rider: [
       { to: "/account", label: "My profile", Icon: PiUserCircleDuotone },

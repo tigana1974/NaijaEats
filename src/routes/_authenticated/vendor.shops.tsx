@@ -402,7 +402,7 @@ function ShopsPage() {
                 </div>
               </div>
               <Link
-                to="/vendor/profile"
+                to="/vendor/subscription"
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-5 py-2.5 text-sm font-bold shadow-lg shadow-amber-500/30 hover:scale-105 transition-transform"
               >
                 Upgrade plan <ArrowRight className="h-4 w-4" />

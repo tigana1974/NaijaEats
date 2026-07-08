@@ -13,6 +13,7 @@ import { Logo } from "@/components/naija/Logo";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { PremiumUpsellDialog } from "@/components/naija/PremiumUpsellDialog";
 
 /**
  * Mobile-first shell for customer-facing pages.
@@ -61,6 +62,7 @@ export function CustomerShell({
       </main>
 
       {!hideBottomNav && <CustomerBottomNav />}
+      <PremiumUpsellDialog />
     </div>
   );
 }
