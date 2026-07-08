@@ -346,12 +346,20 @@ function Nav() {
             <span className="px-2 py-1 rounded-full bg-muted">NG</span>
             <span className="px-2 py-1 rounded-full">UK</span>
           </div>
-          <Link
-            to="/auth"
-            className="rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold hover:opacity-95 transition shadow-[var(--shadow-soft)]"
-          >
-            Sign Up
-          </Link>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Link
+              to="/auth"
+              className="rounded-full border border-primary/20 bg-background text-foreground px-3.5 sm:px-4 py-2 text-sm font-semibold hover:bg-muted transition whitespace-nowrap"
+            >
+              Sign in
+            </Link>
+            <Link
+              to="/auth"
+              className="rounded-full bg-primary text-primary-foreground px-3.5 sm:px-4 py-2 text-sm font-semibold hover:opacity-95 transition shadow-[var(--shadow-soft)] whitespace-nowrap"
+            >
+              Sign up
+            </Link>
+          </div>
         </div>
       </div>
     </header>
