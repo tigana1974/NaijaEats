@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/hooks/useCart";
+import { SplashScreen } from "@/components/naija/SplashScreen";
 
 function NotFoundComponent() {
   return (
@@ -143,6 +144,7 @@ function RootComponent() {
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster richColors position="top-center" />
+        <SplashScreen />
       </CartProvider>
     </QueryClientProvider>
   );

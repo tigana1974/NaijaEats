@@ -9,9 +9,40 @@ import {
   PiFileDuotone,
   PiMicrophoneDuotone,
   PiCameraDuotone,
+  PiCurrencyNgnDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
 import { loadWallet, addWalletTxn } from "@/lib/wallet";
+
+const PAID_KEY = "naijaeats.paidInvoices.v1";
+
+function loadPaidSet(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = JSON.parse(localStorage.getItem(PAID_KEY) || "[]");
+    return new Set(Array.isArray(raw) ? raw : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markPaid(id: string) {
+  if (typeof window === "undefined") return;
+  const s = loadPaidSet();
+  s.add(id);
+  localStorage.setItem(PAID_KEY, JSON.stringify(Array.from(s)));
+}
+
+function parseInvoice(body: string | null | undefined): { amount: number; note: string } | null {
+  if (!body || !body.startsWith("[[INVOICE:") || !body.endsWith("]]")) return null;
+  const inner = body.slice(10, -2);
+  const firstColon = inner.indexOf(":");
+  if (firstColon === -1) return null;
+  const amt = parseInt(inner.slice(0, firstColon), 10);
+  const note = inner.slice(firstColon + 1);
+  if (!Number.isFinite(amt) || amt <= 0) return null;
+  return { amount: amt, note };
+}
 
 type Props = {
   conversationId: string;
@@ -39,6 +70,8 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
   const [invoiceAmount, setInvoiceAmount] = useState("");
   const [invoiceNote, setInvoiceNote] = useState("");
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
+  const [paidInvoices, setPaidInvoices] = useState<Set<string>>(() => loadPaidSet());
+  const [pulseInvoiceId, setPulseInvoiceId] = useState<string | null>(null);
 
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", conversationId],
@@ -166,27 +199,55 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
   };
 
   const handlePayInvoice = async (msgId: string, amount: number) => {
+    if (paidInvoices.has(msgId)) return;
     setPayingInvoiceId(msgId);
     try {
-      const w = await loadWallet();
-      if (!w || w.balance < amount) {
-        toast.error("Insufficient wallet balance");
+      const w = loadWallet();
+      if (w.balance < amount) {
+        toast.error("Insufficient wallet balance — top up first");
         return;
       }
-      await addWalletTxn({
+      // Small perceived delay for the "processing" state
+      await new Promise((r) => setTimeout(r, 700));
+      addWalletTxn({
         amount: -amount,
         type: "order",
-        title: "Paid Invoice",
-        description: `Paid via chat to ${otherName ?? "vendor"}`,
-        reference: `INV-${msgId.slice(0, 8)}`,
+        title: `Paid ${otherName ?? "vendor"}`,
+        note: `Invoice INV-${msgId.slice(0, 8)}`,
       });
-      toast.success("Invoice paid successfully!");
-      // We could also update the message in DB to mark it as paid, but for now a toast + wallet deduction is sufficient
+      markPaid(msgId);
+      setPaidInvoices((prev) => new Set(prev).add(msgId));
+      // Also send a follow-up "receipt" message so the vendor sees payment confirmation
+      void supabase.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: meId,
+        body: `✅ Paid ₦${amount.toLocaleString()} · INV-${msgId.slice(0, 8)}`,
+      });
+      qc.invalidateQueries({ queryKey: ["messages", conversationId] });
+      toast.success(`Paid ₦${amount.toLocaleString()} from your wallet`);
     } catch (e: any) {
       toast.error(e?.message || "Failed to process payment");
     } finally {
       setPayingInvoiceId(null);
     }
+  };
+
+  const jumpToLatestInvoice = () => {
+    setAttachOpen(false);
+    // Find newest unpaid invoice sent by the other party
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m: any = messages[i];
+      if (m.sender_id === meId) continue;
+      const inv = parseInvoice(m.body);
+      if (inv && !paidInvoices.has(m.id)) {
+        const el = document.getElementById(`msg-${m.id}`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setPulseInvoiceId(m.id);
+        window.setTimeout(() => setPulseInvoiceId(null), 1600);
+        return;
+      }
+    }
+    toast.info("No unpaid invoices to pay right now");
   };
 
   const initial = (otherName ?? "C").charAt(0).toUpperCase();
@@ -260,8 +321,10 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
               const time = new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
               if (mine) {
+                const mineInvoice = parseInvoice(m.body);
+                const isPaidMine = mineInvoice && paidInvoices.has(m.id);
                 return (
-                  <div key={m.id} className="flex justify-end">
+                  <div key={m.id} id={`msg-${m.id}`} className="flex justify-end">
                     <div
                       className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 shadow-[0_2px_10px_-4px_rgba(217,75,58,0.35)] bg-gradient-to-br from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white ${
                         same ? "rounded-2xl rounded-br-lg" : "rounded-2xl rounded-br-md"
@@ -274,20 +337,22 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                           className="max-w-full rounded-xl mb-1 object-cover border border-white/20"
                         />
                       )}
-                      {m.body?.startsWith("[[INVOICE:") ? (() => {
-                        const parts = m.body.slice(10, -2).split(":");
-                        const amt = parseInt(parts[0], 10);
-                        const note = parts.slice(1).join(":");
-                        return (
-                          <div className="bg-white/10 rounded-xl p-3 border border-white/20 min-w-[200px]">
-                            <div className="flex items-center gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest opacity-80">
-                              <PiReceiptDuotone className="h-4 w-4" /> Invoice Sent
-                            </div>
-                            <div className="text-xl font-display font-bold">₦{amt.toLocaleString()}</div>
-                            <div className="text-sm opacity-90 mt-1">{note}</div>
+                      {mineInvoice ? (
+                        <div className="bg-white/10 rounded-xl p-3 border border-white/20 min-w-[200px]">
+                          <div className="flex items-center justify-between gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest opacity-90">
+                            <span className="inline-flex items-center gap-1.5">
+                              <PiReceiptDuotone className="h-4 w-4" /> Invoice sent
+                            </span>
+                            {isPaidMine && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/30 text-emerald-50 px-1.5 py-0.5">
+                                <Check className="h-3 w-3" strokeWidth={3} /> Paid
+                              </span>
+                            )}
                           </div>
-                        );
-                      })() : m.body ? (
+                          <div className="text-xl font-display font-bold tabular-nums">₦{mineInvoice.amount.toLocaleString()}</div>
+                          <div className="text-sm opacity-90 mt-1 break-words">{mineInvoice.note}</div>
+                        </div>
+                      ) : m.body ? (
                         <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>
                       ) : null}
                       <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-white/85">
@@ -299,8 +364,12 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                 );
               }
 
+              const invoice = parseInvoice(m.body);
+              const isPaid = invoice ? paidInvoices.has(m.id) : false;
+              const isPaying = payingInvoiceId === m.id;
+              const shouldPulse = pulseInvoiceId === m.id;
               return (
-                <div key={m.id} className="flex items-end gap-2 justify-start">
+                <div key={m.id} id={`msg-${m.id}`} className="flex items-end gap-2 justify-start">
                   <div className={`h-8 w-8 rounded-full overflow-hidden bg-muted shrink-0 ${same ? "opacity-0" : ""}`}>
                     {otherAvatar ? (
                       <img src={otherAvatar} alt="" className="h-full w-full object-cover" />
@@ -311,9 +380,9 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                     )}
                   </div>
                   <div
-                    className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 shadow-[0_2px_10px_-4px_rgba(132,204,22,0.35)] bg-[var(--brand-forest)] text-[var(--brand-ink)] ${
+                    className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 shadow-[0_2px_10px_-4px_rgba(132,204,22,0.35)] bg-[var(--brand-forest)] text-[var(--brand-ink)] transition-all duration-500 ${
                       same ? "rounded-2xl rounded-bl-lg" : "rounded-2xl rounded-bl-md"
-                    }`}
+                    } ${shouldPulse ? "ring-4 ring-[var(--brand-clay)]/50 scale-[1.03]" : ""}`}
                   >
                     {!same && (
                       <p className="text-[12px] font-extrabold mb-1 opacity-80">{otherName ?? "Chef"}</p>
@@ -325,30 +394,52 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                         className="max-w-full rounded-xl mb-1 object-cover border border-black/5"
                       />
                     )}
-                    {m.body?.startsWith("[[INVOICE:") ? (() => {
-                      const parts = m.body.slice(10, -2).split(":");
-                      const amt = parseInt(parts[0], 10);
-                      const note = parts.slice(1).join(":");
-                      const isPaying = payingInvoiceId === m.id;
-                      return (
-                        <div className="bg-white/10 rounded-xl p-3 border border-black/5 shadow-sm min-w-[200px]">
-                          <div className="flex items-center gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest opacity-80">
+                    {invoice ? (
+                      <div className="bg-white/95 text-foreground rounded-2xl p-3.5 shadow-inner min-w-[220px]">
+                        <div className="flex items-center justify-between gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest">
+                          <span className="inline-flex items-center gap-1.5 text-emerald-700">
                             <PiReceiptDuotone className="h-4 w-4" /> Invoice
-                          </div>
-                          <div className="text-xl font-display font-bold">₦{amt.toLocaleString()}</div>
-                          <div className="text-sm opacity-90 mt-1">{note}</div>
-                          {!isVendor && (
-                            <button 
-                              onClick={() => handlePayInvoice(m.id, amt)} 
-                              disabled={isPaying}
-                              className="mt-3 w-full rounded-lg bg-[var(--brand-clay)] text-white font-bold py-2 text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition disabled:opacity-50"
-                            >
-                              {isPaying ? "Processing..." : "Pay Now"}
-                            </button>
+                          </span>
+                          {isPaid && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.5">
+                              <Check className="h-3 w-3" strokeWidth={3} /> Paid
+                            </span>
                           )}
                         </div>
-                      );
-                    })() : m.body ? (
+                        <div className="font-display text-2xl font-extrabold tabular-nums leading-none">
+                          ₦{invoice.amount.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1.5 break-words">{invoice.note}</div>
+                        {!isVendor && (
+                          <button
+                            onClick={() => handlePayInvoice(m.id, invoice.amount)}
+                            disabled={isPaying || isPaid}
+                            className={`mt-3 w-full rounded-xl font-bold py-2.5 text-sm shadow-sm inline-flex items-center justify-center gap-1.5 transition ${
+                              isPaid
+                                ? "bg-emerald-100 text-emerald-700 cursor-default"
+                                : isPaying
+                                  ? "bg-zinc-200 text-zinc-500"
+                                  : "bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white hover:scale-[1.02] active:scale-95 shadow-[var(--brand-clay)]/30"
+                            }`}
+                          >
+                            {isPaid ? (
+                              <>
+                                <Check className="h-4 w-4" strokeWidth={3} /> Paid from wallet
+                              </>
+                            ) : isPaying ? (
+                              <>
+                                <span className="h-3.5 w-3.5 rounded-full border-2 border-zinc-400 border-t-transparent animate-spin" />
+                                Processing…
+                              </>
+                            ) : (
+                              <>
+                                <PiCurrencyNgnDuotone className="h-4 w-4" /> Pay ₦{invoice.amount.toLocaleString()}
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    ) : m.body ? (
                       <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>
                     ) : null}
                     <div className="mt-1 flex items-center justify-end gap-1 text-[10px] opacity-75">
@@ -396,12 +487,19 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                 tone="bg-[oklch(0.95_0.06_320)] text-purple-700"
                 onClick={() => openAttach("photo")}
               />
-              {isVendor && (
+              {isVendor ? (
                 <AttachTile
                   Icon={PiReceiptDuotone}
                   label="Invoice"
                   tone="bg-[oklch(0.95_0.04_145)] text-emerald-700"
                   onClick={() => openAttach("invoice")}
+                />
+              ) : (
+                <AttachTile
+                  Icon={PiCurrencyNgnDuotone}
+                  label="Pay"
+                  tone="bg-[oklch(0.95_0.04_145)] text-emerald-700"
+                  onClick={jumpToLatestInvoice}
                 />
               )}
               <AttachTile

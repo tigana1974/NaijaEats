@@ -171,16 +171,16 @@ function MealPlannerPage() {
     }
     setPaying(true);
     try {
-      const w = await loadWallet();
+      const w = loadWallet();
       if (!w || w.balance < totalPrice) {
         toast.error("Insufficient wallet balance");
         return;
       }
-      await addWalletTxn({
+      addWalletTxn({
         amount: -totalPrice,
         type: "order",
         title: "Weekly Meal Plan",
-        description: `Paid for ${totalPlanned} meals`,
+        note: `Paid for ${totalPlanned} meals`,
       });
       toast.success("Payment successful! Your meals are booked.");
       setPlan({});
