@@ -349,12 +349,14 @@ function Nav() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Link
               to="/auth"
+              search={{ mode: "signin" }}
               className="rounded-full border border-primary/20 bg-background text-foreground px-3.5 sm:px-4 py-2 text-sm font-semibold hover:bg-muted transition whitespace-nowrap"
             >
               Sign in
             </Link>
             <Link
               to="/auth"
+              search={{ mode: "signup" }}
               className="rounded-full bg-primary text-primary-foreground px-3.5 sm:px-4 py-2 text-sm font-semibold hover:opacity-95 transition shadow-[var(--shadow-soft)] whitespace-nowrap"
             >
               Sign up

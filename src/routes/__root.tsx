@@ -90,6 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
 
+      { name: "theme-color", content: "#ffffff" },
       { name: "twitter:title", content: "Naija Eats — The Home of African & Authentic Food" },
       { name: "twitter:description", content: "Order from chefs, African & Caribbean restaurants, and ethnic groceries. Cooked with culture, delivered fresh." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WwfEWjKFFmQR7zXd4Diy2oZplB92/social-images/social-1780595681268-Naija_Eats_logo_Transparent_2.webp" },
@@ -99,6 +100,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "manifest",
+        href: "/manifest.webmanifest",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/logo.png",
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
