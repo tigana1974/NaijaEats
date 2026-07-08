@@ -362,7 +362,7 @@ function ChefProfileLayout({ vendor, grouped, cartIsForThisVendor, itemCount, su
               </div>
 
               <div className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-clay)]/8 text-[var(--brand-clay)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
-                <PiMedalDuotone className="h-3.5 w-3.5" /> Private chef
+                <PiMedalDuotone className="h-3.5 w-3.5" /> Chef
               </div>
               <h1 className="font-display text-4xl sm:text-5xl font-bold mt-3 text-zinc-900 tracking-tight leading-[1.05]">
                 {vendor.name}

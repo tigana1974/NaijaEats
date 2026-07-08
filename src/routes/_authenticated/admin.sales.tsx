@@ -58,7 +58,7 @@ function AdminSales() {
       // Group by type
       if (vtype === 'restaurant') byType.restaurant += amount;
       else if (vtype === 'grocery') byType.grocery += amount;
-      else byType.chef += amount; // both home_chef and personal_chef
+      else byType.chef += amount;
 
       // Group by hour
       const hour = new Date(o.created_at).getHours();

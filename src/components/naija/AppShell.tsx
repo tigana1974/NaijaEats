@@ -181,7 +181,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       ? vendorType === "grocery"
         ? "Grocery store"
         : vendorType === "chef"
-          ? "Private chef"
+          ? "Chef"
           : "Restaurant"
       : role === "rider"
         ? "Delivery rider"

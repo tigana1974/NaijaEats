@@ -122,7 +122,7 @@ function AdminStores() {
         <UberPageTitle
           eyebrow="Store"
           title="Store list"
-          description="Restaurants, home chefs, grocery shops and caterers across United Kingdom and Nigeria."
+          description="Restaurants, chefs, grocery shops and caterers across United Kingdom and Nigeria."
           actions={
             <button type="button" className={uberBtn.primary} onClick={() => setIsOnboardOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Onboard vendor
@@ -144,7 +144,7 @@ function AdminStores() {
             tabs={[
               { id: "all", label: "All", count: counts.all },
               { id: "restaurant", label: "Restaurants", count: counts.restaurant },
-              { id: "chef", label: "Home chefs", count: counts.chef },
+              { id: "chef", label: "Chefs", count: counts.chef },
               { id: "grocery", label: "Grocery", count: counts.grocery },
               { id: "caterer", label: "Caterers", count: counts.caterer },
             ]}
@@ -275,8 +275,7 @@ function AdminStores() {
                 <label className="text-sm font-medium">Store Type</label>
                 <select name="type" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                   <option value="restaurant">Restaurant</option>
-                  <option value="home_chef">Home Chef</option>
-                  <option value="personal_chef">Personal Chef</option>
+                  <option value="chef">Chef</option>
                   <option value="grocery">Grocery Store</option>
                   <option value="caterer">Caterer</option>
                 </select>

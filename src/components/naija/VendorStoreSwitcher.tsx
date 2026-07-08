@@ -47,7 +47,7 @@ function typeIcon(type: string | null | undefined) {
 
 function typeLabel(type: string | null | undefined) {
   if (type === "grocery") return "Grocery store";
-  if (type === "chef") return "Private chef";
+  if (type === "chef") return "Chef";
   if (type === "restaurant") return "Restaurant";
   return "Shop";
 }
