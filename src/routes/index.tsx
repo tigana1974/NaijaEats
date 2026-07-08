@@ -22,20 +22,22 @@ import {
   Send,
   Mail,
 } from "lucide-react";
-import heroJollof from "@/assets/hero-jollof.jpg";
-import dishJollof from "@/assets/dish-jollof.jpg";
-import dishSuya from "@/assets/dish-suya.jpg";
-import dishEgusi from "@/assets/dish-egusi.jpg";
-import dishPuffpuff from "@/assets/dish-puffpuff.jpg";
-import chefPortrait from "@/assets/chef-portrait.jpg";
-import offerPlatter from "@/assets/offer-platter.jpg";
-import avatarTunde from "@/assets/avatar-tunde.jpg";
-import avatarRahim from "@/assets/avatar-rahim.jpg";
-import avatarEmily from "@/assets/avatar-emily.jpg";
-import avatarSade from "@/assets/avatar-sade.jpg";
-import illusRider from "@/assets/illus-rider.png";
-import illusOrder from "@/assets/illus-order.png";
-import illusChef from "@/assets/illus-chef.png";
+import {
+  heroFood as heroJollof,
+  dishJollof,
+  dishSuya,
+  dishEgusi,
+  dishPuffpuff,
+  chefPortrait,
+  offerPlatter,
+  avatarTunde,
+  avatarRahim,
+  avatarEmily,
+  avatarSade,
+  illusRider,
+  illusOrder,
+  illusChef,
+} from "@/assets/landing-images";
 import { Logo } from "@/components/naija/Logo";
 import { useState, useEffect, useRef, createContext, useContext, type ReactNode, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -531,19 +533,33 @@ function Story() {
             <img src={offerPlatter} alt="A platter of African dishes" width={1024} height={448} loading="lazy" className="h-full w-full object-cover" />
           </div>
 
-          <div className="rounded-2xl bg-card border border-border p-5 flex items-center gap-6 flex-wrap">
-            {stats.map(([n, l]) => (
-              <div key={l}>
-                <div className="font-display text-2xl font-bold text-primary">{n}</div>
-                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{l}</div>
-              </div>
-            ))}
-            <button className="ml-auto flex items-center gap-2 text-sm font-semibold text-foreground">
-              <span className="grid place-items-center h-10 w-10 rounded-full bg-primary text-primary-foreground">
-                <Play className="h-4 w-4 fill-current" />
-              </span>
-              Watch Intro
-            </button>
+          <div className="rounded-2xl bg-card border border-border p-4 sm:p-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {stats.map(([n, l]) => (
+                <div
+                  key={l}
+                  className="rounded-xl sm:rounded-none sm:bg-transparent bg-muted/40 px-3 py-2.5 sm:p-0 min-w-0"
+                >
+                  <div className="font-display text-xl sm:text-2xl font-bold text-primary tabular-nums leading-none">
+                    {n}
+                  </div>
+                  <div className="mt-1 text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground leading-tight">
+                    {l}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-border sm:mt-5 sm:pt-5">
+              <button
+                type="button"
+                className="w-full sm:w-auto sm:ml-auto flex items-center justify-center sm:justify-end gap-2 text-sm font-semibold text-foreground"
+              >
+                <span className="grid place-items-center h-10 w-10 rounded-full bg-primary text-primary-foreground shrink-0">
+                  <Play className="h-4 w-4 fill-current" />
+                </span>
+                Watch Intro
+              </button>
+            </div>
           </div>
         </div>
       </div>

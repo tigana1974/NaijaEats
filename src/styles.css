@@ -73,11 +73,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-html, body {
-  overflow-x: clip;
-  max-width: 100vw;
-}
-
 :root {
   --radius: 0.75rem;
   /* Brand palette: #ff4d4d red, #84cc16 lime, #facc15 yellow, #1d1d1b ink */
