@@ -68,6 +68,7 @@ function VendorConversation() {
             meId={data.me}
             otherName={name}
             unreadField="vendor_unread"
+            isVendor={true}
           />
         )}
       </div>

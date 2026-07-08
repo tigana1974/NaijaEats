@@ -126,6 +126,7 @@ function ChatPage() {
             otherName={data.vendor.name}
             otherAvatar={data.vendor.logo_url ?? data.vendor.cover_image_url ?? null}
             unreadField="customer_unread"
+            isVendor={false}
           />
         )}
       </div>

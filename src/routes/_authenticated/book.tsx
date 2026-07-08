@@ -12,8 +12,10 @@ import {
   PiClockDuotone,
   PiCheckCircleDuotone,
   PiPlusCircleDuotone,
+  PiWalletDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
+import { loadWallet, addWalletTxn } from "@/lib/wallet";
 
 export const Route = createFileRoute("/_authenticated/book")({
   component: MealPlannerPage,
@@ -150,10 +152,44 @@ function MealPlannerPage() {
   }, [plan]);
 
   const totalPlanned = Object.values(plan).reduce((n, arr) => n + (arr?.length ?? 0), 0);
+  const totalPrice = Object.values(plan).reduce(
+    (sum, arr) => sum + (arr?.reduce((s, item) => s + item.price, 0) ?? 0),
+    0
+  );
+
   const daysWithFullMeals = week.filter((d) =>
     MEALS.every((m) => (plan[keyFor(d, m.id)]?.length ?? 0) > 0),
   ).length;
   const progress = daysWithFullMeals / 7;
+
+  const [paying, setPaying] = useState(false);
+
+  const handlePay = async () => {
+    if (totalPrice <= 0) {
+      toast.error("Add some meals first");
+      return;
+    }
+    setPaying(true);
+    try {
+      const w = await loadWallet();
+      if (!w || w.balance < totalPrice) {
+        toast.error("Insufficient wallet balance");
+        return;
+      }
+      await addWalletTxn({
+        amount: -totalPrice,
+        type: "order",
+        title: "Weekly Meal Plan",
+        description: `Paid for ${totalPlanned} meals`,
+      });
+      toast.success("Payment successful! Your meals are booked.");
+      setPlan({});
+    } catch (e: any) {
+      toast.error(e?.message || "Payment failed");
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const weekLabel = `${week[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${week[6].toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
 
@@ -337,21 +373,48 @@ function MealPlannerPage() {
         </div>
 
         {/* Bottom prompt */}
-        <div className="mt-8 rounded-3xl border border-dashed border-zinc-200 bg-white p-6 flex items-start gap-4">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
-            <PiCookingPotDuotone className="h-6 w-6" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display text-base sm:text-lg font-bold text-zinc-900">Need a hand planning?</h3>
-            <p className="text-sm text-zinc-500 mt-1">
-              Tell us your dietary preferences and we'll auto-fill your week with rotating menus.
-            </p>
-            <button className="mt-3 inline-flex items-center gap-2 rounded-full bg-zinc-900 text-white px-4 py-2 text-sm font-bold hover:bg-zinc-800 transition">
-              Build my week
-              <ArrowRight className="h-4 w-4" />
+        {totalPrice > 0 ? (
+          <div className="mt-8 rounded-3xl border border-[var(--brand-clay)]/20 bg-white p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[0_8px_30px_-12px_rgba(217,75,58,0.2)]">
+            <div className="flex items-start gap-4">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
+                <PiWalletDuotone className="h-6 w-6" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">Checkout</div>
+                <h3 className="font-display text-2xl font-bold text-zinc-900 leading-tight">
+                  ₦{totalPrice.toLocaleString()}
+                </h3>
+                <p className="text-sm text-zinc-500 mt-1">
+                  For {totalPlanned} meals this week. Money will be deducted from your wallet.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handlePay}
+              disabled={paying}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-clay)] text-white px-8 py-3.5 text-[15px] font-bold shadow-lg shadow-[var(--brand-clay)]/30 hover:scale-105 active:scale-95 transition disabled:opacity-70 disabled:hover:scale-100"
+            >
+              {paying ? "Processing..." : "Pay Now"}
+              {!paying && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="mt-8 rounded-3xl border border-dashed border-zinc-200 bg-white p-6 flex items-start gap-4">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
+              <PiCookingPotDuotone className="h-6 w-6" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-base sm:text-lg font-bold text-zinc-900">Need a hand planning?</h3>
+              <p className="text-sm text-zinc-500 mt-1">
+                Tell us your dietary preferences and we'll auto-fill your week with rotating menus.
+              </p>
+              <button className="mt-3 inline-flex items-center gap-2 rounded-full bg-zinc-900 text-white px-4 py-2 text-sm font-bold hover:bg-zinc-800 transition">
+                Build my week
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {picker && (

@@ -11,6 +11,7 @@ import {
   PiCameraDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
+import { loadWallet, addWalletTxn } from "@/lib/wallet";
 
 type Props = {
   conversationId: string;
@@ -18,9 +19,10 @@ type Props = {
   otherName?: string | null;
   otherAvatar?: string | null;
   unreadField: "customer_unread" | "vendor_unread";
+  isVendor?: boolean;
 };
 
-export function ChatThread({ conversationId, meId, otherName, otherAvatar, unreadField }: Props) {
+export function ChatThread({ conversationId, meId, otherName, otherAvatar, unreadField, isVendor }: Props) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -33,6 +35,10 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
   const audioInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
+  const [invoicePopupOpen, setInvoicePopupOpen] = useState(false);
+  const [invoiceAmount, setInvoiceAmount] = useState("");
+  const [invoiceNote, setInvoiceNote] = useState("");
+  const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
 
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", conversationId],
@@ -134,6 +140,57 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     }
   };
 
+  };
+
+  const sendInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amt = parseFloat(invoiceAmount);
+    if (isNaN(amt) || amt <= 0) return toast.error("Invalid amount");
+    const note = invoiceNote.trim() || "Custom Invoice";
+    
+    setSending(true);
+    const body = `[[INVOICE:${amt}:${note}]]`;
+    const { error } = await supabase
+      .from("messages")
+      .insert({ conversation_id: conversationId, sender_id: meId, body });
+    setSending(false);
+    
+    if (error) {
+      toast.error("Failed to send invoice");
+      return;
+    }
+    
+    setInvoicePopupOpen(false);
+    setInvoiceAmount("");
+    setInvoiceNote("");
+    qc.invalidateQueries({ queryKey: ["messages", conversationId] });
+    toast.success("Invoice sent!");
+  };
+
+  const handlePayInvoice = async (msgId: string, amount: number) => {
+    setPayingInvoiceId(msgId);
+    try {
+      const w = await loadWallet();
+      if (!w || w.balance < amount) {
+        toast.error("Insufficient wallet balance");
+        return;
+      }
+      await addWalletTxn({
+        amount: -amount,
+        type: "order",
+        title: "Paid Invoice",
+        description: `Paid via chat to ${otherName ?? "vendor"}`,
+        reference: `INV-${msgId.slice(0, 8)}`,
+      });
+      toast.success("Invoice paid successfully!");
+      // We could also update the message in DB to mark it as paid, but for now a toast + wallet deduction is sufficient
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to process payment");
+    } finally {
+      setPayingInvoiceId(null);
+    }
+  };
+
   const initial = (otherName ?? "C").charAt(0).toUpperCase();
 
   // Group messages by date for headers
@@ -164,8 +221,10 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     setAttachOpen(false);
     if (which === "photo") imgInputRef.current?.click();
     else if (which === "camera") cameraInputRef.current?.click();
-    else if (which === "document" || which === "invoice") {
-      // set a data attribute to distinguish invoice vs document during handler
+    else if (which === "invoice") {
+      setInvoicePopupOpen(true);
+    }
+    else if (which === "document") {
       if (docInputRef.current) docInputRef.current.dataset.kind = which;
       docInputRef.current?.click();
     } else if (which === "audio") audioInputRef.current?.click();
@@ -217,9 +276,22 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                           className="max-w-full rounded-xl mb-1 object-cover border border-white/20"
                         />
                       )}
-                      {m.body && (
+                      {m.body?.startsWith("[[INVOICE:") ? (() => {
+                        const parts = m.body.slice(10, -2).split(":");
+                        const amt = parseInt(parts[0], 10);
+                        const note = parts.slice(1).join(":");
+                        return (
+                          <div className="bg-white/10 rounded-xl p-3 border border-white/20 min-w-[200px]">
+                            <div className="flex items-center gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest opacity-80">
+                              <PiReceiptDuotone className="h-4 w-4" /> Invoice Sent
+                            </div>
+                            <div className="text-xl font-display font-bold">₦{amt.toLocaleString()}</div>
+                            <div className="text-sm opacity-90 mt-1">{note}</div>
+                          </div>
+                        );
+                      })() : m.body ? (
                         <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>
-                      )}
+                      ) : null}
                       <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-white/85">
                         <span className="tabular-nums">{time}</span>
                         <CheckCheck className="h-3 w-3" strokeWidth={2.5} />
@@ -255,9 +327,32 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                         className="max-w-full rounded-xl mb-1 object-cover border border-black/5"
                       />
                     )}
-                    {m.body && (
+                    {m.body?.startsWith("[[INVOICE:") ? (() => {
+                      const parts = m.body.slice(10, -2).split(":");
+                      const amt = parseInt(parts[0], 10);
+                      const note = parts.slice(1).join(":");
+                      const isPaying = payingInvoiceId === m.id;
+                      return (
+                        <div className="bg-white/10 rounded-xl p-3 border border-black/5 shadow-sm min-w-[200px]">
+                          <div className="flex items-center gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest opacity-80">
+                            <PiReceiptDuotone className="h-4 w-4" /> Invoice
+                          </div>
+                          <div className="text-xl font-display font-bold">₦{amt.toLocaleString()}</div>
+                          <div className="text-sm opacity-90 mt-1">{note}</div>
+                          {!isVendor && (
+                            <button 
+                              onClick={() => handlePayInvoice(m.id, amt)} 
+                              disabled={isPaying}
+                              className="mt-3 w-full rounded-lg bg-[var(--brand-clay)] text-white font-bold py-2 text-sm shadow-sm hover:scale-[1.02] active:scale-95 transition disabled:opacity-50"
+                            >
+                              {isPaying ? "Processing..." : "Pay Now"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })() : m.body ? (
                       <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>
-                    )}
+                    ) : null}
                     <div className="mt-1 flex items-center justify-end gap-1 text-[10px] opacity-75">
                       <span className="tabular-nums">{time}</span>
                       <Check className="h-3 w-3" strokeWidth={2.5} />
@@ -303,12 +398,14 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                 tone="bg-[oklch(0.95_0.06_320)] text-purple-700"
                 onClick={() => openAttach("photo")}
               />
-              <AttachTile
-                Icon={PiReceiptDuotone}
-                label="Invoice"
-                tone="bg-[oklch(0.95_0.04_145)] text-emerald-700"
-                onClick={() => openAttach("invoice")}
-              />
+              {isVendor && (
+                <AttachTile
+                  Icon={PiReceiptDuotone}
+                  label="Invoice"
+                  tone="bg-[oklch(0.95_0.04_145)] text-emerald-700"
+                  onClick={() => openAttach("invoice")}
+                />
+              )}
               <AttachTile
                 Icon={PiFileDuotone}
                 label="Document"
@@ -327,6 +424,55 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                 tone="bg-[oklch(0.96_0.04_20)] text-[var(--brand-clay)]"
                 onClick={() => openAttach("camera")}
               />
+            </div>
+            </div>
+          </div>
+        )}
+        
+        {invoicePopupOpen && (
+          <div className="absolute bottom-full left-3 right-3 sm:right-auto sm:w-[320px] mb-3 rounded-3xl bg-white shadow-[0_24px_60px_-24px_rgba(0,0,0,0.25)] border border-border p-4 animate-in slide-in-from-bottom-2 fade-in duration-150">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-[12px] uppercase tracking-widest font-bold text-emerald-700 flex items-center gap-1.5">
+                <PiReceiptDuotone className="h-4 w-4" /> Create Invoice
+              </div>
+              <button
+                type="button"
+                onClick={() => setInvoicePopupOpen(false)}
+                className="h-7 w-7 grid place-items-center rounded-full hover:bg-muted transition text-muted-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">Amount (₦)</label>
+                <input
+                  type="number"
+                  value={invoiceAmount}
+                  onChange={(e) => setInvoiceAmount(e.target.value)}
+                  placeholder="e.g. 5000"
+                  className="w-full h-11 rounded-xl border border-black/10 px-3 text-sm focus:border-[var(--brand-clay)] focus:ring-1 focus:ring-[var(--brand-clay)] transition"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">Description</label>
+                <input
+                  type="text"
+                  value={invoiceNote}
+                  onChange={(e) => setInvoiceNote(e.target.value)}
+                  placeholder="e.g. Party Jollof (2 portions)"
+                  className="w-full h-11 rounded-xl border border-black/10 px-3 text-sm focus:border-[var(--brand-clay)] focus:ring-1 focus:ring-[var(--brand-clay)] transition"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={sendInvoice}
+                disabled={sending || !invoiceAmount}
+                className="w-full h-11 rounded-xl bg-emerald-600 text-white font-bold shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition mt-2 disabled:opacity-50"
+              >
+                {sending ? "Sending..." : "Send Invoice"}
+              </button>
             </div>
           </div>
         )}

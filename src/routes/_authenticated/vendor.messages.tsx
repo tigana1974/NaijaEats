@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
 import { useVendorStore } from "@/hooks/useVendorStore";
-import { Search, X } from "lucide-react";
+import { ArrowLeft, Search, X } from "lucide-react";
 import { PiChatCircleDotsDuotone, PiUserCircleDuotone } from "react-icons/pi";
 
 export const Route = createFileRoute("/_authenticated/vendor/messages")({
@@ -85,7 +85,16 @@ function VendorInbox() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-8 pb-24">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4 sm:py-8 pb-24">
+        <div className="mb-4">
+          <Link
+            to="/vendor/dashboard"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-border hover:bg-muted transition"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </div>
         {/* Hero */}
         <div className="relative overflow-hidden rounded-[2rem] p-5 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
           <div className="pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
