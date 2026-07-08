@@ -35,7 +35,7 @@ export function CustomerShell({
   containerClassName?: string;
 }) {
   return (
-    <div className="min-h-dvh bg-white text-foreground flex flex-col">
+    <div className="min-h-dvh bg-white text-foreground flex flex-col overflow-x-hidden">
       {topBar && (
         <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-3 sm:pt-5 pb-2 flex items-center gap-3">

@@ -80,7 +80,7 @@ function WalletPage() {
 
   return (
     <RoleShell>
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-6 sm:pt-10 pb-16">
+      <div className="mx-auto max-w-5xl px-3 sm:px-4 pt-4 sm:pt-6 pb-12">
         <div className="flex items-end justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-semibold">Wallet</div>
@@ -92,7 +92,7 @@ function WalletPage() {
         </div>
 
         {/* Balance card */}
-        <div className="relative mt-6 overflow-hidden rounded-[32px] p-6 sm:p-8 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
+        <div className="relative mt-5 overflow-hidden rounded-2xl p-5 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.55),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
           <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/30 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
@@ -137,7 +137,7 @@ function WalletPage() {
           </div>
 
           {/* Quick actions */}
-          <div className="relative mt-7 grid grid-cols-4 gap-2 sm:gap-3">
+          <div className="relative mt-5 grid grid-cols-4 gap-2 sm:gap-3">
             <Link
               to="/wallet/top-up"
               className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white text-foreground shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
