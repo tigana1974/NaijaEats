@@ -14,7 +14,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorSlugRouteImport } from './routes/vendor.$slug'
-import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
@@ -30,6 +29,7 @@ import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/c
 import { Route as AuthenticatedBookRouteImport } from './routes/_authenticated/book'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
 import { Route as ApiWebhooksStripeRouteImport } from './routes/api/webhooks/stripe'
 import { Route as ApiWebhooksPaystackRouteImport } from './routes/api/webhooks/paystack'
@@ -111,11 +111,6 @@ const VendorSlugRoute = VendorSlugRouteImport.update({
   path: '/vendor/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedSubscriptionRoute =
   AuthenticatedSubscriptionRouteImport.update({
     id: '/subscription',
@@ -195,6 +190,12 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWalletIndexRoute =
+  AuthenticatedWalletIndexRouteImport.update({
+    id: '/wallet/',
+    path: '/wallet/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
   id: '/chats/',
   path: '/chats/',
@@ -212,20 +213,20 @@ const ApiWebhooksPaystackRoute = ApiWebhooksPaystackRouteImport.update({
 } as any)
 const AuthenticatedWalletTopUpRoute =
   AuthenticatedWalletTopUpRouteImport.update({
-    id: '/top-up',
-    path: '/top-up',
-    getParentRoute: () => AuthenticatedWalletRoute,
+    id: '/wallet/top-up',
+    path: '/wallet/top-up',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedWalletSendRoute = AuthenticatedWalletSendRouteImport.update({
-  id: '/send',
-  path: '/send',
-  getParentRoute: () => AuthenticatedWalletRoute,
+  id: '/wallet/send',
+  path: '/wallet/send',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWalletRequestRoute =
   AuthenticatedWalletRequestRouteImport.update({
-    id: '/request',
-    path: '/request',
-    getParentRoute: () => AuthenticatedWalletRoute,
+    id: '/wallet/request',
+    path: '/wallet/request',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedVendorSubscriptionRoute =
   AuthenticatedVendorSubscriptionRouteImport.update({
@@ -541,7 +542,6 @@ export interface FileRoutesByFullPath {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
-  '/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
@@ -597,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
+  '/wallet/': typeof AuthenticatedWalletIndexRoute
   '/vendor/messages/$conversationId': typeof AuthenticatedVendorMessagesConversationIdRoute
   '/vendor/$slug/item/$itemId': typeof VendorSlugItemItemIdRoute
 }
@@ -619,7 +620,6 @@ export interface FileRoutesByTo {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
-  '/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
@@ -675,6 +675,7 @@ export interface FileRoutesByTo {
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/wallet': typeof AuthenticatedWalletIndexRoute
   '/vendor/messages/$conversationId': typeof AuthenticatedVendorMessagesConversationIdRoute
   '/vendor/$slug/item/$itemId': typeof VendorSlugItemItemIdRoute
 }
@@ -699,7 +700,6 @@ export interface FileRoutesById {
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
-  '/_authenticated/wallet': typeof AuthenticatedWalletRouteWithChildren
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/_authenticated/admin/banking': typeof AuthenticatedAdminBankingRoute
@@ -755,6 +755,7 @@ export interface FileRoutesById {
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/wallet/': typeof AuthenticatedWalletIndexRoute
   '/_authenticated/vendor/messages/$conversationId': typeof AuthenticatedVendorMessagesConversationIdRoute
   '/vendor/$slug/item/$itemId': typeof VendorSlugItemItemIdRoute
 }
@@ -779,7 +780,6 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/subscription'
-    | '/wallet'
     | '/vendor/$slug'
     | '/admin/ads'
     | '/admin/banking'
@@ -835,6 +835,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/paystack'
     | '/api/webhooks/stripe'
     | '/chats/'
+    | '/wallet/'
     | '/vendor/messages/$conversationId'
     | '/vendor/$slug/item/$itemId'
   fileRoutesByTo: FileRoutesByTo
@@ -857,7 +858,6 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/subscription'
-    | '/wallet'
     | '/vendor/$slug'
     | '/admin/ads'
     | '/admin/banking'
@@ -913,6 +913,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/paystack'
     | '/api/webhooks/stripe'
     | '/chats'
+    | '/wallet'
     | '/vendor/messages/$conversationId'
     | '/vendor/$slug/item/$itemId'
   id:
@@ -936,7 +937,6 @@ export interface FileRouteTypes {
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/_authenticated/subscription'
-    | '/_authenticated/wallet'
     | '/vendor/$slug'
     | '/_authenticated/admin/ads'
     | '/_authenticated/admin/banking'
@@ -992,6 +992,7 @@ export interface FileRouteTypes {
     | '/api/webhooks/paystack'
     | '/api/webhooks/stripe'
     | '/_authenticated/chats/'
+    | '/_authenticated/wallet/'
     | '/_authenticated/vendor/messages/$conversationId'
     | '/vendor/$slug/item/$itemId'
   fileRoutesById: FileRoutesById
@@ -1042,13 +1043,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/vendor/$slug'
       preLoaderRoute: typeof VendorSlugRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/wallet': {
-      id: '/_authenticated/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AuthenticatedWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/subscription': {
       id: '/_authenticated/subscription'
@@ -1155,6 +1149,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/wallet/': {
+      id: '/_authenticated/wallet/'
+      path: '/wallet'
+      fullPath: '/wallet/'
+      preLoaderRoute: typeof AuthenticatedWalletIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/chats/': {
       id: '/_authenticated/chats/'
       path: '/chats'
@@ -1178,24 +1179,24 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/wallet/top-up': {
       id: '/_authenticated/wallet/top-up'
-      path: '/top-up'
+      path: '/wallet/top-up'
       fullPath: '/wallet/top-up'
       preLoaderRoute: typeof AuthenticatedWalletTopUpRouteImport
-      parentRoute: typeof AuthenticatedWalletRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wallet/send': {
       id: '/_authenticated/wallet/send'
-      path: '/send'
+      path: '/wallet/send'
       fullPath: '/wallet/send'
       preLoaderRoute: typeof AuthenticatedWalletSendRouteImport
-      parentRoute: typeof AuthenticatedWalletRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wallet/request': {
       id: '/_authenticated/wallet/request'
-      path: '/request'
+      path: '/wallet/request'
       fullPath: '/wallet/request'
       preLoaderRoute: typeof AuthenticatedWalletRequestRouteImport
-      parentRoute: typeof AuthenticatedWalletRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vendor/subscription': {
       id: '/_authenticated/vendor/subscription'
@@ -1561,21 +1562,6 @@ const AuthenticatedOrdersRouteChildren: AuthenticatedOrdersRouteChildren = {
 const AuthenticatedOrdersRouteWithChildren =
   AuthenticatedOrdersRoute._addFileChildren(AuthenticatedOrdersRouteChildren)
 
-interface AuthenticatedWalletRouteChildren {
-  AuthenticatedWalletRequestRoute: typeof AuthenticatedWalletRequestRoute
-  AuthenticatedWalletSendRoute: typeof AuthenticatedWalletSendRoute
-  AuthenticatedWalletTopUpRoute: typeof AuthenticatedWalletTopUpRoute
-}
-
-const AuthenticatedWalletRouteChildren: AuthenticatedWalletRouteChildren = {
-  AuthenticatedWalletRequestRoute: AuthenticatedWalletRequestRoute,
-  AuthenticatedWalletSendRoute: AuthenticatedWalletSendRoute,
-  AuthenticatedWalletTopUpRoute: AuthenticatedWalletTopUpRoute,
-}
-
-const AuthenticatedWalletRouteWithChildren =
-  AuthenticatedWalletRoute._addFileChildren(AuthenticatedWalletRouteChildren)
-
 interface AuthenticatedVendorMessagesRouteChildren {
   AuthenticatedVendorMessagesConversationIdRoute: typeof AuthenticatedVendorMessagesConversationIdRoute
 }
@@ -1607,7 +1593,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
-  AuthenticatedWalletRoute: typeof AuthenticatedWalletRouteWithChildren
   AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminBankingRoute: typeof AuthenticatedAdminBankingRoute
   AuthenticatedAdminCustomerInsightsRoute: typeof AuthenticatedAdminCustomerInsightsRoute
@@ -1655,7 +1640,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendorProfileRoute: typeof AuthenticatedVendorProfileRoute
   AuthenticatedVendorShopsRoute: typeof AuthenticatedVendorShopsRoute
   AuthenticatedVendorSubscriptionRoute: typeof AuthenticatedVendorSubscriptionRoute
+  AuthenticatedWalletRequestRoute: typeof AuthenticatedWalletRequestRoute
+  AuthenticatedWalletSendRoute: typeof AuthenticatedWalletSendRoute
+  AuthenticatedWalletTopUpRoute: typeof AuthenticatedWalletTopUpRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedWalletIndexRoute: typeof AuthenticatedWalletIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1674,7 +1663,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
-  AuthenticatedWalletRoute: AuthenticatedWalletRouteWithChildren,
   AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminBankingRoute: AuthenticatedAdminBankingRoute,
   AuthenticatedAdminCustomerInsightsRoute:
@@ -1725,7 +1713,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVendorProfileRoute: AuthenticatedVendorProfileRoute,
   AuthenticatedVendorShopsRoute: AuthenticatedVendorShopsRoute,
   AuthenticatedVendorSubscriptionRoute: AuthenticatedVendorSubscriptionRoute,
+  AuthenticatedWalletRequestRoute: AuthenticatedWalletRequestRoute,
+  AuthenticatedWalletSendRoute: AuthenticatedWalletSendRoute,
+  AuthenticatedWalletTopUpRoute: AuthenticatedWalletTopUpRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedWalletIndexRoute: AuthenticatedWalletIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

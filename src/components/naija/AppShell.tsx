@@ -265,11 +265,11 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     <div className="min-h-screen bg-background text-foreground">
       {!hideHeader && (
         <header className="sticky top-0 z-30 bg-background/80 backdrop-blur border-b border-border">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-6">
-            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="mx-auto max-w-7xl px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-6">
+            <Link to="/" className="flex items-center gap-2 shrink-0 group">
               <Logo className="h-8 w-8 transition-transform duration-300 group-hover:scale-105" />
-              <div className="min-w-0">
-                <span className="font-display text-lg font-bold tracking-tight text-foreground">
+              <div className="min-w-0 hidden xs:block sm:block">
+                <span className="font-display text-base sm:text-lg font-bold tracking-tight text-foreground">
                   Naija<span className="text-[var(--brand-clay)]">Eats</span>
                 </span>
               </div>
@@ -279,7 +279,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
                 <span key={n.to}>{desktopNavItem(n.to, n.label, n.Icon)}</span>
               ))}
             </nav>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
               {role === "vendor" && (
                 <VendorStoreSwitcher userId={me?.id} plan={me?.vendor_plan} />
               )}

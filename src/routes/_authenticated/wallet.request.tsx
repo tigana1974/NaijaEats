@@ -567,21 +567,24 @@ function FauxQR({ seed }: { seed: string }) {
       {finder(0, 0)}
       {finder((grid - 7) * cell, 0)}
       {finder(0, (grid - 7) * cell)}
-      {/* Brand chip in center */}
+      {/* Brand chip in center — Naija Eats logo */}
       <g>
-        <rect x={grid * cell / 2 - 22} y={grid * cell / 2 - 22} width={44} height={44} rx={10} fill="white" />
-        <rect x={grid * cell / 2 - 18} y={grid * cell / 2 - 18} width={36} height={36} rx={8} fill="var(--brand-clay, #d94b3a)" />
-        <text
-          x={grid * cell / 2}
-          y={grid * cell / 2 + 6}
-          textAnchor="middle"
+        <rect
+          x={grid * cell / 2 - 24}
+          y={grid * cell / 2 - 24}
+          width={48}
+          height={48}
+          rx={12}
           fill="white"
-          fontSize="18"
-          fontWeight="800"
-          fontFamily="system-ui, sans-serif"
-        >
-          ₦
-        </text>
+        />
+        <image
+          href="/logo.png"
+          x={grid * cell / 2 - 20}
+          y={grid * cell / 2 - 20}
+          width={40}
+          height={40}
+          preserveAspectRatio="xMidYMid meet"
+        />
       </g>
     </svg>
   );

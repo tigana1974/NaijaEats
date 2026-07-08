@@ -385,9 +385,9 @@ function SubscriptionPage() {
               <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">Every feature, side by side</h2>
             </div>
           </div>
-          <div className="mt-5 rounded-3xl bg-card border border-border overflow-hidden">
+          <div className="mt-5 rounded-3xl bg-card border border-border overflow-x-auto">
             {/* Header */}
-            <div className="grid grid-cols-[minmax(180px,1.6fr)_repeat(3,1fr)] bg-muted/40 border-b border-border">
+            <div className="min-w-[560px] grid grid-cols-[minmax(180px,1.6fr)_repeat(3,1fr)] bg-muted/40 border-b border-border">
               <div className="p-4 font-bold text-xs uppercase tracking-wider text-muted-foreground">Feature</div>
               {PLANS.map((p) => (
                 <div key={p.key} className="p-4 text-center border-l border-border">
@@ -401,7 +401,7 @@ function SubscriptionPage() {
 
             {FEATURE_TABLE.map((section) => (
               <div key={section.section}>
-                <div className="grid grid-cols-[minmax(180px,1.6fr)_repeat(3,1fr)] bg-muted/20 border-t border-border">
+                <div className="min-w-[560px] grid grid-cols-[minmax(180px,1.6fr)_repeat(3,1fr)] bg-muted/20 border-t border-border">
                   <div className="p-3 flex items-center gap-2 col-span-full">
                     <section.Icon className="h-4 w-4 text-[var(--brand-clay)]" />
                     <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -412,7 +412,7 @@ function SubscriptionPage() {
                 {section.rows.map((row, i) => (
                   <div
                     key={row.label}
-                    className={`grid grid-cols-[minmax(180px,1.6fr)_repeat(3,1fr)] ${
+                    className={`min-w-[560px] grid grid-cols-[minmax(180px,1.6fr)_repeat(3,1fr)] ${
                       i === section.rows.length - 1 ? "" : "border-b border-border"
                     }`}
                   >

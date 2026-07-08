@@ -1,15 +1,34 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerShell } from "@/components/naija/CustomerShell";
-import { MessageCircle } from "lucide-react";
+import { Search, X } from "lucide-react";
+import { PiChatCircleDotsDuotone, PiStorefrontDuotone } from "react-icons/pi";
 
 export const Route = createFileRoute("/_authenticated/chats/")({
   component: ChatsList,
 });
 
+function timeLabel(iso: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  if (sameDay) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const y = new Date(now);
+  y.setDate(now.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  const week = new Date(now);
+  week.setDate(now.getDate() - 7);
+  if (d > week) return d.toLocaleDateString([], { weekday: "short" });
+  return d.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
 function ChatsList() {
+  const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<"all" | "unread">("all");
+
   const { data, refetch } = useQuery({
     queryKey: ["conversations", "customer"],
     queryFn: async () => {
@@ -18,7 +37,7 @@ function ChatsList() {
       if (!uid) return [];
       const { data } = await supabase
         .from("conversations")
-        .select("*, vendor:vendors(id, name, slug, logo_url, cover_image_url)")
+        .select("*, vendor:vendors(id, name, slug, logo_url, cover_image_url, type)")
         .eq("customer_id", uid)
         .order("last_message_at", { ascending: false, nullsFirst: false });
       return data ?? [];
@@ -35,67 +54,184 @@ function ChatsList() {
     };
   }, [refetch]);
 
-  return (
-    <CustomerShell>
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-8">
-        <h1 className="font-display text-3xl sm:text-4xl font-semibold">Messages</h1>
-        <p className="text-muted-foreground mt-1">Chat directly with your chefs.</p>
+  const list = data ?? [];
+  const totalUnread = list.reduce((n, c: any) => n + (c.customer_unread ?? 0), 0);
 
-        <div className="mt-6 space-y-2">
-          {(!data || data.length === 0) && (
-            <div className="rounded-2xl border border-border bg-card p-10 text-center">
-              <MessageCircle className="h-8 w-8 mx-auto text-muted-foreground" />
-              <p className="mt-3 font-medium">No conversations yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Tap “Message chef” from any restaurant or chef to start a chat.
-              </p>
-              <Link
-                to="/discover"
-                className="inline-block mt-4 rounded-full bg-[var(--brand-clay)] text-[var(--brand-cream)] px-5 py-2 text-sm font-semibold"
+  const filtered = useMemo(() => {
+    let out = list as any[];
+    if (tab === "unread") out = out.filter((c) => (c.customer_unread ?? 0) > 0);
+    const q = query.trim().toLowerCase();
+    if (q) {
+      out = out.filter((c) => {
+        const v = c.vendor;
+        return (
+          (v?.name ?? "").toLowerCase().includes(q) ||
+          (c.last_message ?? "").toLowerCase().includes(q)
+        );
+      });
+    }
+    return out;
+  }, [list, tab, query]);
+
+  return (
+    <CustomerShell hideBottomNav>
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-4 pb-24">
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-[2rem] p-5 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
+          <div className="pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 h-52 w-52 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
+
+          <div className="relative flex items-center gap-3">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/12 backdrop-blur border border-white/15">
+              <PiChatCircleDotsDuotone className="h-7 w-7 text-[var(--brand-gold)]" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-widest font-bold text-white/70">Inbox</div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
+                Chat with your chefs
+              </h1>
+            </div>
+            {totalUnread > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white text-[var(--brand-clay)] px-3 py-1.5 text-xs font-bold shadow-lg">
+                {totalUnread} new
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Search + tabs */}
+        <div className="mt-5 flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search chats"
+              className="w-full h-11 rounded-2xl border border-border bg-white pl-10 pr-9 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/15 transition"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-full bg-muted hover:bg-muted/70"
+                aria-label="Clear"
               >
-                Discover chefs
-              </Link>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          <div className="inline-flex rounded-2xl bg-muted p-0.5 text-xs font-bold">
+            {(["all", "unread"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-3 h-10 rounded-xl capitalize transition ${
+                  tab === t ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
+                }`}
+              >
+                {t}
+                {t === "unread" && totalUnread > 0 && (
+                  <span className="ml-1 rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-1.5 py-0.5 text-[10px]">
+                    {totalUnread}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="mt-5">
+          {filtered.length === 0 ? (
+            <EmptyState hasQuery={!!query || tab === "unread"} />
+          ) : (
+            <div className="rounded-3xl bg-white border border-border overflow-hidden divide-y divide-border">
+              {filtered.map((c: any) => (
+                <ChatRow key={c.id} convo={c} />
+              ))}
             </div>
           )}
-          {data?.map((c: any) => {
-            const v = c.vendor;
-            return (
-              <Link
-                key={c.id}
-                to="/chats/$vendorId"
-                params={{ vendorId: v?.id ?? "" }}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 hover:shadow-[var(--shadow-soft)] transition"
-              >
-                <div className="h-12 w-12 rounded-full overflow-hidden bg-muted shrink-0">
-                  {v?.logo_url || v?.cover_image_url ? (
-                    <img src={v.logo_url ?? v.cover_image_url} alt={v.name} className="h-full w-full object-cover" />
-                  ) : null}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold truncate">{v?.name ?? "Chef"}</span>
-                    {c.last_message_at && (
-                      <span className="text-[11px] text-muted-foreground shrink-0">
-                        {new Date(c.last_message_at).toLocaleDateString([], { month: "short", day: "numeric" })}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <p className="text-sm text-muted-foreground truncate">
-                      {c.last_message ?? "Start the conversation"}
-                    </p>
-                    {c.customer_unread > 0 && (
-                      <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-[var(--brand-clay)] text-[var(--brand-cream)] text-[11px] font-semibold">
-                        {c.customer_unread}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
         </div>
       </div>
     </CustomerShell>
+  );
+}
+
+function ChatRow({ convo }: { convo: any }) {
+  const v = convo.vendor;
+  const unread = convo.customer_unread ?? 0;
+  const initial = (v?.name ?? "C").charAt(0).toUpperCase();
+  return (
+    <Link
+      to="/chats/$vendorId"
+      params={{ vendorId: v?.id ?? "" }}
+      className="flex items-center gap-3 p-3.5 hover:bg-muted/40 transition-colors"
+    >
+      <div className="relative">
+        <div className="h-13 w-13 rounded-2xl overflow-hidden bg-muted ring-1 ring-black/5 shrink-0" style={{ height: 52, width: 52 }}>
+          {v?.logo_url || v?.cover_image_url ? (
+            <img src={v.logo_url ?? v.cover_image_url} alt={v.name} className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full grid place-items-center bg-[var(--gradient-warm)] text-white font-display font-bold text-lg">
+              {initial}
+            </div>
+          )}
+        </div>
+        {unread > 0 && (
+          <span className="absolute -top-1 -right-1 grid h-5 min-w-5 px-1 place-items-center rounded-full bg-[var(--brand-clay)] text-white text-[10px] font-bold ring-2 ring-white">
+            {unread > 99 ? "99+" : unread}
+          </span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className={`truncate ${unread > 0 ? "font-extrabold" : "font-semibold"} text-sm sm:text-[15px]`}>
+            {v?.name ?? "Chef"}
+          </span>
+          <span className={`text-[11px] shrink-0 tabular-nums ${unread > 0 ? "text-[var(--brand-clay)] font-bold" : "text-muted-foreground"}`}>
+            {timeLabel(convo.last_message_at)}
+          </span>
+        </div>
+        <div className="mt-0.5 flex items-center gap-1.5">
+          {v?.type && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase text-muted-foreground shrink-0">
+              <PiStorefrontDuotone className="h-2.5 w-2.5" />
+              {v.type === "grocery" ? "Grocery" : v.type === "chef" ? "Chef" : "Restaurant"}
+            </span>
+          )}
+          <p className={`text-xs truncate ${unread > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
+            {convo.last_message ?? "Start the conversation"}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function EmptyState({ hasQuery }: { hasQuery: boolean }) {
+  if (hasQuery) {
+    return (
+      <div className="rounded-3xl border border-dashed border-border bg-white p-10 text-center">
+        <PiChatCircleDotsDuotone className="h-10 w-10 mx-auto text-muted-foreground" />
+        <p className="mt-3 font-semibold">No chats match</p>
+        <p className="text-xs text-muted-foreground mt-1">Try clearing your filter or search.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-3xl border border-border bg-white p-10 text-center">
+      <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]">
+        <PiChatCircleDotsDuotone className="h-8 w-8" />
+      </div>
+      <p className="mt-3 font-display text-lg font-bold">No conversations yet</p>
+      <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+        Tap "Message chef" from any restaurant, grocery, or private kitchen to start a chat.
+      </p>
+      <Link
+        to="/discover"
+        className="inline-flex items-center gap-1.5 mt-5 rounded-full bg-[var(--brand-clay)] text-white px-5 py-2.5 text-sm font-bold shadow-lg shadow-[var(--brand-clay)]/25 hover:scale-105 transition"
+      >
+        Discover chefs
+      </Link>
+    </div>
   );
 }
