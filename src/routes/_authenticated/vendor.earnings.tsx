@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
+import { useVendorStore } from "@/hooks/useVendorStore";
 import { toast } from "sonner";
 import { Wallet, Banknote, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
@@ -26,13 +27,21 @@ function VendorEarnings() {
   const [methodInput, setMethodInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const { activeShopId } = useVendorStore();
   const { data, isLoading } = useQuery({
-    queryKey: ["vendor-earnings"],
+    queryKey: ["vendor-earnings", activeShopId],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return null;
-      const { data: vendor } = await supabase.from("vendors").select("id").eq("owner_id", uid).maybeSingle();
+      
+      let query = supabase.from("vendors").select("id").eq("owner_id", uid);
+      if (activeShopId) {
+        query = query.eq("id", activeShopId);
+      }
+      
+      const { data: vendors } = await query;
+      const vendor = vendors?.[0];
       if (!vendor) return { orders: [] as any[], totals: {} as Record<string, number> };
       // Only paid orders count toward payable revenue — an order that's
       // been delivered but never actually paid for isn't money you have.

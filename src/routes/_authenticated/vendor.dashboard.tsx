@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
+import { useVendorStore } from "@/hooks/useVendorStore";
 import {
   PiClipboardTextDuotone,
   PiForkKnifeDuotone,
@@ -20,18 +21,32 @@ export const Route = createFileRoute("/_authenticated/vendor/dashboard")({
 
 function VendorDashboard() {
   const { data: role, isLoading: roleLoading } = useMyRole();
+  const { activeShopId, setActiveShopId } = useVendorStore();
+
+  // "ALL" mode routes to the multi-shop workspace instead.
+  if (activeShopId === "ALL") return <Navigate to="/vendor/shops" replace />;
+
   const { data, isLoading } = useQuery({
-    queryKey: ["vendor-dashboard"],
+    queryKey: ["vendor-dashboard", activeShopId],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return null;
-      const { data: vendor } = await supabase
-        .from("vendors")
-        .select("*")
-        .eq("owner_id", uid)
-        .maybeSingle();
+
+      let query = supabase.from("vendors").select("*").eq("owner_id", uid);
+      if (activeShopId) {
+        query = query.eq("id", activeShopId);
+      }
+
+      const { data: vendors } = await query;
+      const vendor = vendors?.[0];
       if (!vendor) return { vendor: null };
+
+      // Auto-select if not set
+      if (!activeShopId) {
+        setActiveShopId(vendor.id);
+      }
+
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const { data: orders } = await supabase

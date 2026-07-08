@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
+import { useVendorStore } from "@/hooks/useVendorStore";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, Upload, Loader2 } from "lucide-react";
 
@@ -18,13 +19,21 @@ function VendorMenu() {
   const [showItemForm, setShowItemForm] = useState(false);
   const [newCat, setNewCat] = useState("");
 
+  const { activeShopId } = useVendorStore();
   const { data, isLoading } = useQuery({
-    queryKey: ["vendor-menu"],
+    queryKey: ["vendor-menu", activeShopId],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return null;
-      const { data: vendor } = await supabase.from("vendors").select("*").eq("owner_id", uid).maybeSingle();
+      
+      let query = supabase.from("vendors").select("*").eq("owner_id", uid);
+      if (activeShopId) {
+        query = query.eq("id", activeShopId);
+      }
+      
+      const { data: vendors } = await query;
+      const vendor = vendors?.[0];
       if (!vendor) return { vendor: null, fallbackType: userData.user?.user_metadata?.vendor_type };
       const [{ data: cats }, { data: items }] = await Promise.all([
         supabase.from("menu_categories").select("*").eq("vendor_id", vendor.id).order("sort_order"),

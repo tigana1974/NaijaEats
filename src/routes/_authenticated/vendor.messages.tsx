@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
+import { useVendorStore } from "@/hooks/useVendorStore";
 import { MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/vendor/messages")({
@@ -12,17 +13,21 @@ export const Route = createFileRoute("/_authenticated/vendor/messages")({
 
 function VendorInbox() {
   const { data: role, isLoading: roleLoading } = useMyRole();
+  const { activeShopId } = useVendorStore();
   const { data, refetch } = useQuery({
-    queryKey: ["conversations", "vendor"],
+    queryKey: ["conversations", "vendor", activeShopId],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id;
       if (!uid) return [];
-      const { data: vendor } = await supabase
-        .from("vendors")
-        .select("id, name")
-        .eq("owner_id", uid)
-        .maybeSingle();
+      
+      let query = supabase.from("vendors").select("id, name").eq("owner_id", uid);
+      if (activeShopId) {
+        query = query.eq("id", activeShopId);
+      }
+      
+      const { data: vendors } = await query;
+      const vendor = vendors?.[0];
       if (!vendor) return [];
       const { data: convos } = await supabase
         .from("conversations")

@@ -35,6 +35,7 @@ import { Route as ApiWebhooksPaystackRouteImport } from './routes/api/webhooks/p
 import { Route as AuthenticatedWalletTopUpRouteImport } from './routes/_authenticated/wallet.top-up'
 import { Route as AuthenticatedWalletSendRouteImport } from './routes/_authenticated/wallet.send'
 import { Route as AuthenticatedWalletRequestRouteImport } from './routes/_authenticated/wallet.request'
+import { Route as AuthenticatedVendorShopsRouteImport } from './routes/_authenticated/vendor.shops'
 import { Route as AuthenticatedVendorProfileRouteImport } from './routes/_authenticated/vendor.profile'
 import { Route as AuthenticatedVendorOrdersRouteImport } from './routes/_authenticated/vendor.orders'
 import { Route as AuthenticatedVendorMessagesRouteImport } from './routes/_authenticated/vendor.messages'
@@ -217,6 +218,12 @@ const AuthenticatedWalletRequestRoute =
     id: '/request',
     path: '/request',
     getParentRoute: () => AuthenticatedWalletRoute,
+  } as any)
+const AuthenticatedVendorShopsRoute =
+  AuthenticatedVendorShopsRouteImport.update({
+    id: '/vendor/shops',
+    path: '/vendor/shops',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedVendorProfileRoute =
   AuthenticatedVendorProfileRouteImport.update({
@@ -567,6 +574,7 @@ export interface FileRoutesByFullPath {
   '/vendor/messages': typeof AuthenticatedVendorMessagesRouteWithChildren
   '/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/vendor/profile': typeof AuthenticatedVendorProfileRoute
+  '/vendor/shops': typeof AuthenticatedVendorShopsRoute
   '/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/wallet/send': typeof AuthenticatedWalletSendRoute
   '/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
@@ -642,6 +650,7 @@ export interface FileRoutesByTo {
   '/vendor/messages': typeof AuthenticatedVendorMessagesRouteWithChildren
   '/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/vendor/profile': typeof AuthenticatedVendorProfileRoute
+  '/vendor/shops': typeof AuthenticatedVendorShopsRoute
   '/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/wallet/send': typeof AuthenticatedWalletSendRoute
   '/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
@@ -719,6 +728,7 @@ export interface FileRoutesById {
   '/_authenticated/vendor/messages': typeof AuthenticatedVendorMessagesRouteWithChildren
   '/_authenticated/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/_authenticated/vendor/profile': typeof AuthenticatedVendorProfileRoute
+  '/_authenticated/vendor/shops': typeof AuthenticatedVendorShopsRoute
   '/_authenticated/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/_authenticated/wallet/send': typeof AuthenticatedWalletSendRoute
   '/_authenticated/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
@@ -796,6 +806,7 @@ export interface FileRouteTypes {
     | '/vendor/messages'
     | '/vendor/orders'
     | '/vendor/profile'
+    | '/vendor/shops'
     | '/wallet/request'
     | '/wallet/send'
     | '/wallet/top-up'
@@ -871,6 +882,7 @@ export interface FileRouteTypes {
     | '/vendor/messages'
     | '/vendor/orders'
     | '/vendor/profile'
+    | '/vendor/shops'
     | '/wallet/request'
     | '/wallet/send'
     | '/wallet/top-up'
@@ -947,6 +959,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendor/messages'
     | '/_authenticated/vendor/orders'
     | '/_authenticated/vendor/profile'
+    | '/_authenticated/vendor/shops'
     | '/_authenticated/wallet/request'
     | '/_authenticated/wallet/send'
     | '/_authenticated/wallet/top-up'
@@ -1150,6 +1163,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/wallet/request'
       preLoaderRoute: typeof AuthenticatedWalletRequestRouteImport
       parentRoute: typeof AuthenticatedWalletRoute
+    }
+    '/_authenticated/vendor/shops': {
+      id: '/_authenticated/vendor/shops'
+      path: '/vendor/shops'
+      fullPath: '/vendor/shops'
+      preLoaderRoute: typeof AuthenticatedVendorShopsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vendor/profile': {
       id: '/_authenticated/vendor/profile'
@@ -1592,6 +1612,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendorMessagesRoute: typeof AuthenticatedVendorMessagesRouteWithChildren
   AuthenticatedVendorOrdersRoute: typeof AuthenticatedVendorOrdersRoute
   AuthenticatedVendorProfileRoute: typeof AuthenticatedVendorProfileRoute
+  AuthenticatedVendorShopsRoute: typeof AuthenticatedVendorShopsRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
 }
 
@@ -1659,6 +1680,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedVendorMessagesRouteWithChildren,
   AuthenticatedVendorOrdersRoute: AuthenticatedVendorOrdersRoute,
   AuthenticatedVendorProfileRoute: AuthenticatedVendorProfileRoute,
+  AuthenticatedVendorShopsRoute: AuthenticatedVendorShopsRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
 }
 

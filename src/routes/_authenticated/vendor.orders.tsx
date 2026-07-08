@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
+import { useVendorStore } from "@/hooks/useVendorStore";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -37,13 +38,21 @@ function VendorOrders() {
   const [filter, setFilter] = useState<"open" | "all">("open");
   const { data: role, isLoading: roleLoading } = useMyRole();
 
+  const { activeShopId } = useVendorStore();
   const { data, isLoading } = useQuery({
-    queryKey: ["vendor-orders"],
+    queryKey: ["vendor-orders", activeShopId],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return { vendor: null, orders: [] as any[] };
-      const { data: vendor } = await supabase.from("vendors").select("*").eq("owner_id", uid).maybeSingle();
+      
+      let query = supabase.from("vendors").select("*").eq("owner_id", uid);
+      if (activeShopId) {
+        query = query.eq("id", activeShopId);
+      }
+      
+      const { data: vendors } = await query;
+      const vendor = vendors?.[0];
       if (!vendor) return { vendor: null, orders: [] };
       const { data: orders } = await supabase
         .from("orders")

@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMyRole, type AppRole } from "@/hooks/useMyRole";
+import { VendorStoreSwitcher } from "./VendorStoreSwitcher";
 import { Logo } from "@/components/naija/Logo";
 
 export function AppShell({ children, hideHeader, hideBottomNav }: { children: React.ReactNode; hideHeader?: boolean; hideBottomNav?: boolean }) {
@@ -50,7 +51,14 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
         .select("full_name, avatar_url")
         .eq("id", uid)
         .maybeSingle();
-      return { email: u.user?.email ?? "", ...(p ?? {}) } as { email: string; full_name?: string | null; avatar_url?: string | null };
+      const profile = (p ?? {}) as { full_name?: string | null; avatar_url?: string | null; vendor_plan?: string | null };
+      return {
+        id: uid,
+        email: u.user?.email ?? "",
+        full_name: profile.full_name ?? null,
+        avatar_url: profile.avatar_url ?? null,
+        vendor_plan: profile.vendor_plan ?? "free",
+      };
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -150,6 +158,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
   // Extra role-specific links shown in the sidebar under a second section.
   const workspaceByRole: Partial<Record<AppRole, NavItem[]>> = {
     vendor: [
+      { to: "/vendor/shops", label: "My shops", Icon: PiSquaresFourDuotone },
       { to: "/vendor/messages", label: "Messages", Icon: PiChatCircleDotsDuotone },
       { to: "/vendor/profile", label: vendorType === "grocery" ? "Store profile" : vendorType === "chef" ? "Kitchen profile" : "Restaurant profile", Icon: PiStorefrontDuotone },
     ],
@@ -269,6 +278,9 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
               ))}
             </nav>
             <div className="ml-auto flex items-center gap-2">
+              {role === "vendor" && (
+                <VendorStoreSwitcher userId={me?.id} plan={me?.vendor_plan} />
+              )}
               {role === "customer" && (
                 <Link
                   to="/cart"

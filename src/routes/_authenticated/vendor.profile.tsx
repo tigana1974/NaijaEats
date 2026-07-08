@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
+import { useVendorStore } from "@/hooks/useVendorStore";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/vendor/profile")({
@@ -67,15 +68,27 @@ function VendorProfilePage() {
   const [uploading, setUploading] = useState<"cover" | "logo" | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
-  const { data: existing, isLoading } = useQuery({
-    queryKey: ["my-vendor"],
+  const { activeShopId, setActiveShopId } = useVendorStore();
+
+  const { data: vendorMeta } = useQuery({
+    queryKey: ["vendor-meta", user.id],
     queryFn: async () => {
-      const uid = user.id;
-      if (!uid) return null;
+      const [{ data: profile }, { count }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase.from("vendors").select("*", { count: "exact", head: true }).eq("owner_id", user.id),
+      ]);
+      return { plan: (profile as any)?.vendor_plan || "basic", count: count || 0 };
+    },
+  });
+
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ["my-vendor", activeShopId],
+    enabled: !!activeShopId,
+    queryFn: async () => {
       const { data } = await supabase
         .from("vendors")
         .select("*")
-        .eq("owner_id", uid)
+        .eq("id", activeShopId!)
         .maybeSingle();
       return data ?? null;
     },
@@ -241,15 +254,23 @@ function VendorProfilePage() {
         if (error) throw error;
         toast.success("Shop updated");
       } else {
-        const { error } = await supabase.from("vendors").insert(payload);
+        const maxShops = vendorMeta?.plan === "premium" ? 5 : 1;
+        if ((vendorMeta?.count || 0) >= maxShops) {
+          throw new Error(`You have reached the maximum of ${maxShops} shops on the ${vendorMeta?.plan} plan. Please upgrade to create more.`);
+        }
+        const { data: inserted, error } = await supabase.from("vendors").insert(payload).select().single();
         if (error) throw error;
         toast.success("Shop created — pending approval");
+        setActiveShopId(inserted.id);
       }
       await qc.invalidateQueries({ queryKey: ["my-vendor"] });
+      await qc.invalidateQueries({ queryKey: ["my-shops"] });
+      await qc.invalidateQueries({ queryKey: ["vendor-meta"] });
       await qc.invalidateQueries({ queryKey: ["vendor-dashboard"] });
       navigate({ to: "/vendor/dashboard" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Save failed");
+    } catch (err: any) {
+      toast.error(err?.message || err?.details || "Save failed");
+      console.error("Vendor save error:", err);
     } finally {
       setSaving(false);
     }
