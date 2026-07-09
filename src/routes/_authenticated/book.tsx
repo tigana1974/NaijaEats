@@ -419,19 +419,22 @@ function MealPlannerPage() {
             </button>
           </div>
         ) : (
-          <div className="mt-8 rounded-3xl border border-dashed border-zinc-200 bg-white p-6 flex items-start gap-4">
+          <div className="mt-8 rounded-3xl border border-dashed border-border bg-card p-6 flex items-start gap-4">
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
               <PiCookingPotDuotone className="h-6 w-6" />
             </span>
             <div className="flex-1 min-w-0">
-              <h3 className="font-display text-base sm:text-lg font-bold text-zinc-900">Need a hand planning?</h3>
-              <p className="text-sm text-zinc-500 mt-1">
+              <h3 className="font-display text-base sm:text-lg font-bold text-foreground">Need a hand planning?</h3>
+              <p className="text-sm text-muted-foreground mt-1">
                 Tell us your dietary preferences and we'll auto-fill your week with rotating menus.
               </p>
-              <button className="mt-3 inline-flex items-center gap-2 rounded-full bg-zinc-900 text-white px-4 py-2 text-sm font-bold hover:bg-zinc-800 transition">
+              <Link
+                to="/book/build"
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2 text-sm font-bold hover:opacity-90 transition"
+              >
                 Build my week
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </Link>
             </div>
           </div>
         )}

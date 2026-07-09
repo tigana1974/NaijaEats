@@ -50,6 +50,7 @@ import { Route as AuthenticatedRiderDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedRiderAvailableRouteImport } from './routes/_authenticated/rider.available'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedChatsVendorIdRouteImport } from './routes/_authenticated/chats.$vendorId'
+import { Route as AuthenticatedBookBuildRouteImport } from './routes/_authenticated/book.build'
 import { Route as AuthenticatedAdminWebshopRouteImport } from './routes/_authenticated/admin.webshop'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminSuccessRouteImport } from './routes/_authenticated/admin.success'
@@ -311,6 +312,11 @@ const AuthenticatedChatsVendorIdRoute =
     path: '/chats/$vendorId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBookBuildRoute = AuthenticatedBookBuildRouteImport.update({
+  id: '/build',
+  path: '/build',
+  getParentRoute: () => AuthenticatedBookRoute,
+} as any)
 const AuthenticatedAdminWebshopRoute =
   AuthenticatedAdminWebshopRouteImport.update({
     id: '/admin/webshop',
@@ -529,7 +535,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
   '/addresses': typeof AuthenticatedAddressesRoute
-  '/book': typeof AuthenticatedBookRoute
+  '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/groceries': typeof AuthenticatedGroceriesRoute
@@ -577,6 +583,7 @@ export interface FileRoutesByFullPath {
   '/admin/success': typeof AuthenticatedAdminSuccessRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
+  '/book/build': typeof AuthenticatedBookBuildRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -607,7 +614,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
   '/addresses': typeof AuthenticatedAddressesRoute
-  '/book': typeof AuthenticatedBookRoute
+  '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/groceries': typeof AuthenticatedGroceriesRoute
@@ -655,6 +662,7 @@ export interface FileRoutesByTo {
   '/admin/success': typeof AuthenticatedAdminSuccessRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
+  '/book/build': typeof AuthenticatedBookBuildRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -687,7 +695,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/addresses': typeof AuthenticatedAddressesRoute
-  '/_authenticated/book': typeof AuthenticatedBookRoute
+  '/_authenticated/book': typeof AuthenticatedBookRouteWithChildren
   '/_authenticated/cart': typeof AuthenticatedCartRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/groceries': typeof AuthenticatedGroceriesRoute
@@ -735,6 +743,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/success': typeof AuthenticatedAdminSuccessRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/webshop': typeof AuthenticatedAdminWebshopRoute
+  '/_authenticated/book/build': typeof AuthenticatedBookBuildRoute
   '/_authenticated/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/_authenticated/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -815,6 +824,7 @@ export interface FileRouteTypes {
     | '/admin/success'
     | '/admin/users'
     | '/admin/webshop'
+    | '/book/build'
     | '/chats/$vendorId'
     | '/orders/$orderId'
     | '/rider/available'
@@ -893,6 +903,7 @@ export interface FileRouteTypes {
     | '/admin/success'
     | '/admin/users'
     | '/admin/webshop'
+    | '/book/build'
     | '/chats/$vendorId'
     | '/orders/$orderId'
     | '/rider/available'
@@ -972,6 +983,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/success'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/webshop'
+    | '/_authenticated/book/build'
     | '/_authenticated/chats/$vendorId'
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/rider/available'
@@ -1296,6 +1308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsVendorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/book/build': {
+      id: '/_authenticated/book/build'
+      path: '/build'
+      fullPath: '/book/build'
+      preLoaderRoute: typeof AuthenticatedBookBuildRouteImport
+      parentRoute: typeof AuthenticatedBookRoute
+    }
     '/_authenticated/admin/webshop': {
       id: '/_authenticated/admin/webshop'
       path: '/admin/webshop'
@@ -1551,6 +1570,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedBookRouteChildren {
+  AuthenticatedBookBuildRoute: typeof AuthenticatedBookBuildRoute
+}
+
+const AuthenticatedBookRouteChildren: AuthenticatedBookRouteChildren = {
+  AuthenticatedBookBuildRoute: AuthenticatedBookBuildRoute,
+}
+
+const AuthenticatedBookRouteWithChildren =
+  AuthenticatedBookRoute._addFileChildren(AuthenticatedBookRouteChildren)
+
 interface AuthenticatedOrdersRouteChildren {
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
 }
@@ -1580,7 +1610,7 @@ const AuthenticatedVendorMessagesRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAddressesRoute: typeof AuthenticatedAddressesRoute
-  AuthenticatedBookRoute: typeof AuthenticatedBookRoute
+  AuthenticatedBookRoute: typeof AuthenticatedBookRouteWithChildren
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
   AuthenticatedGroceriesRoute: typeof AuthenticatedGroceriesRoute
@@ -1650,7 +1680,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAddressesRoute: AuthenticatedAddressesRoute,
-  AuthenticatedBookRoute: AuthenticatedBookRoute,
+  AuthenticatedBookRoute: AuthenticatedBookRouteWithChildren,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
   AuthenticatedGroceriesRoute: AuthenticatedGroceriesRoute,

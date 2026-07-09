@@ -236,3 +236,93 @@
 html, body {
   transition: background-color 180ms ease, color 180ms ease;
 }
+
+/*
+ * Dark-mode remap for hardcoded utility classes.
+ *
+ * The app uses semantic tokens (bg-card / text-foreground / border-border)
+ * in most places, but a lot of hero cards, product cards and small pieces
+ * of chrome still reach for literal Tailwind palette classes like
+ * `text-zinc-900`, `bg-white`, `border-zinc-200`. In dark mode those look
+ * broken because the background is now dark but the text is still near-black.
+ *
+ * Rather than sweep every page, we alias those classes to theme-safe values
+ * whenever <html> carries `.dark`. This makes the whole app immediately
+ * legible in dark mode; individual pages can still override with their own
+ * dark: variants when they want a bespoke look.
+ */
+.dark .text-zinc-900,
+.dark .text-zinc-800,
+.dark .text-black {
+  color: var(--color-foreground);
+}
+.dark .text-zinc-700,
+.dark .text-zinc-600 {
+  color: color-mix(in oklab, var(--color-foreground) 88%, transparent);
+}
+.dark .text-zinc-500,
+.dark .text-zinc-400 {
+  color: var(--color-muted-foreground);
+}
+.dark .text-zinc-300 {
+  color: color-mix(in oklab, var(--color-muted-foreground) 80%, transparent);
+}
+
+/* Neutral surfaces */
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/90 {
+  background-color: var(--color-card);
+}
+.dark .bg-zinc-50,
+.dark .bg-zinc-100 {
+  background-color: var(--color-muted);
+}
+.dark .bg-zinc-200 {
+  background-color: color-mix(in oklab, var(--color-muted) 80%, var(--color-background));
+}
+
+/* Borders / rings */
+.dark .border-zinc-100,
+.dark .border-zinc-200,
+.dark .border-zinc-300 {
+  border-color: var(--color-border);
+}
+.dark .ring-zinc-100,
+.dark .ring-zinc-200 {
+  --tw-ring-color: var(--color-border);
+}
+.dark .divide-zinc-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-zinc-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--color-border);
+}
+
+/* Hover states that assume a light backdrop */
+.dark .hover\:bg-zinc-50:hover,
+.dark .hover\:bg-zinc-100:hover,
+.dark .hover\:bg-white:hover {
+  background-color: var(--color-muted);
+}
+
+/*
+ * Placeholder + input surfaces. Inputs styled with `bg-white`/`border-zinc-*`
+ * inherit the remap above, but we tighten the placeholder tone so it's still
+ * subtle against the darker background.
+ */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: color-mix(in oklab, var(--color-muted-foreground) 90%, transparent);
+}
+
+/*
+ * Text inside otherwise-untokenized cards. Some tiles are `bg-white p-4`
+ * with `text-foreground` implicit — which reads as pure white on white in
+ * dark mode. Nudge default text on obvious light-surface classes so any
+ * child text inherits a dark-mode-safe color.
+ */
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/90,
+.dark .bg-zinc-50 {
+  color: var(--color-foreground);
+}
