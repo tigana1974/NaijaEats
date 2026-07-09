@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMyRole, type AppRole } from "@/hooks/useMyRole";
 import { clearAllLocalUsernames } from "@/lib/username";
+import { useUnreadNotifications, formatBadgeCount } from "@/hooks/useUnreadNotifications";
 import { VendorStoreSwitcher } from "./VendorStoreSwitcher";
 import { Logo } from "@/components/naija/Logo";
 
@@ -85,20 +86,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: unreadCount = 0 } = useQuery({
-    queryKey: ["unread-notifications"],
-    queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user?.id) return 0;
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", u.user.id)
-        .eq("is_unread", true);
-      return count ?? 0;
-    },
-    staleTime: 10000,
-  });
+  const { count: unreadCount } = useUnreadNotifications();
 
   const vendorType = vendorData?.type;
   const vendorLogo = vendorData?.logo_url;
@@ -310,12 +298,14 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
               )}
               <Link
                 to="/notifications"
-                aria-label="Notifications"
+                aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
                 className="relative inline-flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-border hover:ring-[var(--brand-clay)] transition text-foreground"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--brand-clay)]" />
+                  <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-[var(--brand-clay)] text-white text-[10px] font-bold grid place-items-center ring-2 ring-background">
+                    {formatBadgeCount(unreadCount)}
+                  </span>
                 )}
               </Link>
               <Link

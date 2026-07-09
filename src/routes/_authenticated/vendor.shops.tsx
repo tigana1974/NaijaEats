@@ -223,46 +223,48 @@ function ShopsPage() {
     <AppShell>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
         {/* Hero header */}
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#1a1108] via-[#3a1a14] to-[#7c2d12] p-6 sm:p-8 text-white">
-          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[var(--brand-clay)]/30 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl sm:rounded-[2rem] bg-gradient-to-br from-[#1a1108] via-[#3a1a14] to-[#7c2d12] p-4 sm:p-8 text-white">
+          <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-[var(--brand-clay)]/30 blur-3xl" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
 
-          <div className="relative flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
-                <PiSquaresFourDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Multi-shop workspace
+          {/* Plan chip — top-right corner on all screens */}
+          <div className="absolute top-3 right-3 sm:top-5 sm:right-5 z-10">
+            <PlanChip plan={planKey} />
+          </div>
+
+          <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4">
+            <div className="min-w-0 pr-24 sm:pr-32">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+                <PiSquaresFourDuotone className="h-3 w-3 text-[var(--brand-gold)]" /> Multi-shop workspace
               </div>
-              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-3 leading-tight">
-                Your shops
+              <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight mt-2 sm:mt-3 leading-tight">
+                My shops
               </h1>
-              <p className="text-white/75 text-sm mt-2 max-w-md">
-                Manage every kitchen, store, and profile from one place. Switch, edit, or add a new one instantly.
+              <p className="text-white/75 text-xs sm:text-sm mt-1.5 sm:mt-2 max-w-md leading-relaxed">
+                Manage every kitchen, store, and profile from one place.
               </p>
             </div>
-            <div className="flex flex-col items-end gap-3">
-              <PlanChip plan={planKey} />
-              <button
-                onClick={() => {
-                  setActiveShopId(null);
-                  navigate({ to: "/vendor/profile" });
-                }}
-                disabled={!canAdd}
-                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold shadow-xl transition-all ${
-                  canAdd
-                    ? "bg-white text-[#1a1108] hover:scale-105"
-                    : "bg-white/10 text-white/50 cursor-not-allowed"
-                }`}
-              >
-                <Plus className="h-4 w-4" />
-                Add shop
-                {canAdd && limit > 1 && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-clay)] bg-[var(--brand-clay)]/10 rounded-full px-1.5 py-0.5">
-                    {shops.length}/{limit}
-                  </span>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setActiveShopId(null);
+                navigate({ to: "/vendor/profile" });
+              }}
+              disabled={!canAdd}
+              className={`w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 sm:py-2.5 text-sm font-bold shadow-xl transition-all ${
+                canAdd
+                  ? "bg-white text-[#1a1108] hover:scale-105"
+                  : "bg-white/10 text-white/50 cursor-not-allowed"
+              }`}
+            >
+              <Plus className="h-4 w-4" />
+              Add shop
+              {canAdd && limit > 1 && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-clay)] bg-[var(--brand-clay)]/10 rounded-full px-1.5 py-0.5">
+                  {shops.length}/{limit}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Aggregate stat row */}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useRouterState, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnreadNotifications, formatBadgeCount } from "@/hooks/useUnreadNotifications";
 import { useMyRole } from "@/hooks/useMyRole";
 import {
   ChevronDown,
@@ -189,20 +190,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: unreadCount = 0 } = useQuery({
-    queryKey: ["admin-unread"],
-    queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user?.id) return 0;
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", u.user.id)
-        .eq("is_unread", true);
-      return count ?? 0;
-    },
-    staleTime: 10000,
-  });
+  const { count: unreadCount } = useUnreadNotifications();
 
   if (!roleLoading && role !== "admin") return <Navigate to="/" replace />;
 
@@ -232,12 +220,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-1">
           <Link
             to="/notifications"
-            aria-label="Notifications"
+            aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
             className="relative rounded-md p-2 hover:bg-[oklch(0.965_0.003_260)]"
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[var(--naija-orange)]" />
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--naija-orange)] text-white text-[10px] font-bold grid place-items-center ring-2 ring-white">
+                {formatBadgeCount(unreadCount)}
+              </span>
             )}
           </Link>
           <Link to="/admin/profile" className="ml-1 rounded-full overflow-hidden">
@@ -315,13 +305,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </Link>
             <Link
               to="/notifications"
-              aria-label="Notifications"
+              aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
               className="relative rounded-full bg-[oklch(0.965_0.003_260)] p-2 hover:bg-[oklch(0.94_0.003_260)]"
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--naija-orange)] px-1 text-[10px] font-medium text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
+                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[var(--naija-orange)] px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                  {formatBadgeCount(unreadCount)}
                 </span>
               )}
             </Link>

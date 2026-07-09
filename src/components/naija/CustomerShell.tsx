@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumUpsellDialog } from "@/components/naija/PremiumUpsellDialog";
+import { useUnreadNotifications, formatBadgeCount } from "@/hooks/useUnreadNotifications";
 
 /**
  * Mobile-first shell for customer-facing pages.
@@ -73,6 +74,7 @@ export function CustomerShell({
  * and a notification bell on the right.
  */
 export function CustomerLocationHeader() {
+  const { count: unreadCount } = useUnreadNotifications();
   return (
     <div className="flex items-center justify-between gap-3">
       <Link to="/discover" className="flex items-center gap-2.5 shrink-0 group">
@@ -86,10 +88,15 @@ export function CustomerLocationHeader() {
       <div className="flex items-center gap-2">
         <Link
           to="/notifications"
-          aria-label="Notifications"
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
           className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 text-zinc-700 transition-colors"
         >
           <IoNotifications className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[var(--brand-clay)] text-white text-[10px] font-bold grid place-items-center ring-2 ring-white">
+              {formatBadgeCount(unreadCount)}
+            </span>
+          )}
         </Link>
         <Link
           to="/wallet"
