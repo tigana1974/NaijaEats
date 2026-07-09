@@ -50,7 +50,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 type Mode = "signin" | "signup";
-type SignupRole = "customer" | "chef" | "grocery" | "rider";
+type SignupRole = "customer" | "restaurant" | "chef" | "grocery" | "rider";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -99,8 +99,8 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const dbRole = role === "chef" || role === "grocery" ? "vendor" : role;
-        const vendor_type = role === "grocery" ? "grocery" : role === "chef" ? "chef" : null;
+        const dbRole = role === "chef" || role === "grocery" || role === "restaurant" ? "vendor" : role;
+        const vendor_type = role === "grocery" ? "grocery" : role === "chef" ? "chef" : role === "restaurant" ? "restaurant" : null;
 
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -272,6 +272,7 @@ function AuthPage() {
                       className="input"
                     >
                       <option value="customer">Customer</option>
+                      <option value="restaurant">Restaurant</option>
                       <option value="chef">Chef</option>
                       <option value="grocery">Groceries Market</option>
                       <option value="rider">Delivery rider</option>
