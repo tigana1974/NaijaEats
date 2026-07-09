@@ -380,7 +380,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
               <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-[var(--brand-clay)]/25 blur-[90px]" />
               <div className="pointer-events-none absolute -bottom-28 -right-20 h-64 w-64 rounded-full bg-[var(--brand-gold)]/10 blur-[90px]" />
 
-              <div className="relative flex flex-col h-full overflow-y-auto p-5">
+              <div className="relative flex flex-col h-full overflow-y-auto scrollbar-hide p-5">
                 {/* Header / Profile */}
                 <div className="rounded-3xl bg-white/[0.05] border border-white/[0.07] p-4 mb-6">
                   <div className="flex items-start justify-between">

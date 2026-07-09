@@ -47,19 +47,20 @@ function VendorOrders() {
       if (!uid) return { vendor: null, orders: [] as any[] };
       
       let query = supabase.from("vendors").select("*").eq("owner_id", uid);
-      if (activeShopId) {
+      if (activeShopId && activeShopId !== "ALL") {
         query = query.eq("id", activeShopId);
       }
       
       const { data: vendors } = await query;
-      const vendor = vendors?.[0];
-      if (!vendor) return { vendor: null, orders: [] };
+      if (!vendors || vendors.length === 0) return { vendor: null, orders: [] };
+      const vendorIds = vendors.map(v => v.id);
+      
       const { data: orders } = await supabase
         .from("orders")
         .select("*, order_items(*)")
-        .eq("vendor_id", vendor.id)
+        .in("vendor_id", vendorIds)
         .order("created_at", { ascending: false });
-      return { vendor, orders: orders ?? [] };
+      return { vendor: vendors[0], orders: orders ?? [] };
     },
   });
 

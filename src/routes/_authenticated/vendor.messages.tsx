@@ -41,12 +41,13 @@ function VendorInbox() {
       if (activeShopId && activeShopId !== "ALL") query = query.eq("id", activeShopId);
 
       const { data: vendors } = await query;
-      const vendor = vendors?.[0];
-      if (!vendor) return [];
+      if (!vendors || vendors.length === 0) return [];
+      const vendorIds = vendors.map(v => v.id);
+      
       const { data: convos } = await supabase
         .from("conversations")
         .select("*, customer:profiles!conversations_customer_id_fkey(id, full_name, avatar_url)")
-        .eq("vendor_id", vendor.id)
+        .in("vendor_id", vendorIds)
         .order("last_message_at", { ascending: false, nullsFirst: false });
       return convos ?? [];
     },

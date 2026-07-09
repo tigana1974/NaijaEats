@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { PiWalletDuotone, PiUserCircleDuotone, PiPaperPlaneTiltDuotone, PiLightningDuotone } from "react-icons/pi";
+import { AtSign } from "lucide-react";
 import { toast } from "sonner";
 import {
   addWalletTxn,
@@ -25,6 +26,7 @@ import {
   initialsOf,
   type Contact,
 } from "@/lib/wallet";
+import { searchUsersByUsername, normalizeUsername, type FoundUser } from "@/lib/username";
 
 export const Route = createFileRoute("/_authenticated/wallet/send")({
   component: SendPage,
@@ -273,6 +275,54 @@ function PickStep({
   onOpenAdd: () => void;
 }) {
   const recents = contacts.filter((c) => c.lastSentAt).slice(0, 6);
+
+  // Live username search. Kicks in when the query starts with @ or is a
+  // valid handle prefix (3+ chars, no spaces).
+  const [users, setUsers] = useState<FoundUser[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+
+  const usernameQuery = useMemo(() => {
+    const raw = search.trim();
+    if (!raw) return "";
+    // Only treat as username query if it starts with @ or looks handle-ish
+    if (raw.startsWith("@")) return normalizeUsername(raw);
+    if (/^[a-zA-Z][a-zA-Z0-9_]{1,}$/.test(raw) && !raw.includes(" ")) return normalizeUsername(raw);
+    return "";
+  }, [search]);
+
+  useEffect(() => {
+    if (usernameQuery.length < 2) {
+      setUsers([]);
+      setSearchingUsers(false);
+      return;
+    }
+    let cancelled = false;
+    setSearchingUsers(true);
+    const t = window.setTimeout(async () => {
+      const found = await searchUsersByUsername(usernameQuery, 8);
+      if (!cancelled) {
+        setUsers(found);
+        setSearchingUsers(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [usernameQuery]);
+
+  const pickUser = (u: FoundUser) => {
+    const c: Contact = upsertContact({
+      name: u.full_name || `@${u.username}`,
+      handle: `@${u.username}`,
+    });
+    onPick(c);
+  };
+
+  // Hide local contacts we've already surfaced from the users list (match by handle)
+  const userHandles = new Set(users.map((u) => `@${u.username}`.toLowerCase()));
+  const filteredExcludingDupes = filtered.filter((c) => !userHandles.has(c.handle.toLowerCase()));
+
   return (
     <>
       {/* Search */}
@@ -281,9 +331,17 @@ function PickStep({
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search name, @handle or phone"
+          placeholder="Search name or @username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           className="pl-11 h-12 rounded-2xl bg-white border-zinc-200 shadow-sm"
         />
+        {searchingUsers && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            searching…
+          </span>
+        )}
       </div>
 
       {/* Add new + Quick tiles */}
@@ -335,20 +393,73 @@ function PickStep({
         </div>
       )}
 
+      {/* Live username search results */}
+      {users.length > 0 && (
+        <div className="mt-6">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 mb-2 inline-flex items-center gap-1.5">
+            <AtSign className="h-3 w-3" /> Naija Eats users
+          </div>
+          <div className="rounded-2xl bg-white border border-emerald-200 divide-y divide-emerald-100 overflow-hidden">
+            {users.map((u) => (
+              <button
+                key={u.id}
+                onClick={() => pickUser(u)}
+                className="w-full flex items-center gap-3 p-3.5 hover:bg-emerald-50 transition text-left"
+              >
+                <div className="relative h-11 w-11 shrink-0">
+                  {u.avatar_url ? (
+                    <img
+                      src={u.avatar_url}
+                      alt=""
+                      className="h-full w-full rounded-full object-cover ring-1 ring-black/5"
+                    />
+                  ) : (
+                    <span className="grid h-full w-full place-items-center rounded-full font-display font-bold bg-emerald-100 text-emerald-700">
+                      {(u.full_name || u.username).charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white">
+                    <Check className="h-2.5 w-2.5" strokeWidth={3.5} />
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-zinc-900 truncate">{u.full_name || `@${u.username}`}</div>
+                  <div className="text-[11px] text-emerald-700 font-semibold truncate">@{u.username}</div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-zinc-400" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No users found for a valid @-query */}
+      {usernameQuery.length >= 2 && !searchingUsers && users.length === 0 && (
+        <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 bg-white p-5 text-center">
+          <AtSign className="h-8 w-8 mx-auto text-zinc-300" />
+          <div className="mt-2 text-sm font-semibold text-zinc-700">
+            No Naija Eats user with @{usernameQuery}
+          </div>
+          <div className="text-xs text-zinc-500">Double-check the handle or add them as a contact.</div>
+        </div>
+      )}
+
       {/* All contacts */}
       <div className="mt-6">
         <div className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
-          {search ? `Results (${filtered.length})` : "All contacts"}
+          {search ? `Contacts (${filteredExcludingDupes.length})` : "All contacts"}
         </div>
-        {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-8 text-center">
-            <PiUserCircleDuotone className="h-10 w-10 mx-auto text-zinc-300" />
-            <div className="mt-2 text-sm font-semibold text-zinc-700">No matches</div>
-            <div className="text-xs text-zinc-500">Try a different search or add a new contact.</div>
-          </div>
+        {filteredExcludingDupes.length === 0 ? (
+          users.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-8 text-center">
+              <PiUserCircleDuotone className="h-10 w-10 mx-auto text-zinc-300" />
+              <div className="mt-2 text-sm font-semibold text-zinc-700">No matches</div>
+              <div className="text-xs text-zinc-500">Try a different search or add a new contact.</div>
+            </div>
+          )
         ) : (
           <div className="rounded-2xl bg-white border border-zinc-100 divide-y divide-zinc-100 overflow-hidden">
-            {filtered.map((c) => (
+            {filteredExcludingDupes.map((c) => (
               <button
                 key={c.id}
                 onClick={() => onPick(c)}

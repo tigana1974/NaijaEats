@@ -28,6 +28,9 @@ function VendorEarnings() {
   const [submitting, setSubmitting] = useState(false);
 
   const { activeShopId } = useVendorStore();
+
+  if (activeShopId === "ALL") return <Navigate to="/vendor/shops" replace />;
+
   const { data, isLoading } = useQuery({
     queryKey: ["vendor-earnings", activeShopId],
     queryFn: async () => {

@@ -20,6 +20,9 @@ function VendorMenu() {
   const [newCat, setNewCat] = useState("");
 
   const { activeShopId } = useVendorStore();
+
+  if (activeShopId === "ALL") return <Navigate to="/vendor/shops" replace />;
+
   const { data, isLoading } = useQuery({
     queryKey: ["vendor-menu", activeShopId],
     queryFn: async () => {

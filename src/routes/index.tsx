@@ -838,14 +838,22 @@ function ServePromise() {
             Your Favourite African<br />Food Delivery Partner
           </h2>
         </div>
-        <div className="mt-14 grid md:grid-cols-3 gap-8">
+        <div className="mt-14 grid md:grid-cols-3 gap-6 md:gap-8">
           {items.map((it) => (
-            <div key={it.title} className="text-center">
-              <div className="mx-auto h-44 w-44 grid place-items-center">
-                <img src={it.img} alt="" width={768} height={768} loading="lazy" className="h-full w-full object-contain" />
+            <div key={it.title} className="text-center group">
+              <div className="relative mx-auto aspect-[3/2] w-full max-w-[320px] rounded-3xl overflow-hidden shadow-[var(--shadow-card)] ring-1 ring-black/5">
+                <img
+                  src={it.img}
+                  alt={it.title}
+                  width={740}
+                  height={493}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
               </div>
-              <h3 className="mt-4 font-semibold text-foreground">{it.title}</h3>
-              <p className="mt-1.5 text-xs text-muted-foreground max-w-[200px] mx-auto">{it.copy}</p>
+              <h3 className="mt-5 font-display text-lg font-bold text-foreground">{it.title}</h3>
+              <p className="mt-1.5 text-xs text-muted-foreground max-w-[240px] mx-auto leading-relaxed">{it.copy}</p>
             </div>
           ))}
         </div>

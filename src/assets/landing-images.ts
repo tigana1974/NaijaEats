@@ -27,7 +27,15 @@ export const avatarRahim = u("1531384441138-2736e62e0919", 200);
 export const avatarEmily = u("1494790108377-be9c29b29330", 200);
 export const avatarSade = u("1531123897727-8f129e1688ce", 200);
 
-/** "What we serve" mini illustrations — swapped for real photos */
-export const illusOrder = u("1522202176988-66273c2fd55f", 900);   // person ordering food on phone
-export const illusRider = u("1571900669025-49e28b0ea48e", 900);   // motorbike delivery rider
-export const illusChef = u("1556910103-1c02745aae4d", 900);       // chef cooking in kitchen
+/**
+ * "What we serve" trio — user-supplied realistic photos.
+ * Drop these three files into `public/landing/` with the exact filenames below:
+ *   • easy-to-order.jpg       — woman on phone in kitchen with salad bowl
+ *   • fastest-delivery.jpg    — rider handing food-delivery bag to customer
+ *   • cooked-with-culture.jpg — family sharing a meal, headwrap & Ankara
+ * The public/ folder is served at the site root, so the app resolves them
+ * automatically as `/landing/…` at runtime.
+ */
+export const illusOrder = "/landing/easy-to-order.jpg";
+export const illusRider = "/landing/fastest-delivery.jpg";
+export const illusChef = "/landing/cooked-with-culture.jpg";
