@@ -38,7 +38,7 @@ export function FloatingXoraButton() {
         {/* Xora portrait inside a white circle */}
         <span className="relative h-11 w-11 shrink-0 rounded-full overflow-hidden bg-white shadow-inner">
           <img
-            src="/xora.png"
+            src="/xora.jpg"
             alt=""
             className="h-full w-full object-cover object-top scale-[1.15]"
             draggable={false}

@@ -284,7 +284,7 @@ function XoraAvatar({ size = 38, pulsing = false }: { size?: number; pulsing?: b
       {/* Character portrait — Xora */}
       <div className="absolute inset-[3px] rounded-full overflow-hidden bg-background">
         <img
-          src="/xora.png"
+          src="/xora.jpg"
           alt=""
           className="h-full w-full object-cover object-top scale-[1.15]"
           draggable={false}
