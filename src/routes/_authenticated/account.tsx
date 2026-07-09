@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { AvatarCropDialog } from "@/components/naija/AvatarCropDialog";
 import { PremiumAccountBanner } from "@/components/naija/PremiumUpsellDialog";
-import { clearAllLocalUsernames } from "@/lib/username";
+import { clearAllLocalUsernames, loadLocalUsername } from "@/lib/username";
 
 export const Route = createFileRoute("/_authenticated/account")({
   component: AccountPage,
@@ -49,6 +49,10 @@ function AccountPage() {
   };
 
   const displayName = profile?.full_name || user.email?.split("@")[0] || "Your account";
+  // Prefer the Supabase-persisted username, fall back to the per-user local
+  // cache (which is scoped by auth uid so no cross-account leakage).
+  const username = (profile as any)?.username as string | undefined | null;
+  const usernameHandle = username || loadLocalUsername(user.id) || null;
   const initials = (profile?.full_name || user.email || "?")
     .split(/[\s@]+/)
     .filter(Boolean)
@@ -181,7 +185,21 @@ function AccountPage() {
             )}
           </div>
           <h1 className="mt-4 font-display text-2xl font-semibold">{displayName}</h1>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+          {usernameHandle ? (
+            <Link
+              to="/personal-info"
+              className="mt-1 inline-flex items-center gap-1 rounded-full bg-[var(--brand-clay)]/8 text-[var(--brand-clay)] px-2.5 py-1 text-sm font-semibold hover:bg-[var(--brand-clay)]/12 transition"
+            >
+              @{usernameHandle}
+            </Link>
+          ) : (
+            <Link
+              to="/personal-info"
+              className="mt-1 inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-[var(--brand-clay)]/50 transition"
+            >
+              + Set username
+            </Link>
+          )}
           {uploading && (
             <p className="mt-1 text-xs text-muted-foreground">Uploading photo…</p>
           )}

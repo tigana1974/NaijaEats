@@ -29,6 +29,7 @@ import {
   PiTargetDuotone,
   PiEyeDuotone,
   PiSquaresFourDuotone,
+  PiLockKeyDuotone,
 } from "react-icons/pi";
 
 export const Route = createFileRoute("/_authenticated/vendor/shops")({
@@ -387,23 +388,27 @@ function ShopsPage() {
           </div>
         )}
 
-        {/* Upgrade banner */}
+        {/* Upgrade banner — mobile: stacked, sm+: side-by-side */}
         {!canAdd && (
-          <div className="mt-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-white to-white border border-amber-200 p-6">
+          <div className="mt-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-white to-white border border-amber-200 p-4 sm:p-6">
             <div className="pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full bg-amber-200/50 blur-3xl" />
-            <div className="relative flex flex-wrap items-center gap-4">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30">
-                <Sparkles className="h-6 w-6" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="font-display text-lg font-bold">You've hit the {planLabel(planKey)} limit</div>
-                <div className="text-sm text-muted-foreground mt-0.5">
-                  Upgrade to run up to 5 shops on Premium, or 25 on Enterprise.
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-start gap-3 sm:flex-1 sm:min-w-0">
+                <span className="grid h-12 w-12 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30">
+                  <PiLockKeyDuotone className="h-6 w-6 sm:h-7 sm:w-7" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="font-display text-base sm:text-lg font-bold leading-tight">
+                    {planLabel(planKey)} limit reached
+                  </div>
+                  <div className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
+                    Upgrade to run up to 5 shops on Premium, or 25 on Enterprise.
+                  </div>
                 </div>
               </div>
               <Link
                 to="/vendor/subscription"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-5 py-2.5 text-sm font-bold shadow-lg shadow-amber-500/30 hover:scale-105 transition-transform"
+                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-5 py-3 sm:py-2.5 text-sm font-bold shadow-lg shadow-amber-500/30 hover:scale-105 transition-transform"
               >
                 Upgrade plan <ArrowRight className="h-4 w-4" />
               </Link>
