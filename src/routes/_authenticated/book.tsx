@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { RoleShell } from "@/components/naija/RoleShell";
-import { ArrowRight, Calendar, ChevronRight, Sparkles, Search, X, Trash2 } from "lucide-react";
+import { ArrowRight, Calendar, ChevronRight, Sparkles, Search, X, Trash2, Utensils } from "lucide-react";
 import { IoFlame } from "react-icons/io5";
 import {
   PiCoffeeDuotone,
@@ -67,36 +69,54 @@ const MEALS: Meal[] = [
   },
 ];
 
-/** Suggestions per meal slot — swap for a Supabase-driven catalogue later. */
-const SUGGESTIONS: Record<MealId, { id: string; name: string; sub: string; emoji: string; price: number }[]> = {
-  breakfast: [
-    { id: "b1", name: "Akara & pap", sub: "Bean cakes with corn porridge", emoji: "🍯", price: 1800 },
-    { id: "b2", name: "Boli & fish", sub: "Roasted plantain with grilled fish", emoji: "🍌", price: 2400 },
-    { id: "b3", name: "Moi moi", sub: "Steamed bean pudding", emoji: "🫘", price: 1500 },
-    { id: "b4", name: "Yam & egg sauce", sub: "Boiled yam with pepper egg sauce", emoji: "🍳", price: 2000 },
-    { id: "b5", name: "Bread & tea", sub: "Fresh bread with Milo or Lipton", emoji: "🍞", price: 900 },
-    { id: "b6", name: "Ogi & akara", sub: "Traditional pap combo", emoji: "🥣", price: 1400 },
-  ],
-  lunch: [
-    { id: "l1", name: "Jollof rice & chicken", sub: "Party-style with grilled chicken", emoji: "🍚", price: 3500 },
-    { id: "l2", name: "Amala & ewedu", sub: "Yam flour with jute soup", emoji: "🥘", price: 3200 },
-    { id: "l3", name: "Egusi soup & fufu", sub: "Melon seed soup with pounded yam", emoji: "🍲", price: 3800 },
-    { id: "l4", name: "Ofada rice", sub: "Local rice with ayamashe stew", emoji: "🌾", price: 3600 },
-    { id: "l5", name: "Fried rice combo", sub: "With plantain and beef", emoji: "🍛", price: 3400 },
-    { id: "l6", name: "Suya wrap", sub: "Spicy beef with fresh salad", emoji: "🌯", price: 2800 },
-  ],
-  dinner: [
-    { id: "d1", name: "Pepper soup", sub: "Catfish or goat pepper soup", emoji: "🌶️", price: 3900 },
-    { id: "d2", name: "Nkwobi", sub: "Spicy cow foot delicacy", emoji: "🥩", price: 4200 },
-    { id: "d3", name: "Isi ewu", sub: "Spiced goat head", emoji: "🐐", price: 4500 },
-    { id: "d4", name: "Grilled tilapia", sub: "With plantain & pepper sauce", emoji: "🐟", price: 4800 },
-    { id: "d5", name: "Ewa agoyin", sub: "Mashed beans with pepper stew", emoji: "🫘", price: 2800 },
-    { id: "d6", name: "Suya platter", sub: "Assorted spicy grilled meat", emoji: "🥙", price: 4000 },
-  ],
+/**
+ * Real menu item as fetched from Supabase, decorated with the vendor and
+ * a computed match score against a meal type (breakfast / lunch / dinner).
+ * We compute the score client-side so vendors don't have to tag their items
+ * perfectly — a category called "Breakfast" or an item named "Jollof lunch"
+ * still surfaces in the right slot.
+ */
+type VendorMenuItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  price: number;
+  currency: string;
+  tags: string[] | null;
+  vendor: { name: string; slug: string; type: string | null };
+  category_name: string | null;
 };
 
-type PickedItem = { id: string; name: string; emoji: string; price: number };
+type PickedItem = {
+  id: string;
+  name: string;
+  sub: string;            // vendor label / description
+  price: number;
+  imageUrl: string | null;
+  currency: string;
+  vendorName: string;
+  vendorSlug: string;
+};
+
 type PlanState = Record<string, PickedItem[]>;
+
+/**
+ * Rank a menu item by how strongly it matches a meal type:
+ *   3 → item tagged with the meal id
+ *   2 → its category name contains the meal id (e.g. "Breakfast menu")
+ *   1 → its name or description mentions the meal id
+ *   0 → no textual link, but still shown as a fallback when nothing else matches
+ */
+function scoreForMeal(item: VendorMenuItem, meal: MealId): number {
+  const tags = (item.tags ?? []).map((t) => t.toLowerCase());
+  if (tags.includes(meal)) return 3;
+  const cat = (item.category_name ?? "").toLowerCase();
+  if (cat.includes(meal)) return 2;
+  const blob = `${item.name} ${item.description ?? ""}`.toLowerCase();
+  if (blob.includes(meal)) return 1;
+  return 0;
+}
 
 const STORAGE_KEY = "naijaeats.mealplan.v1";
 
@@ -507,12 +527,23 @@ function MealSlot({
       {/* Picked items */}
       {hasItems && (
         <ul className="border-t border-emerald-100 divide-y divide-emerald-100">
-          {items.map((it) => (
-            <li key={it.id} className="flex items-center gap-2 px-3.5 py-2.5">
-              <span className="text-lg shrink-0">{it.emoji}</span>
+          {items.map((it) => {
+            const symbol = it.currency === "GBP" ? "£" : "₦";
+            return (
+            <li key={it.id} className="flex items-center gap-2.5 px-3.5 py-2.5">
+              <span className="h-9 w-9 shrink-0 rounded-lg overflow-hidden bg-muted ring-1 ring-black/5 grid place-items-center">
+                {it.imageUrl ? (
+                  <img src={it.imageUrl} alt={it.name} className="h-full w-full object-cover" />
+                ) : (
+                  <Utensils className="h-4 w-4 text-zinc-400" />
+                )}
+              </span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-zinc-900 truncate">{it.name}</div>
-                <div className="text-[10px] text-zinc-500 tabular-nums">₦{it.price.toLocaleString()}</div>
+                <div className="text-[10px] text-zinc-500 truncate">
+                  {it.vendorName ? `${it.vendorName} · ` : ""}
+                  <span className="tabular-nums">{symbol}{it.price.toLocaleString()}</span>
+                </div>
               </div>
               {!disabled && (
                 <button
@@ -525,7 +556,8 @@ function MealSlot({
                 </button>
               )}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>
@@ -546,12 +578,62 @@ function MealPickerSheet({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const options = SUGGESTIONS[meal.id];
-  const filtered = useMemo(() => {
+
+  // Live catalogue — every available item from every approved vendor.
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["book-catalogue"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select(
+          "id, name, description, image_url, price, currency, tags, is_available, vendors!inner(name, slug, status, type), menu_categories(name)",
+        )
+        .eq("is_available", true)
+        .eq("vendors.status", "approved")
+        .order("is_featured", { ascending: false })
+        .limit(400);
+      if (error) throw error;
+      return (data ?? []).map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        image_url: row.image_url,
+        price: Number(row.price),
+        currency: row.currency,
+        tags: row.tags,
+        vendor: {
+          name: row.vendors?.name ?? "",
+          slug: row.vendors?.slug ?? "",
+          type: row.vendors?.type ?? null,
+        },
+        category_name: row.menu_categories?.name ?? null,
+      })) as VendorMenuItem[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Rank by meal match, then by query, then by name.
+  const ranked = useMemo(() => {
+    const withScore = items.map((it) => ({ item: it, score: scoreForMeal(it, meal.id) }));
+    const anyMatch = withScore.some((r) => r.score > 0);
+    // If we found no meal-typed matches at all, fall back to all items so the
+    // user isn't stuck with an empty picker.
+    const pool = anyMatch ? withScore.filter((r) => r.score > 0) : withScore;
     const q = query.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((o) => (o.name + " " + o.sub).toLowerCase().includes(q));
-  }, [options, query]);
+    const searched = q
+      ? pool.filter(({ item }) =>
+          (item.name + " " + (item.description ?? "") + " " + item.vendor.name)
+            .toLowerCase()
+            .includes(q),
+        )
+      : pool;
+    // Sort: strongest meal match first, then alphabetical.
+    return searched
+      .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name))
+      .map((r) => r.item);
+  }, [items, meal.id, query]);
+
+  const currencySymbol = (c: string) => (c === "GBP" ? "£" : "₦");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -602,21 +684,52 @@ function MealPickerSheet({
 
         {/* List */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <ul className="space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <li key={i} className="w-full flex items-center gap-3 rounded-2xl p-3 bg-white border border-border animate-pulse">
+                  <span className="h-14 w-14 rounded-2xl bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-2/3 bg-muted rounded-full" />
+                    <div className="h-2.5 w-1/2 bg-muted/70 rounded-full" />
+                    <div className="h-3 w-16 bg-muted rounded-full" />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : ranked.length === 0 ? (
             <div className="p-10 text-center text-sm text-muted-foreground">
               <PiCookingPotDuotone className="h-10 w-10 mx-auto text-zinc-300" />
-              <p className="mt-2 font-semibold text-zinc-700">Nothing matches</p>
-              <p className="text-xs mt-1">Try a different search.</p>
+              <p className="mt-2 font-semibold text-zinc-700">
+                {query ? "Nothing matches" : "No dishes available yet"}
+              </p>
+              <p className="text-xs mt-1">
+                {query
+                  ? "Try a different search or clear it to see everything."
+                  : "Come back soon — chefs are still adding their menus."}
+              </p>
             </div>
           ) : (
             <ul className="space-y-2">
-              {filtered.map((item) => {
+              {ranked.map((item) => {
                 const already = picked.some((p) => p.id === item.id);
+                const symbol = currencySymbol(item.currency);
                 return (
                   <li key={item.id}>
                     <button
                       type="button"
-                      onClick={() => onAdd(item)}
+                      onClick={() =>
+                        onAdd({
+                          id: item.id,
+                          name: item.name,
+                          sub: item.vendor.name || item.description || "",
+                          price: item.price,
+                          imageUrl: item.image_url,
+                          currency: item.currency,
+                          vendorName: item.vendor.name,
+                          vendorSlug: item.vendor.slug,
+                        })
+                      }
                       disabled={already}
                       className={`w-full flex items-center gap-3 rounded-2xl p-3 text-left transition-all ${
                         already
@@ -624,14 +737,21 @@ function MealPickerSheet({
                           : "bg-white border border-border hover:border-[var(--brand-clay)]/40 hover:shadow-md active:scale-[0.99]"
                       }`}
                     >
-                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-muted text-2xl">
-                        {item.emoji}
+                      <span className="h-14 w-14 shrink-0 rounded-2xl overflow-hidden bg-muted ring-1 ring-black/5 grid place-items-center">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <Utensils className="h-6 w-6 text-zinc-400" />
+                        )}
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-zinc-900 truncate">{item.name}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">{item.sub}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {item.vendor.name}
+                          {item.category_name ? ` · ${item.category_name}` : ""}
+                        </div>
                         <div className="text-xs font-bold text-[var(--brand-clay)] tabular-nums mt-0.5">
-                          ₦{item.price.toLocaleString()}
+                          {symbol}{item.price.toLocaleString()}
                         </div>
                       </div>
                       <span

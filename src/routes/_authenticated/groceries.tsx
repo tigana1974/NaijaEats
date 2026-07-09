@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Leaf, Apple, Coffee, Milk } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useMyProfile } from "@/hooks/useMyProfile";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { FoodCard, VendorCard } from "@/components/naija/customer-ui";
 
@@ -19,16 +20,26 @@ const GROCERY_CATEGORIES = [
 
 function GroceriesPage() {
   const { user } = Route.useRouteContext();
-  const [country, setCountry] = useState<"NG" | "UK">("NG");
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const { data: profile } = useMyProfile();
 
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user.id],
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("avatar_url, full_name").eq("id", user.id).maybeSingle();
-      return data ?? null;
-    },
-  });
+  const [country, setCountryState] = useState<"NG" | "UK">(
+    () => (typeof window !== "undefined" && localStorage.getItem("ui_country") as "NG" | "UK") || "NG"
+  );
+  
+  // Update local storage whenever country changes
+  const setCountry = (c: "NG" | "UK") => {
+    setCountryState(c);
+    localStorage.setItem("ui_country", c);
+  };
+
+  // When profile loads, if user hasn't explicitly set a country in localStorage, use their profile country
+  useEffect(() => {
+    if (profile?.country && !localStorage.getItem("ui_country")) {
+      setCountry(profile.country as "NG" | "UK");
+    }
+  }, [profile?.country]);
+
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const { data: vendors, isLoading: vendorsLoading } = useQuery({
     queryKey: ["groceries-vendors", country],

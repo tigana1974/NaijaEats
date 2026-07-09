@@ -18,116 +18,123 @@ export type Cart = {
   items: CartItem[];
 };
 
+type CartState = Record<string, Cart>; // Keyed by vendorId
+
 type CartContextValue = {
-  cart: Cart | null;
+  carts: CartState;
   addItem: (
     vendor: { id: string; name: string; slug: string; currency: string; deliveryFee: number; minOrder: number },
     item: { menuItemId: string; name: string; price: number; imageUrl?: string | null },
-  ) => "added" | "different_vendor";
-  confirmSwitchVendor: (
-    vendor: { id: string; name: string; slug: string; currency: string; deliveryFee: number; minOrder: number },
-    item: { menuItemId: string; name: string; price: number; imageUrl?: string | null },
   ) => void;
-  removeItem: (menuItemId: string) => void;
-  setQuantity: (menuItemId: string, quantity: number) => void;
-  clearCart: () => void;
-  itemCount: number;
-  subtotal: number;
+  removeItem: (vendorId: string, menuItemId: string) => void;
+  setQuantity: (vendorId: string, menuItemId: string, quantity: number) => void;
+  clearVendorCart: (vendorId: string) => void;
+  clearAllCarts: () => void;
+  itemCount: number; // Total across all carts (for the top nav badge)
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "naijaeats_cart_v1";
+const STORAGE_KEY = "naijaeats_cart_v2";
 
-function readCart(): Cart | null {
-  if (typeof window === "undefined") return null;
+function readCarts(): CartState {
+  if (typeof window === "undefined") return {};
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Cart) : null;
+    return raw ? (JSON.parse(raw) as CartState) : {};
   } catch {
-    return null;
+    return {};
   }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<Cart | null>(null);
+  const [carts, setCarts] = useState<CartState>({});
 
   // Hydrate from localStorage only after mount, to avoid SSR/client mismatch.
   useEffect(() => {
-    setCart(readCart());
+    setCarts(readCarts());
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (cart) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+    if (Object.keys(carts).length > 0) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(carts));
     else window.localStorage.removeItem(STORAGE_KEY);
-  }, [cart]);
+  }, [carts]);
 
   const addItem: CartContextValue["addItem"] = (vendor, item) => {
-    if (cart && cart.vendorId !== vendor.id) return "different_vendor";
-    setCart((prev) => {
-      const base: Cart =
-        prev && prev.vendorId === vendor.id
-          ? prev
-          : {
-              vendorId: vendor.id,
-              vendorName: vendor.name,
-              vendorSlug: vendor.slug,
-              currency: vendor.currency,
-              deliveryFee: vendor.deliveryFee,
-              minOrder: vendor.minOrder,
-              items: [],
-            };
-      const existingIdx = base.items.findIndex((i) => i.menuItemId === item.menuItemId);
-      const items =
+    setCarts((prev) => {
+      const vendorCart = prev[vendor.id] || {
+        vendorId: vendor.id,
+        vendorName: vendor.name,
+        vendorSlug: vendor.slug,
+        currency: vendor.currency,
+        deliveryFee: vendor.deliveryFee,
+        minOrder: vendor.minOrder,
+        items: [],
+      };
+
+      const existingIdx = vendorCart.items.findIndex((i) => i.menuItemId === item.menuItemId);
+      const newItems =
         existingIdx >= 0
-          ? base.items.map((i, idx) => (idx === existingIdx ? { ...i, quantity: i.quantity + 1 } : i))
-          : [...base.items, { ...item, quantity: 1 }];
-      return { ...base, items };
-    });
-    return "added";
-  };
+          ? vendorCart.items.map((i, idx) => (idx === existingIdx ? { ...i, quantity: i.quantity + 1 } : i))
+          : [...vendorCart.items, { ...item, quantity: 1 }];
 
-  const confirmSwitchVendor: CartContextValue["confirmSwitchVendor"] = (vendor, item) => {
-    setCart({
-      vendorId: vendor.id,
-      vendorName: vendor.name,
-      vendorSlug: vendor.slug,
-      currency: vendor.currency,
-      deliveryFee: vendor.deliveryFee,
-      minOrder: vendor.minOrder,
-      items: [{ ...item, quantity: 1 }],
+      return {
+        ...prev,
+        [vendor.id]: { ...vendorCart, items: newItems },
+      };
     });
   };
 
-  const removeItem = (menuItemId: string) => {
-    setCart((prev) => {
-      if (!prev) return prev;
-      const items = prev.items.filter((i) => i.menuItemId !== menuItemId);
-      return items.length ? { ...prev, items } : null;
+  const removeItem = (vendorId: string, menuItemId: string) => {
+    setCarts((prev) => {
+      const vendorCart = prev[vendorId];
+      if (!vendorCart) return prev;
+      const items = vendorCart.items.filter((i) => i.menuItemId !== menuItemId);
+      
+      const next = { ...prev };
+      if (items.length === 0) {
+        delete next[vendorId];
+      } else {
+        next[vendorId] = { ...vendorCart, items };
+      }
+      return next;
     });
   };
 
-  const setQuantity = (menuItemId: string, quantity: number) => {
-    if (quantity < 1) return removeItem(menuItemId);
-    setCart((prev) => {
-      if (!prev) return prev;
-      return { ...prev, items: prev.items.map((i) => (i.menuItemId === menuItemId ? { ...i, quantity } : i)) };
+  const setQuantity = (vendorId: string, menuItemId: string, quantity: number) => {
+    if (quantity < 1) return removeItem(vendorId, menuItemId);
+    setCarts((prev) => {
+      const vendorCart = prev[vendorId];
+      if (!vendorCart) return prev;
+      const items = vendorCart.items.map((i) => (i.menuItemId === menuItemId ? { ...i, quantity } : i));
+      return {
+        ...prev,
+        [vendorId]: { ...vendorCart, items },
+      };
     });
   };
 
-  const clearCart = () => setCart(null);
+  const clearVendorCart = (vendorId: string) => {
+    setCarts((prev) => {
+      const next = { ...prev };
+      delete next[vendorId];
+      return next;
+    });
+  };
 
-  const { itemCount, subtotal } = useMemo(() => {
-    if (!cart) return { itemCount: 0, subtotal: 0 };
-    return {
-      itemCount: cart.items.reduce((s, i) => s + i.quantity, 0),
-      subtotal: cart.items.reduce((s, i) => s + i.price * i.quantity, 0),
-    };
-  }, [cart]);
+  const clearAllCarts = () => setCarts({});
+
+  const itemCount = useMemo(() => {
+    let count = 0;
+    for (const cart of Object.values(carts)) {
+      count += cart.items.reduce((s, i) => s + i.quantity, 0);
+    }
+    return count;
+  }, [carts]);
 
   return (
     <CartContext.Provider
-      value={{ cart, addItem, confirmSwitchVendor, removeItem, setQuantity, clearCart, itemCount, subtotal }}
+      value={{ carts, addItem, removeItem, setQuantity, clearVendorCart, clearAllCarts, itemCount }}
     >
       {children}
     </CartContext.Provider>

@@ -29,7 +29,7 @@ export const Route = createFileRoute("/vendor/$slug/item/$itemId")({
 function MenuItemPage() {
   const { slug, itemId } = Route.useParams();
   const navigate = useNavigate();
-  const { cart, addItem, confirmSwitchVendor } = useCart();
+  const { addItem } = useCart();
   const [qty, setQty] = useState(1);
   const [adding, setAdding] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -87,23 +87,11 @@ function MenuItemPage() {
         imageUrl: item.image_url,
       };
 
-      let switched = false;
       for (let i = 0; i < qty; i++) {
-        const result = addItem(vendorArg, itemArg);
-        if (result === "different_vendor") {
-          if (switched) break;
-          const ok = window.confirm(
-            `Your cart has items from ${cart?.vendorName}. Start a new cart with ${vendor.name} instead?`,
-          );
-          if (!ok) return;
-          confirmSwitchVendor(vendorArg, itemArg);
-          switched = true;
-          for (let j = 1; j < qty; j++) addItem(vendorArg, itemArg);
-          break;
-        }
+        addItem(vendorArg, itemArg);
       }
-      toast.success(`Added ${qty}× ${item.name} to cart`);
-      navigate({ to: "/cart" });
+      toast.success(`Added ${qty} ${item.name} to cart`);
+      setTimeout(() => navigate({ to: `/vendor/${vendor.slug}` }), 300);
     } finally {
       setAdding(false);
     }

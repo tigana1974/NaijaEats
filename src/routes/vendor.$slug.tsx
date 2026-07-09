@@ -46,7 +46,7 @@ export const Route = createFileRoute("/vendor/$slug")({
 
 function VendorPage() {
   const { slug } = Route.useParams();
-  const { cart, itemCount, subtotal } = useCart();
+  const { carts, itemCount } = useCart();
 
   const { data, isLoading } = useQuery({
     queryKey: ["vendor", slug],
@@ -76,7 +76,10 @@ function VendorPage() {
 
   const { vendor, categories, items } = data;
   const fmt = (n: number) => `${vendor.currency === "GBP" ? "£" : "₦"}${Number(n).toLocaleString()}`;
-  const cartIsForThisVendor = cart?.vendorId === vendor.id;
+  
+  const vendorCart = carts[vendor.id];
+  const subtotal = vendorCart?.items.reduce((s, i) => s + i.price * i.quantity, 0) ?? 0;
+  const cartIsForThisVendor = !!vendorCart && vendorCart.items.length > 0;
 
   const grouped = categories.length
     ? categories.map((c: any) => ({

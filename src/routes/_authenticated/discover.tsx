@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { IoFastFood, IoBasket, IoRestaurant, IoSearch } from "react-icons/io5";
 import { supabase } from "@/integrations/supabase/client";
+import { useMyProfile } from "@/hooks/useMyProfile";
 import {
   CustomerLocationHeader,
   CustomerShell,
@@ -36,16 +37,26 @@ const TYPE_OPTIONS: { key: VendorType; label: string; Icon: React.ComponentType<
 
 function DiscoverPage() {
   const { user } = Route.useRouteContext();
-  const [country, setCountry] = useState<"NG" | "UK">("NG");
-  const [typeFilter, setTypeFilter] = useState<VendorType | null>(null);
+  const { data: profile } = useMyProfile();
+  
+  const [country, setCountryState] = useState<"NG" | "UK">(
+    () => (typeof window !== "undefined" && localStorage.getItem("ui_country") as "NG" | "UK") || "NG"
+  );
+  
+  // Update local storage whenever country changes
+  const setCountry = (c: "NG" | "UK") => {
+    setCountryState(c);
+    localStorage.setItem("ui_country", c);
+  };
 
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user.id],
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("avatar_url, full_name").eq("id", user.id).maybeSingle();
-      return data;
-    },
-  });
+  // When profile loads, if user hasn't explicitly set a country in localStorage, use their profile country
+  useEffect(() => {
+    if (profile?.country && !localStorage.getItem("ui_country")) {
+      setCountry(profile.country as "NG" | "UK");
+    }
+  }, [profile?.country]);
+
+  const [typeFilter, setTypeFilter] = useState<VendorType | null>(null);
 
   // Vendors — approved only. Type filter is optional now.
   const { data: vendors, isLoading: vendorsLoading } = useQuery({

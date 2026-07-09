@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { Search as SearchIcon, ArrowLeft, Utensils, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useMyProfile } from "@/hooks/useMyProfile";
 import { CustomerShell } from "@/components/naija/CustomerShell";
 import { FoodCard, VendorCard } from "@/components/naija/customer-ui";
 
@@ -86,6 +87,17 @@ function SearchPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { data: profile } = useMyProfile();
+  
+  const [country, setCountry] = useState<"NG" | "UK">(
+    () => (typeof window !== "undefined" && localStorage.getItem("ui_country") as "NG" | "UK") || "NG"
+  );
+
+  useEffect(() => {
+    if (profile?.country && !localStorage.getItem("ui_country")) {
+      setCountry(profile.country as "NG" | "UK");
+    }
+  }, [profile?.country]);
 
   // Auto-focus the input on mount
   useEffect(() => {
@@ -101,6 +113,7 @@ function SearchPage() {
         .from("vendors")
         .select("*")
         .eq("status", "approved")
+        .eq("country", country)
         .or(`name.ilike.${like},tagline.ilike.${like},city.ilike.${like}`)
         .order("rating", { ascending: false })
         .limit(10);
@@ -138,11 +151,12 @@ function SearchPage() {
         mergedItems.set(it.id, it as SearchItem);
       });
 
-      return Array.from(mergedItems.values())
-        .filter(
-          (it): it is SearchItemWithVendor => hasApprovedVendor(it) && itemMatchesSearch(it, term),
-        )
-        .slice(0, 20);
+      const filtered = Array.from(mergedItems.values())
+        .filter(hasApprovedVendor)
+        .filter((it) => it.vendor.country === country)
+        .filter((it) => itemMatchesSearch(it, term));
+
+      return filtered.slice(0, 20);
     },
     enabled: search.trim().length > 1,
   });
