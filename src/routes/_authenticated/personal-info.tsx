@@ -48,7 +48,9 @@ function PersonalInfoPage() {
       setPhone(profile.phone ?? "");
       setCity(profile.default_city ?? "");
       const dbUsername = (profile as any).username as string | null | undefined;
-      const localUsername = loadLocalUsername();
+      // Local cache is scoped to THIS user's auth id so switching accounts
+      // never surfaces another account's handle.
+      const localUsername = loadLocalUsername(user.id);
       const initial = dbUsername ?? localUsername ?? "";
       setUsername(initial);
       setSavedUsername(initial || null);
@@ -104,9 +106,9 @@ function PersonalInfoPage() {
     // Try to persist the username too (won't crash if the column is missing)
     if (finalUsername) {
       await persistUsername(user.id, finalUsername);
-      setLocalUsername(finalUsername);
+      setLocalUsername(user.id, finalUsername);
     } else {
-      setLocalUsername(null);
+      setLocalUsername(user.id, null);
     }
 
     setSaving(false);

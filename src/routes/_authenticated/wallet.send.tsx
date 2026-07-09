@@ -24,9 +24,11 @@ import {
   loadContacts,
   upsertContact,
   initialsOf,
+  sendToUser,
   type Contact,
 } from "@/lib/wallet";
-import { searchUsersByUsername, normalizeUsername, type FoundUser } from "@/lib/username";
+import { searchUsersByUsername, normalizeUsername, loadLocalUsernameForCurrentUser, type FoundUser } from "@/lib/username";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/wallet/send")({
   component: SendPage,
@@ -86,16 +88,46 @@ function SendPage() {
     if (amount < 100) return toast.error("Minimum send is ₦100");
     if (overBalance) return toast.error("Not enough balance");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    upsertContact({ name: recipient.name, handle: recipient.handle, tone: recipient.tone });
-    addWalletTxn({
-      type: "send",
-      title: `Sent to ${recipient.name}`,
-      note: note || undefined,
-      amount: -amount,
-    });
-    setLoading(false);
-    setStep("success");
+    try {
+      // Bump the recipient's "last sent to" in the local contacts either way.
+      upsertContact({
+        name: recipient.name,
+        handle: recipient.handle,
+        tone: recipient.tone,
+        userId: recipient.userId,
+      });
+
+      if (recipient.userId) {
+        // Real Naija Eats user — this actually credits their wallet on the
+        // other side via the wallet_transfers table.
+        const { data: me } = await supabase.auth.getUser();
+        const myUsername = await loadLocalUsernameForCurrentUser();
+        const myName = (me.user?.user_metadata as any)?.full_name
+          ?? me.user?.email?.split("@")[0]
+          ?? null;
+        await sendToUser({
+          recipientId: recipient.userId,
+          recipientLabel: recipient.name,
+          amount,
+          note: note || undefined,
+          senderName: myName,
+          senderUsername: myUsername,
+        });
+      } else {
+        // Legacy local-only contact — debit-only, no counterparty exists.
+        addWalletTxn({
+          type: "send",
+          title: `Sent to ${recipient.name}`,
+          note: note || undefined,
+          amount: -amount,
+        });
+      }
+      setStep("success");
+    } catch (e: any) {
+      toast.error(e?.message || "Transfer failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const goBack = () => {
@@ -315,6 +347,7 @@ function PickStep({
     const c: Contact = upsertContact({
       name: u.full_name || `@${u.username}`,
       handle: `@${u.username}`,
+      userId: u.id,
     });
     onPick(c);
   };

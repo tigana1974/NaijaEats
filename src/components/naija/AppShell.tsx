@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMyRole, type AppRole } from "@/hooks/useMyRole";
+import { clearAllLocalUsernames } from "@/lib/username";
 import { VendorStoreSwitcher } from "./VendorStoreSwitcher";
 import { Logo } from "@/components/naija/Logo";
 
@@ -117,6 +118,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
+    clearAllLocalUsernames();
     await supabase.auth.signOut();
     toast.success("Signed out");
     navigate({ to: "/auth", replace: true });

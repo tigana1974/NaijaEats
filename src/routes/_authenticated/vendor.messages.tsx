@@ -46,17 +46,25 @@ function VendorInbox() {
       
       const { data: convos } = await supabase
         .from("conversations")
-        .select("*, customer:profiles!conversations_customer_id_fkey(id, full_name, avatar_url)")
+        .select(
+          "*, customer:profiles!conversations_customer_id_fkey(id, full_name, avatar_url), vendor:vendors!conversations_vendor_id_fkey(id, name)",
+        )
         .in("vendor_id", vendorIds)
         .order("last_message_at", { ascending: false, nullsFirst: false });
-      return convos ?? [];
+      // Attach how many shops the vendor owns so the row can decide whether
+      // to show a "sent to <shop>" badge (only useful in multi-shop setups).
+      return (convos ?? []).map((c) => ({ ...c, __shopCount: vendors.length }));
     },
   });
 
   useEffect(() => {
+    // Two subscriptions: conversations covers new threads + trigger-driven
+    // last_message updates; messages covers the "vendor is on this page when
+    // a new message lands" case so unread counters bump immediately.
     const ch = supabase
       .channel("conversations-vendor")
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => refetch())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => refetch())
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -178,9 +186,11 @@ function VendorInbox() {
 
 function ChatRow({ convo }: { convo: any }) {
   const cust = convo.customer;
+  const shop = convo.vendor;
   const name = cust?.full_name || "Customer";
   const unread = convo.vendor_unread ?? 0;
   const initial = name.charAt(0).toUpperCase();
+  const showShopBadge = (convo.__shopCount ?? 1) > 1 && shop?.name;
   return (
     <Link
       to="/vendor/messages/$conversationId"
@@ -212,6 +222,11 @@ function ChatRow({ convo }: { convo: any }) {
             {timeLabel(convo.last_message_at)}
           </span>
         </div>
+        {showShopBadge && (
+          <div className="mt-0.5 mb-0.5 inline-flex items-center gap-1 rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider max-w-full">
+            <span className="truncate">to {shop.name}</span>
+          </div>
+        )}
         <p className={`mt-0.5 text-xs truncate ${unread > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
           {convo.last_message ?? "Say hello"}
         </p>

@@ -21,7 +21,15 @@ import {
   PiUsersThreeDuotone,
   PiClockCounterClockwiseDuotone,
 } from "react-icons/pi";
-import { loadWallet, WALLET_EVENT, type WalletState, type WalletTxn } from "@/lib/wallet";
+import {
+  loadWallet,
+  WALLET_EVENT,
+  claimIncomingTransfers,
+  subscribeIncomingTransfers,
+  type WalletState,
+  type WalletTxn,
+} from "@/lib/wallet";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/wallet/")({
   component: WalletPage,
@@ -44,8 +52,38 @@ function useWallet(): WalletState {
   return state;
 }
 
+/**
+ * Claim any pending wallet_transfers rows for the current user on mount and
+ * then again whenever a new one arrives via realtime. Each claim credits the
+ * local wallet, so the WALLET_EVENT listeners above pick up the change.
+ */
+function useIncomingTransfers() {
+  useEffect(() => {
+    let cancelled = false;
+
+    const claim = async () => {
+      try {
+        const n = await claimIncomingTransfers();
+        if (!cancelled && n > 0) {
+          toast.success(n === 1 ? "You received money" : `You received ${n} transfers`);
+        }
+      } catch {
+        // network hiccup — silently retry on next event
+      }
+    };
+
+    claim();
+    const unsubscribe = subscribeIncomingTransfers(() => claim());
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+}
+
 function WalletPage() {
   const wallet = useWallet();
+  useIncomingTransfers();
   const [hidden, setHidden] = useState(false);
   const [filter, setFilter] = useState<"all" | "in" | "out">("all");
   const [query, setQuery] = useState("");

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { AvatarCropDialog } from "@/components/naija/AvatarCropDialog";
 import { PremiumAccountBanner } from "@/components/naija/PremiumUpsellDialog";
+import { clearAllLocalUsernames } from "@/lib/username";
 
 export const Route = createFileRoute("/_authenticated/account")({
   component: AccountPage,
@@ -41,6 +42,7 @@ function AccountPage() {
   const signOut = async () => {
     await queryClient.cancelQueries();
     queryClient.clear();
+    clearAllLocalUsernames();
     await supabase.auth.signOut();
     toast.success("Signed out");
     navigate({ to: "/auth", replace: true });

@@ -8,10 +8,13 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/hooks/useCart";
 import { SplashScreen } from "@/components/naija/SplashScreen";
+import { supabase } from "@/integrations/supabase/client";
+import { clearAllLocalUsernames } from "@/lib/username";
 
 function NotFoundComponent() {
   return (
@@ -137,6 +140,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Belt-and-suspenders: if the Supabase session ends for any reason (manual
+  // sign-out, expiry, cross-tab logout), wipe the per-user username cache so
+  // the next signed-in account never sees a stale handle. Also invalidate all
+  // queries so no other user's data lingers.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        clearAllLocalUsernames();
+        queryClient.clear();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

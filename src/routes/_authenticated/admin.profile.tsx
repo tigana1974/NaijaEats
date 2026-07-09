@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { UberPageTitle, uberBtn } from "@/components/admin/AdminUI";
 import { LogOut, User, Mail, Phone, Save } from "lucide-react";
+import { clearAllLocalUsernames } from "@/lib/username";
 
 export const Route = createFileRoute("/_authenticated/admin/profile")({
   component: AdminProfile,
@@ -83,6 +84,7 @@ function AdminProfile() {
 
   const handleLogOut = async () => {
     try {
+      clearAllLocalUsernames();
       await supabase.auth.signOut();
       toast.success("Logged out successfully");
       navigate({ to: "/" });

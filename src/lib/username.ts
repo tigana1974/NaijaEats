@@ -11,7 +11,25 @@ import { supabase } from "@/integrations/supabase/client";
  * instantly readable across pages without an extra round-trip.
  */
 
-const LOCAL_KEY = "naijaeats.myUsername.v1";
+/**
+ * Local echo of the signed-in user's username, keyed by their Supabase auth id
+ * so switching accounts on the same browser never leaks one user's handle to
+ * another.
+ *
+ * We ALSO keep a legacy un-keyed slot ("naijaeats.myUsername.v1") purely so
+ * we can clear it once at start-up — any user who had the old value cached
+ * would have carried it across log-outs before this fix landed.
+ */
+const KEY_PREFIX = "naijaeats.myUsername.v2::";
+const LEGACY_KEY = "naijaeats.myUsername.v1";
+
+if (typeof window !== "undefined") {
+  try {
+    localStorage.removeItem(LEGACY_KEY);
+  } catch {
+    // storage locked (private mode etc) — no-op
+  }
+}
 
 export type UsernameCheck =
   | { ok: true; normalized: string }
@@ -30,15 +48,52 @@ export function validateUsername(input: string): UsernameCheck {
   return { ok: true, normalized };
 }
 
-export function loadLocalUsername(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(LOCAL_KEY);
+async function currentUid(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
-export function setLocalUsername(username: string | null) {
+/**
+ * Sync (no round-trip) read. Only returns a value when we know the current
+ * auth uid — otherwise we have no safe key to read from and return null so
+ * the caller doesn't accidentally show another user's cached handle.
+ */
+export function loadLocalUsername(uid?: string | null): string | null {
+  if (typeof window === "undefined") return null;
+  if (!uid) return null;
+  return localStorage.getItem(KEY_PREFIX + uid);
+}
+
+/** Async wrapper that resolves the current uid first. */
+export async function loadLocalUsernameForCurrentUser(): Promise<string | null> {
+  const uid = await currentUid();
+  return loadLocalUsername(uid);
+}
+
+export function setLocalUsername(uid: string, username: string | null) {
+  if (typeof window === "undefined" || !uid) return;
+  const key = KEY_PREFIX + uid;
+  if (username) localStorage.setItem(key, username);
+  else localStorage.removeItem(key);
+}
+
+/**
+ * Clear ALL locally cached usernames on this device. Called from the sign-out
+ * flow so nothing lingers into the next login.
+ */
+export function clearAllLocalUsernames() {
   if (typeof window === "undefined") return;
-  if (username) localStorage.setItem(LOCAL_KEY, username);
-  else localStorage.removeItem(LOCAL_KEY);
+  const keys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(KEY_PREFIX)) keys.push(k);
+  }
+  for (const k of keys) localStorage.removeItem(k);
+  localStorage.removeItem(LEGACY_KEY);
 }
 
 /** Is the username already taken by someone else? */
