@@ -6,17 +6,14 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
  * - `mode` is what the user picked: "light" | "dark" | "system".
  * - `resolved` is what actually gets applied to <html>: "light" | "dark".
  *
- * The choice is scoped to the current Supabase auth uid so switching
- * accounts on the same browser never leaks one user's theme into another.
- * When no user is signed in yet, we fall back to the system preference so
- * the marketing pages still respect a visitor's OS-level dark mode.
+ * The theme preference is stored globally in the browser so that it
+ * remains consistent across logged-out pages (landing, auth) and logged-in pages.
  */
 
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
 
-const KEY_PREFIX = "naijaeats.theme.v1::";
-const ANON_KEY = "naijaeats.theme.v1::anon";
+const THEME_KEY = "naijaeats.theme.v1";
 const TRANSITION_CLASS = "theme-transition";
 
 type ThemeCtx = {
@@ -28,13 +25,9 @@ type ThemeCtx = {
 
 const ThemeContext = createContext<ThemeCtx | null>(null);
 
-function keyFor(uid: string | null | undefined): string {
-  return uid ? KEY_PREFIX + uid : ANON_KEY;
-}
-
-function readStoredMode(uid: string | null | undefined): ThemeMode {
+function readStoredMode(): ThemeMode {
   if (typeof window === "undefined") return "system";
-  const v = localStorage.getItem(keyFor(uid));
+  const v = localStorage.getItem(THEME_KEY);
   if (v === "light" || v === "dark" || v === "system") return v;
   return "system";
 }
@@ -57,15 +50,10 @@ function apply(resolved: ResolvedTheme, animate: boolean) {
   el.style.colorScheme = resolved;
 }
 
-export function ThemeProvider({ uid, children }: { uid?: string | null; children: ReactNode }) {
-  const [mode, setModeState] = useState<ThemeMode>(() => readStoredMode(uid));
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [mode, setModeState] = useState<ThemeMode>(() => readStoredMode());
   const [systemResolved, setSystemResolved] = useState<ResolvedTheme>(() => systemPref());
   const firstRun = useState({ v: true })[0];
-
-  // Re-read stored mode when the auth uid changes (login / logout / account switch)
-  useEffect(() => {
-    setModeState(readStoredMode(uid));
-  }, [uid]);
 
   // Track OS-level dark mode changes so `mode: "system"` responds live
   useEffect(() => {
@@ -85,7 +73,7 @@ export function ThemeProvider({ uid, children }: { uid?: string | null; children
 
   const setMode = (m: ThemeMode) => {
     setModeState(m);
-    if (typeof window !== "undefined") localStorage.setItem(keyFor(uid), m);
+    if (typeof window !== "undefined") localStorage.setItem(THEME_KEY, m);
   };
 
   const value = useMemo<ThemeCtx>(
