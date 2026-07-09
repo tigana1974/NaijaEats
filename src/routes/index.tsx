@@ -42,8 +42,24 @@ import { Logo } from "@/components/naija/Logo";
 import { useState, useEffect, useRef, createContext, useContext, type ReactNode, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, queryOptions } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+const landingItemsQuery = queryOptions({
+  queryKey: ["landing-items"],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from("menu_items")
+      .select("id, name, price, currency, image_url, description, vendors!inner(status)")
+      .eq("is_available", true)
+      .eq("vendors.status", "approved")
+      .not("image_url", "is", null)
+      .limit(8);
+    return data || [];
+  },
+  staleTime: 1000 * 60 * 15,
+});
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -54,6 +70,9 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "The food ecosystem for African & authentic cuisine. Chefs, restaurants, and groceries." },
     ],
   }),
+  loader: async ({ context }) => {
+    return context.queryClient.ensureQueryData(landingItemsQuery);
+  },
   component: Index,
 });
 
@@ -578,6 +597,22 @@ const specialDishes = [
 ];
 
 function SpecialDishes() {
+  const { data } = useQuery(landingItemsQuery);
+  const dbDishes = data?.slice(0, 4) || [];
+  
+  const displayDishes = Array.from({ length: 4 }).map((_, i) => {
+    if (dbDishes[i]) {
+      const d = dbDishes[i];
+      return {
+        name: d.name,
+        price: `${d.currency === "GBP" ? "£" : "₦"}${Number(d.price).toLocaleString()}`,
+        rating: 4.9,
+        img: d.image_url,
+      };
+    }
+    return specialDishes[i];
+  });
+
   return (
     <section className="relative py-20 md:py-24 bg-background">
       <div className="mx-auto max-w-7xl px-6">
@@ -591,9 +626,9 @@ function SpecialDishes() {
         </div>
 
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {specialDishes.map((d) => (
+          {displayDishes.map((d, idx) => (
             <article
-              key={d.name}
+              key={d.name + idx}
               className="relative rounded-3xl bg-card border border-border pt-16 pb-6 px-5 text-center shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-card)] hover:-translate-y-1 transition-all"
             >
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-24 rounded-full overflow-hidden ring-4 ring-background shadow-[var(--shadow-warm)]">
@@ -675,12 +710,29 @@ function WhyUs() {
 /* ------------------------------ Menu Carousel ---------------------------- */
 
 function MenuCarousel() {
-  const items = [
-    { name: "Jollof Bowl", price: "₦5,500", tag: "Best Seller", img: dishJollof },
+  const { data } = useQuery(landingItemsQuery);
+  const dbItems = data?.slice(4, 8) || [];
+  
+  const staticItems = [
+    { name: "Spicy Jollof", price: "₦5,500", tag: "Popular", img: dishJollof },
     { name: "Suya Plate", price: "₦7,490", tag: "Spicy", img: dishSuya },
     { name: "Egusi & Yam", price: "₦6,200", tag: "Comfort", img: dishEgusi },
     { name: "Puff Puff Stack", price: "₦2,500", tag: "Sweet", img: dishPuffpuff },
   ];
+
+  const displayItems = Array.from({ length: 4 }).map((_, i) => {
+    if (dbItems[i]) {
+      const d = dbItems[i];
+      return {
+        name: d.name,
+        price: `${d.currency === "GBP" ? "£" : "₦"}${Number(d.price).toLocaleString()}`,
+        tag: "Special",
+        img: d.image_url,
+      };
+    }
+    return staticItems[i];
+  });
+
   return (
     <section id="menu" className="py-20 md:py-24 bg-background">
       <div className="mx-auto max-w-7xl px-6">
@@ -693,8 +745,8 @@ function MenuCarousel() {
           <button className="hidden md:grid absolute -left-5 top-1/2 -translate-y-1/2 place-items-center h-10 w-10 rounded-full bg-card border border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition shadow-[var(--shadow-soft)]" aria-label="Previous">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          {items.map((d) => (
-            <article key={d.name} className="relative rounded-3xl bg-card border border-border p-5 shadow-[var(--shadow-soft)]">
+          {displayItems.map((d, idx) => (
+            <article key={d.name + idx} className="relative rounded-3xl bg-card border border-border p-5 shadow-[var(--shadow-soft)]">
               <div className="relative">
                 <div className="aspect-square rounded-full overflow-hidden mx-auto w-32 h-32 ring-4 ring-background shadow-[var(--shadow-warm)]">
                   <img src={d.img} alt={d.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />

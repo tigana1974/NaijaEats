@@ -326,3 +326,80 @@ html, body {
 .dark .bg-zinc-50 {
   color: var(--color-foreground);
 }
+
+/*
+ * Brand accents in dark mode.
+ *
+ * The stock dark palette drains most warmth from the app — headings look
+ * near-white and lose the Naija Eats identity. Reinforce brand colors on
+ * the surfaces that carry the most personality: display headings, key
+ * numbers, primary/accent tokens, and links.
+ *
+ * We use the existing --brand-clay / --brand-gold tokens so the design
+ * system stays coherent, and scope everything to .dark so light mode is
+ * unaffected.
+ */
+
+/* Nudge the palette so primary + accent stay warm in dark mode */
+.dark {
+  --primary: var(--brand-clay);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: var(--brand-gold);
+  --accent-foreground: oklch(0.20 0.002 90);
+  --ring: var(--brand-clay);
+}
+
+/* Display headings — subtle clay-to-gold gradient text. Falls back to a
+   solid warm color if `background-clip: text` isn't supported. */
+.dark h1,
+.dark h2,
+.dark .font-display {
+  color: var(--brand-gold);
+}
+
+.dark h1 {
+  background-image: linear-gradient(120deg, var(--brand-gold) 0%, oklch(0.85 0.16 40) 55%, var(--brand-clay) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* But leave already-branded text alone — if a heading is explicitly using
+   text-white / text-foreground / text-primary / text-[var(--brand-*)]
+   the developer chose that on purpose. */
+.dark h1.text-white,
+.dark h1.text-foreground,
+.dark h1[class*="text-[var(--brand"],
+.dark h2.text-white,
+.dark h2.text-foreground,
+.dark h2[class*="text-[var(--brand"],
+.dark .font-display.text-white,
+.dark .font-display.text-foreground,
+.dark .font-display[class*="text-[var(--brand"] {
+  color: unset;
+  background-image: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Warm the eyebrow / uppercase labels — most of them already reach for
+   text-primary or text-[var(--brand-clay)]; boost visibility so they
+   pop against dark surfaces. */
+.dark .text-primary {
+  color: var(--brand-clay);
+}
+
+/* Anchor links inherit --primary, so they'll naturally warm up. */
+.dark a:not(.no-brand-tint):not([class*="text-white"]):not([class*="text-foreground"]):hover {
+  color: var(--brand-clay);
+}
+
+/* Prominent tabular numbers — balance figures, prices — glow gold in dark mode
+   when they're inside a display heading, so wallet balances still feel premium. */
+.dark .font-display.tabular-nums,
+.dark h1.tabular-nums,
+.dark h2.tabular-nums {
+  color: var(--brand-gold);
+  background-image: none;
+  -webkit-text-fill-color: currentColor;
+}

@@ -26,10 +26,11 @@ type ThemeCtx = {
 const ThemeContext = createContext<ThemeCtx | null>(null);
 
 function readStoredMode(): ThemeMode {
-  if (typeof window === "undefined") return "system";
+  // Default is Light. Users opt into Dark or System explicitly from Settings.
+  if (typeof window === "undefined") return "light";
   const v = localStorage.getItem(THEME_KEY);
   if (v === "light" || v === "dark" || v === "system") return v;
-  return "system";
+  return "light";
 }
 
 function systemPref(): ResolvedTheme {
