@@ -108,6 +108,7 @@ export function FoodCard({
   vendorName,
   rating,
   badge,
+  onAdd,
 }: {
   vendorSlug: string;
   itemId: string;
@@ -117,6 +118,7 @@ export function FoodCard({
   vendorName?: string;
   rating?: number;
   badge?: string;
+  onAdd?: (e: React.MouseEvent) => void;
 }) {
   return (
     <Link
@@ -155,9 +157,18 @@ export function FoodCard({
 
         {/* Floating add button */}
         <div className="absolute bottom-3 right-3 z-10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xl shadow-black/15 text-[var(--brand-clay)] ring-1 ring-black/[0.04] transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--brand-clay)] group-hover:text-white group-hover:shadow-[var(--brand-clay)]/30">
+          <button
+            onClick={(e) => {
+              if (onAdd) {
+                e.preventDefault();
+                e.stopPropagation();
+                onAdd(e);
+              }
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-xl shadow-black/15 text-[var(--brand-clay)] ring-1 ring-black/[0.04] transition-all duration-300 hover:scale-110 hover:bg-[var(--brand-clay)] hover:text-white hover:shadow-[var(--brand-clay)]/30"
+          >
             <IoAdd className="h-5 w-5" />
-          </div>
+          </button>
         </div>
       </div>
 

@@ -10,6 +10,8 @@ import {
   CustomerShell,
 } from "@/components/naija/CustomerShell";
 import { FeaturedPromoCard, FoodCard, FoodCategoryChips, VendorCard } from "@/components/naija/customer-ui";
+import { useCart } from "@/hooks/useCart";
+import { toast } from "sonner";
 
 /**
  * Customer Home / Discover.
@@ -38,6 +40,7 @@ const TYPE_OPTIONS: { key: VendorType; label: string; Icon: React.ComponentType<
 function DiscoverPage() {
   const { user } = Route.useRouteContext();
   const { data: profile } = useMyProfile();
+  const { addItem } = useCart();
   
   const [country, setCountryState] = useState<"NG" | "UK">(
     () => (typeof window !== "undefined" && localStorage.getItem("ui_country") as "NG" | "UK") || "NG"
@@ -88,7 +91,7 @@ function DiscoverPage() {
       let q = supabase
         .from("menu_items")
         .select(
-          "id, name, price, image_url, is_available, is_featured, description, vendor:vendors!inner(id, slug, name, currency, country, status)",
+          "id, name, price, image_url, is_available, is_featured, description, vendor:vendors!inner(id, slug, name, currency, country, status, delivery_fee, min_order)",
         )
         .eq("is_available", true)
         .order("is_featured", { ascending: false })
@@ -181,6 +184,25 @@ function DiscoverPage() {
                     priceLabel={`${it.vendor.currency === "GBP" ? "£" : "₦"}${Number(it.price).toLocaleString()}`}
                     vendorName={it.vendor.name}
                     badge={it.is_featured ? "Top" : undefined}
+                    onAdd={() => {
+                      addItem(
+                        {
+                          id: it.vendor.id,
+                          name: it.vendor.name,
+                          slug: it.vendor.slug,
+                          currency: it.vendor.currency,
+                          deliveryFee: Number(it.vendor.delivery_fee || 0),
+                          minOrder: Number(it.vendor.min_order || 0),
+                        },
+                        {
+                          menuItemId: it.id,
+                          name: it.name,
+                          price: Number(it.price),
+                          imageUrl: it.image_url,
+                        }
+                      );
+                      toast.success(`${it.name} added to cart!`);
+                    }}
                   />
                 ))}
               </div>
