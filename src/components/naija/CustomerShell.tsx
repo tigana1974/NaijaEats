@@ -36,14 +36,14 @@ export function CustomerShell({
   containerClassName?: string;
 }) {
   return (
-    <div className="min-h-dvh bg-white text-foreground flex flex-col overflow-x-clip">
+    <div className="min-h-dvh bg-background text-foreground flex flex-col overflow-x-clip">
       {topBar && (
-        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75">
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-3 sm:pt-5 pb-2 flex items-center gap-3">
             {showBack && (
               <Link
                 to={backTo ?? "/discover"}
-                className="-ml-1 inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm hover:bg-zinc-50"
+                className="-ml-1 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-sm hover:bg-muted"
                 aria-label="Back"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -80,7 +80,7 @@ export function CustomerLocationHeader() {
       <Link to="/discover" className="flex items-center gap-2.5 shrink-0 group">
         <Logo className="h-9 w-9 transition-transform duration-300 group-hover:scale-105" />
         <div className="min-w-0">
-          <span className="font-display text-lg font-bold tracking-tight text-zinc-900">
+          <span className="font-display text-lg font-bold tracking-tight text-foreground">
             Naija<span className="text-[var(--brand-clay)]">Eats</span>
           </span>
         </div>
@@ -89,11 +89,11 @@ export function CustomerLocationHeader() {
         <Link
           to="/notifications"
           aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
-          className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 text-zinc-700 transition-colors"
+          className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card shadow-sm hover:bg-muted text-foreground transition-colors"
         >
           <IoNotifications className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[var(--brand-clay)] text-white text-[10px] font-bold grid place-items-center ring-2 ring-white">
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[var(--brand-clay)] text-white text-[10px] font-bold grid place-items-center ring-2 ring-background">
               {formatBadgeCount(unreadCount)}
             </span>
           )}
@@ -101,7 +101,7 @@ export function CustomerLocationHeader() {
         <Link
           to="/wallet"
           aria-label="Wallet"
-          className="relative inline-flex h-11 w-11 sm:w-auto sm:px-4 items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white shadow-sm hover:bg-zinc-50 text-zinc-700 transition-colors font-bold text-sm"
+          className="relative inline-flex h-11 w-11 sm:w-auto sm:px-4 items-center justify-center gap-2 rounded-full border border-border bg-card shadow-sm hover:bg-muted text-foreground transition-colors font-bold text-sm"
         >
           <IoWalletOutline className="h-5 w-5 shrink-0" />
           <span className="hidden sm:inline">Wallet</span>
@@ -189,7 +189,7 @@ function CustomerBottomNav() {
     <>
       {/* Mobile bottom nav */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none">
-        <nav className="pointer-events-auto mx-auto max-w-md flex items-stretch bg-white rounded-full px-2 py-1.5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.18)] ring-1 ring-zinc-100 backdrop-blur-md bg-white/95">
+        <nav className="pointer-events-auto mx-auto max-w-md flex items-stretch bg-card rounded-full px-2 py-1.5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.18)] ring-1 ring-border backdrop-blur-md bg-card/95">
           {items.map((item) => (
             <BottomNavButton key={item.to} item={item} active={checkActive(item)} />
           ))}
@@ -197,7 +197,7 @@ function CustomerBottomNav() {
       </div>
 
       {/* Desktop top nav row (only visible on lg+) */}
-      <div className="hidden lg:flex sticky bottom-4 mx-auto max-w-md mt-10 -translate-y-2 z-50 items-stretch bg-white rounded-full px-2 py-1.5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.12)] ring-1 ring-zinc-100">
+      <div className="hidden lg:flex sticky bottom-4 mx-auto max-w-md mt-10 -translate-y-2 z-50 items-stretch bg-card rounded-full px-2 py-1.5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.12)] ring-1 ring-border">
         {items.map((item) => (
           <BottomNavButton key={item.to} item={item} active={checkActive(item)} />
         ))}

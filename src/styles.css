@@ -207,3 +207,32 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/*
+ * Smooth cross-fade whenever the user toggles between light and dark modes.
+ * The `.theme-transition` class is added to <html> for ~300ms during a mode
+ * change, animates background / text / border colors, then is removed — so
+ * ordinary interactions still snap instantly.
+ */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition:
+    background-color 260ms ease,
+    border-color 260ms ease,
+    color 260ms ease,
+    fill 260ms ease,
+    stroke 260ms ease,
+    box-shadow 260ms ease !important;
+  transition-delay: 0ms !important;
+}
+
+/*
+ * Base body already reads var(--color-background) / var(--color-foreground)
+ * from the tokens defined in @theme. Add a permanent (but very short) fade
+ * on the body so the initial system-preference change doesn't feel jarring.
+ */
+html, body {
+  transition: background-color 180ms ease, color 180ms ease;
+}

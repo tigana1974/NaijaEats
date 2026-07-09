@@ -2,22 +2,24 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Bell, Moon, Globe, KeyRound, Trash2 } from "lucide-react";
+import { ChevronLeft, Bell, Sun, Moon, Monitor, Globe, KeyRound, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
 const KEY = "naijaeats.settings";
-type Prefs = { notifications: boolean; darkMode: boolean; language: string };
-const defaults: Prefs = { notifications: true, darkMode: false, language: "English" };
+type Prefs = { notifications: boolean; language: string };
+const defaults: Prefs = { notifications: true, language: "English" };
 
 function SettingsPage() {
   const { user } = Route.useRouteContext();
   const [prefs, setPrefs] = useState<Prefs>(defaults);
+  const { mode, resolved, setMode } = useTheme();
 
   useEffect(() => {
     try {
@@ -28,7 +30,6 @@ function SettingsPage() {
 
   useEffect(() => {
     localStorage.setItem(KEY, JSON.stringify(prefs));
-    document.documentElement.classList.toggle("dark", prefs.darkMode);
   }, [prefs]);
 
   const sendReset = async () => {
@@ -58,9 +59,27 @@ function SettingsPage() {
           <Row Icon={Bell} title="Push notifications" hint="Order updates and offers">
             <Switch checked={prefs.notifications} onCheckedChange={(v) => setPrefs({ ...prefs, notifications: v })} />
           </Row>
-          <Row Icon={Moon} title="Dark mode" hint="Easier on the eyes at night">
-            <Switch checked={prefs.darkMode} onCheckedChange={(v) => setPrefs({ ...prefs, darkMode: v })} />
-          </Row>
+
+          {/* Appearance — full-width so the three options don't crowd the row */}
+          <div className="rounded-2xl bg-card border border-border px-4 py-4">
+            <div className="flex items-center gap-4">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-muted text-foreground">
+                {resolved === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium">Appearance</div>
+                <div className="text-xs text-muted-foreground">
+                  {mode === "system"
+                    ? `Following your device (${resolved})`
+                    : mode === "dark"
+                      ? "Dark mode is on"
+                      : "Light mode is on"}
+                </div>
+              </div>
+            </div>
+            <ThemeSegmented mode={mode} onChange={setMode} />
+          </div>
+
           <Row Icon={Globe} title="Language" hint={prefs.language}>
             <select
               value={prefs.language}
@@ -107,6 +126,36 @@ function Row({ Icon, title, hint, children }: { Icon: React.ComponentType<{ clas
         {hint && <div className="text-xs text-muted-foreground truncate">{hint}</div>}
       </div>
       {children}
+    </div>
+  );
+}
+
+function ThemeSegmented({ mode, onChange }: { mode: ThemeMode; onChange: (m: ThemeMode) => void }) {
+  const options: { id: ThemeMode; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "light", label: "Light", Icon: Sun },
+    { id: "dark", label: "Dark", Icon: Moon },
+    { id: "system", label: "System", Icon: Monitor },
+  ];
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-1.5 rounded-2xl bg-muted p-1">
+      {options.map((o) => {
+        const active = o.id === mode;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
+              active
+                ? "bg-[var(--brand-clay)] text-white shadow-md shadow-[var(--brand-clay)]/25"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/60"
+            }`}
+          >
+            <o.Icon className="h-4 w-4" />
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

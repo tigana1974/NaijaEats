@@ -69,8 +69,9 @@ function Index() {
       <WhyUs />
       <MenuCarousel />
       <OfferBanner />
-      <Testimonials />
       <ServePromise />
+      <Testimonials />
+      <StartOrderingCTA />
       <Footer />
       <BrandWordmark />
     </div>
@@ -839,23 +840,128 @@ function ServePromise() {
           </h2>
         </div>
         <div className="mt-14 grid md:grid-cols-3 gap-6 md:gap-8">
-          {items.map((it) => (
+          {items.map((it, idx) => (
             <div key={it.title} className="text-center group">
-              <div className="relative mx-auto aspect-[3/2] w-full max-w-[320px] rounded-3xl overflow-hidden shadow-[var(--shadow-card)] ring-1 ring-black/5">
+              <div className="relative mx-auto aspect-[4/3] w-full max-w-[360px] rounded-[2rem] overflow-hidden bg-muted shadow-[var(--shadow-card)] ring-1 ring-black/5">
                 <img
                   src={it.img}
                   alt={it.title}
-                  width={740}
-                  height={493}
+                  width={800}
+                  height={600}
                   loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                <span className="absolute top-3 left-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 backdrop-blur text-xs font-bold text-primary shadow-md">
+                  {idx + 1}
+                </span>
               </div>
               <h3 className="mt-5 font-display text-lg font-bold text-foreground">{it.title}</h3>
               <p className="mt-1.5 text-xs text-muted-foreground max-w-[240px] mx-auto leading-relaxed">{it.copy}</p>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* --------------------------- Start ordering CTA ------------------------- */
+
+function StartOrderingCTA() {
+  return (
+    <section className="py-14 md:py-20 bg-background">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div
+          className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-14 text-white"
+          style={{
+            background:
+              "radial-gradient(120% 120% at 0% 0%, oklch(0.85 0.17 90 / 0.55), transparent 55%), radial-gradient(120% 120% at 100% 100%, oklch(0.55 0.22 25 / 0.95), transparent 55%), linear-gradient(150deg, #1a0e0a, #3a1a14 55%, #7c2d12)",
+          }}
+        >
+          {/* Ambient glows */}
+          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
+
+          <div className="relative grid gap-8 md:grid-cols-2 md:items-center">
+            <div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
+                <Sparkle className="h-3 w-3 text-[var(--brand-gold)]" />
+                Ready when you are
+              </div>
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mt-4 leading-[1.05]">
+                Start ordering now.<br />
+                <span className="text-[var(--brand-gold)]">Eat happy in minutes.</span>
+              </h2>
+              <p className="mt-4 text-sm sm:text-base text-white/80 max-w-md leading-relaxed">
+                Pick from real chefs, African restaurants, and ethnic groceries near you.
+                Delivered hot, tracked live, cooked with culture — every single order.
+              </p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/discover"
+                  className="inline-flex items-center gap-2 rounded-full bg-white text-[#1a0e0a] px-6 sm:px-7 py-3.5 text-sm font-bold shadow-xl hover:scale-105 transition"
+                >
+                  Order now
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/auth"
+                  search={{ mode: "signup" }}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white px-6 sm:px-7 py-3.5 text-sm font-bold hover:bg-white/15 transition"
+                >
+                  Create an account
+                </Link>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center gap-4 text-[11px] text-white/70">
+                <span className="inline-flex items-center gap-1.5">
+                  <Truck className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Fast delivery
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 text-[var(--brand-gold)] fill-current" /> 4.9 average rating
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <ChefHat className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> 500+ chefs
+                </span>
+              </div>
+            </div>
+
+            {/* Right-side visual */}
+            <div className="relative hidden md:block">
+              <div className="relative aspect-square max-w-[420px] mx-auto rounded-[2rem] overflow-hidden ring-1 ring-white/15 shadow-2xl">
+                <img
+                  src={heroJollof}
+                  alt="Ready-to-order dishes"
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+              </div>
+
+              {/* Floating chef chip */}
+              <div className="absolute -bottom-4 -left-4 sm:-left-6 flex items-center gap-2.5 rounded-2xl bg-white/95 backdrop-blur pl-2 pr-4 py-2 shadow-xl border border-white/60">
+                <img
+                  src={chefPortrait}
+                  alt="Chef"
+                  className="h-9 w-9 rounded-full object-cover"
+                />
+                <div className="text-left">
+                  <div className="text-xs font-bold text-[#1a0e0a]">Cooking now</div>
+                  <div className="text-[10px] text-zinc-500">15 chefs online</div>
+                </div>
+              </div>
+
+              {/* Floating rating chip */}
+              <div className="absolute -top-3 right-2 sm:-right-2 flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)] text-[#1a0e0a] px-3 py-1.5 shadow-lg">
+                <Star className="h-3.5 w-3.5 fill-current" />
+                <span className="text-xs font-bold">4.9 loved</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

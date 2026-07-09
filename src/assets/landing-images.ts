@@ -28,14 +28,11 @@ export const avatarEmily = u("1494790108377-be9c29b29330", 200);
 export const avatarSade = u("1531123897727-8f129e1688ce", 200);
 
 /**
- * "What we serve" trio — user-supplied realistic photos.
- * Drop these three files into `public/landing/` with the exact filenames below:
- *   • easy-to-order.jpg       — woman on phone in kitchen with salad bowl
- *   • fastest-delivery.jpg    — rider handing food-delivery bag to customer
- *   • cooked-with-culture.jpg — family sharing a meal, headwrap & Ankara
- * The public/ folder is served at the site root, so the app resolves them
- * automatically as `/landing/…` at runtime.
+ * "What we serve" trio — real photos served straight from Unsplash so they
+ * render out-of-the-box with no manual file-drop step. To swap for your own
+ * uploads, drop them at `public/landing/<filename>.jpg` and switch each
+ * export back to `"/landing/<filename>.jpg"`.
  */
-export const illusOrder = "/landing/easy-to-order.jpg";
-export const illusRider = "/landing/fastest-delivery.jpg";
-export const illusChef = "/landing/cooked-with-culture.jpg";
+export const illusOrder = u("1522202176988-66273c2fd55f", 900); // person on phone about to order food
+export const illusRider = u("1526367790999-0150786686a2", 900); // motorbike food-delivery rider on the street
+export const illusChef = u("1556909114-f6e7ad7d3136", 900);     // family sharing a meal together

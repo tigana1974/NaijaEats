@@ -15,6 +15,8 @@ import { CartProvider } from "@/hooks/useCart";
 import { SplashScreen } from "@/components/naija/SplashScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { clearAllLocalUsernames } from "@/lib/username";
+import { ThemeProvider } from "@/hooks/useTheme";
+import { useState } from "react";
 
 function NotFoundComponent() {
   return (
@@ -140,29 +142,43 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [authUid, setAuthUid] = useState<string | null>(null);
 
   // Belt-and-suspenders: if the Supabase session ends for any reason (manual
   // sign-out, expiry, cross-tab logout), wipe the per-user username cache so
   // the next signed-in account never sees a stale handle. Also invalidate all
   // queries so no other user's data lingers.
+  //
+  // We also track the auth uid here so the ThemeProvider below can key its
+  // stored theme preference per-user (no theme leakage between accounts).
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    let mounted = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (mounted) setAuthUid(data.user?.id ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      setAuthUid(session?.user?.id ?? null);
       if (event === "SIGNED_OUT") {
         clearAllLocalUsernames();
         queryClient.clear();
       }
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster richColors position="top-center" />
-        <SplashScreen />
-      </CartProvider>
+      <ThemeProvider uid={authUid}>
+        <CartProvider>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+          <Toaster richColors position="top-center" />
+          <SplashScreen />
+        </CartProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
