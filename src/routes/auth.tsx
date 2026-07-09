@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,31 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in or create your Naija Eats account." },
     ],
   }),
+  // If someone lands on /auth while already signed in — e.g. they opened the
+  // installed PWA which uses /auth as a fallback, or they bookmarked it —
+  // send them straight to their role home instead of showing the sign-in form.
+  beforeLoad: async () => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id;
+      if (!uid) return;
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      const roles = ((roleRows ?? []) as { role: AppRole }[]).map((r) => r.role);
+      const role: AppRole = roles.includes("admin")
+        ? "admin"
+        : roles.includes("vendor")
+          ? "vendor"
+          : roles.includes("rider")
+            ? "rider"
+            : "customer";
+      throw redirect({ to: homeForRole(role), replace: true });
+    } catch (err) {
+      if (err && typeof err === "object" && "isRedirect" in err) throw err;
+    }
+  },
   component: AuthPage,
 });
 

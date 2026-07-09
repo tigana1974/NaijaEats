@@ -1,0 +1,61 @@
+{
+  "name": "Naija Eats",
+  "short_name": "Naija Eats",
+  "description": "Order from chefs, African & Caribbean restaurants, and ethnic grocers. Cooked with culture, delivered fresh.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a0e0a",
+  "theme_color": "#d94b3a",
+  "id": "naijaeats-pwa",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["food", "shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover",
+      "short_name": "Discover",
+      "url": "/discover",
+      "description": "Browse food from top chefs & restaurants"
+    },
+    {
+      "name": "Orders",
+      "short_name": "Orders",
+      "url": "/orders",
+      "description": "Track your current orders"
+    },
+    {
+      "name": "Wallet",
+      "short_name": "Wallet",
+      "url": "/wallet",
+      "description": "Top up, send, and manage your wallet"
+    }
+  ]
+}

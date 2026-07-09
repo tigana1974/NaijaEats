@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
+import { homeForRole, type AppRole } from "@/hooks/useMyRole";
 import {
   ChefHat,
   Store,
@@ -70,6 +71,38 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "The food ecosystem for African & authentic cuisine. Chefs, restaurants, and groceries." },
     ],
   }),
+  // If the visitor already has a Supabase session, skip the marketing site and
+  // hand them straight to their role home. This runs BEFORE the landing page
+  // renders, so a signed-in PWA user never briefly sees the marketing hero on
+  // launch — the splash screen covers the auth check and the redirect happens
+  // under it. Anonymous visitors continue to see the landing page.
+  beforeLoad: async () => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id;
+      if (!uid) return; // signed-out visitor → landing page
+
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      const roles = ((roleRows ?? []) as { role: AppRole }[]).map((r) => r.role);
+      const role: AppRole = roles.includes("admin")
+        ? "admin"
+        : roles.includes("vendor")
+          ? "vendor"
+          : roles.includes("rider")
+            ? "rider"
+            : "customer";
+      const to = homeForRole(role);
+      // `throw redirect(...)` short-circuits the loader and swaps the route.
+      throw redirect({ to, replace: true });
+    } catch (err) {
+      // Re-throw redirect errors so TanStack Router can handle them; any other
+      // failure (e.g. offline) silently falls back to the landing page.
+      if (err && typeof err === "object" && "isRedirect" in err) throw err;
+    }
+  },
   loader: async ({ context }) => {
     return context.queryClient.ensureQueryData(landingItemsQuery);
   },

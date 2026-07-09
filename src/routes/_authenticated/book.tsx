@@ -615,21 +615,21 @@ function MealPickerSheet({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Rank by meal match, then by query, then by name.
+  // Show every available dish in every slot — Breakfast, Lunch and Dinner all
+  // pull from the full catalogue. Meal type only affects the *order*: items
+  // that match the current meal (via tag, category, name / description) float
+  // to the top so they're the first thing the user sees, but nothing is ever
+  // filtered out.
   const ranked = useMemo(() => {
-    const withScore = items.map((it) => ({ item: it, score: scoreForMeal(it, meal.id) }));
-    const anyMatch = withScore.some((r) => r.score > 0);
-    // If we found no meal-typed matches at all, fall back to all items so the
-    // user isn't stuck with an empty picker.
-    const pool = anyMatch ? withScore.filter((r) => r.score > 0) : withScore;
     const q = query.trim().toLowerCase();
+    const withScore = items.map((it) => ({ item: it, score: scoreForMeal(it, meal.id) }));
     const searched = q
-      ? pool.filter(({ item }) =>
+      ? withScore.filter(({ item }) =>
           (item.name + " " + (item.description ?? "") + " " + item.vendor.name)
             .toLowerCase()
             .includes(q),
         )
-      : pool;
+      : withScore;
     // Sort: strongest meal match first, then alphabetical.
     return searched
       .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name))
@@ -649,18 +649,18 @@ function MealPickerSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-lg max-h-[85dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-200">
-        {/* Header */}
-        <div className={`relative overflow-hidden p-5 ${meal.bg} border-b border-black/5`}>
+      <div className="relative w-full sm:max-w-lg max-h-[85dvh] bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-200">
+        {/* Header — sticky so the search stays above the food list at all times */}
+        <div className={`sticky top-0 z-10 relative overflow-hidden p-4 sm:p-5 ${meal.bg} border-b border-black/5`}>
           <div className="flex items-center gap-3">
-            <span className={`grid h-11 w-11 place-items-center rounded-2xl bg-white text-zinc-800 shadow-sm`}>
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-zinc-800 shadow-sm shrink-0">
               <meal.Icon className="h-6 w-6" />
             </span>
             <div className="flex-1 min-w-0">
               <div className={`text-[10px] uppercase tracking-widest font-bold ${meal.chipTone.replace("bg-", "text-").split(" ")[1]}`}>
                 Add to {meal.label}
               </div>
-              <div className="font-display text-lg font-bold text-zinc-900 truncate">
+              <div className="font-display text-base sm:text-lg font-bold text-zinc-900 truncate">
                 {date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })} · {meal.time}
               </div>
             </div>
@@ -673,15 +673,26 @@ function MealPickerSheet({
             </button>
           </div>
 
-          {/* Search */}
-          <div className="relative mt-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          {/* Search — prominent, autofocused, always visible while scrolling */}
+          <div className="relative mt-3.5">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500 pointer-events-none" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Search ${meal.label.toLowerCase()} dishes`}
-              className="w-full h-11 rounded-2xl border border-black/5 bg-white pl-10 pr-3 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/15 transition shadow-sm"
+              placeholder="Search any dish, chef, or restaurant"
+              className="w-full h-12 rounded-2xl border border-black/10 bg-white pl-11 pr-10 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/20 transition shadow-md"
+              autoFocus
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
