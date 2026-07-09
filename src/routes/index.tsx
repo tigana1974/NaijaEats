@@ -634,7 +634,7 @@ function WhyUs() {
     { icon: CalendarHeart, title: "Chef Booking", copy: "Book a chef for your dinner or celebration." },
   ];
   return (
-    <section id="why" className="relative py-20 md:py-28 bg-[oklch(0.95_0.035_75)]">
+    <section id="why" className="relative py-20 md:py-28 bg-muted/50">
       <Sparkle className="absolute top-12 left-12 h-5 w-5 text-accent" />
       <Sparkle className="absolute bottom-16 left-[40%] h-4 w-4 text-accent/70" />
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-12 items-center">
@@ -903,7 +903,7 @@ function StartOrderingCTA() {
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Link
                   to="/discover"
-                  className="inline-flex items-center gap-2 rounded-full bg-white text-[#1a0e0a] px-6 sm:px-7 py-3.5 text-sm font-bold shadow-xl hover:scale-105 transition"
+                  className="inline-flex items-center gap-2 rounded-full !bg-white !text-[#1a0e0a] px-6 sm:px-7 py-3.5 text-sm font-bold shadow-xl hover:scale-105 transition"
                 >
                   Order now
                   <ArrowRight className="h-4 w-4" />
@@ -943,20 +943,20 @@ function StartOrderingCTA() {
               </div>
 
               {/* Floating chef chip */}
-              <div className="absolute -bottom-4 -left-4 sm:-left-6 flex items-center gap-2.5 rounded-2xl bg-white/95 backdrop-blur pl-2 pr-4 py-2 shadow-xl border border-white/60">
+              <div className="absolute -bottom-4 -left-4 sm:-left-6 flex items-center gap-2.5 rounded-2xl !bg-white/95 backdrop-blur pl-2 pr-4 py-2 shadow-xl border border-white/60">
                 <img
                   src={chefPortrait}
                   alt="Chef"
                   className="h-9 w-9 rounded-full object-cover"
                 />
                 <div className="text-left">
-                  <div className="text-xs font-bold text-[#1a0e0a]">Cooking now</div>
-                  <div className="text-[10px] text-zinc-500">15 chefs online</div>
+                  <div className="text-xs font-bold !text-[#1a0e0a]">Cooking now</div>
+                  <div className="text-[10px] !text-zinc-500">15 chefs online</div>
                 </div>
               </div>
 
               {/* Floating rating chip */}
-              <div className="absolute -top-3 right-2 sm:-right-2 flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)] text-[#1a0e0a] px-3 py-1.5 shadow-lg">
+              <div className="absolute -top-3 right-2 sm:-right-2 flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)] !text-[#1a0e0a] px-3 py-1.5 shadow-lg">
                 <Star className="h-3.5 w-3.5 fill-current" />
                 <span className="text-xs font-bold">4.9 loved</span>
               </div>
