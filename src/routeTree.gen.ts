@@ -28,6 +28,7 @@ import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedBookRouteImport } from './routes/_authenticated/book'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
+import { Route as AuthenticatedAdaRouteImport } from './routes/_authenticated/ada'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
@@ -184,6 +185,11 @@ const AuthenticatedBookRoute = AuthenticatedBookRouteImport.update({
 const AuthenticatedAddressesRoute = AuthenticatedAddressesRouteImport.update({
   id: '/addresses',
   path: '/addresses',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdaRoute = AuthenticatedAdaRouteImport.update({
+  id: '/ada',
+  path: '/ada',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
@@ -534,6 +540,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/ada': typeof AuthenticatedAdaRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
@@ -613,6 +620,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/ada': typeof AuthenticatedAdaRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
@@ -694,6 +702,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/ada': typeof AuthenticatedAdaRoute
   '/_authenticated/addresses': typeof AuthenticatedAddressesRoute
   '/_authenticated/book': typeof AuthenticatedBookRouteWithChildren
   '/_authenticated/cart': typeof AuthenticatedCartRoute
@@ -775,6 +784,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/account'
+    | '/ada'
     | '/addresses'
     | '/book'
     | '/cart'
@@ -854,6 +864,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/account'
+    | '/ada'
     | '/addresses'
     | '/book'
     | '/cart'
@@ -934,6 +945,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/_authenticated/account'
+    | '/_authenticated/ada'
     | '/_authenticated/addresses'
     | '/_authenticated/book'
     | '/_authenticated/cart'
@@ -1152,6 +1164,13 @@ declare module '@tanstack/react-router' {
       path: '/addresses'
       fullPath: '/addresses'
       preLoaderRoute: typeof AuthenticatedAddressesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ada': {
+      id: '/_authenticated/ada'
+      path: '/ada'
+      fullPath: '/ada'
+      preLoaderRoute: typeof AuthenticatedAdaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/account': {
@@ -1609,6 +1628,7 @@ const AuthenticatedVendorMessagesRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAdaRoute: typeof AuthenticatedAdaRoute
   AuthenticatedAddressesRoute: typeof AuthenticatedAddressesRoute
   AuthenticatedBookRoute: typeof AuthenticatedBookRouteWithChildren
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
@@ -1679,6 +1699,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAdaRoute: AuthenticatedAdaRoute,
   AuthenticatedAddressesRoute: AuthenticatedAddressesRoute,
   AuthenticatedBookRoute: AuthenticatedBookRouteWithChildren,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
