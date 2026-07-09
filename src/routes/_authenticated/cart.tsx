@@ -349,7 +349,7 @@ function CartPage() {
           </section>
 
           {/* ─── Sticky single-checkout footer ─── */}
-          <div className="fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-3 sm:px-5 pointer-events-none">
+          <div className="fixed bottom-[80px] lg:bottom-4 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-3 sm:px-5 pointer-events-none">
             <div className="pointer-events-auto mx-auto max-w-2xl">
               <div className="rounded-2xl bg-card border border-border shadow-[0_-8px_30px_-6px_rgba(0,0,0,0.15)] p-3 flex items-center gap-3">
                 <div className="min-w-0 flex-1 pl-1">
