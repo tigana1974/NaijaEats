@@ -34,7 +34,7 @@ function VendorConversation() {
         .maybeSingle();
         
       if (profile) {
-        convo.customer = profile;
+        (convo as any).customer = profile;
       }
 
       return { me: uid, conversation: convo };
