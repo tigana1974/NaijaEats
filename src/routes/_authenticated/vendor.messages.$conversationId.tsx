@@ -22,10 +22,21 @@ function VendorConversation() {
       if (!uid) return null;
       const { data: convo } = await supabase
         .from("conversations")
-        .select("*, customer:profiles!conversations_customer_id_fkey(id, full_name, avatar_url)")
+        .select("*")
         .eq("id", conversationId)
         .maybeSingle();
       if (!convo) return null;
+      
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .eq("id", convo.customer_id)
+        .maybeSingle();
+        
+      if (profile) {
+        convo.customer = profile;
+      }
+
       return { me: uid, conversation: convo };
     },
   });

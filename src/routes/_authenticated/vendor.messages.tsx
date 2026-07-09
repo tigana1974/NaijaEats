@@ -46,14 +46,30 @@ function VendorInbox() {
       
       const { data: convos } = await supabase
         .from("conversations")
-        .select(
-          "*, customer:profiles!conversations_customer_id_fkey(id, full_name, avatar_url), vendor:vendors!conversations_vendor_id_fkey(id, name)",
-        )
+        .select("*, vendor:vendors(id, name)")
         .in("vendor_id", vendorIds)
         .order("last_message_at", { ascending: false, nullsFirst: false });
+        
+      const validConvos = convos ?? [];
+      
+      // Fetch customer profiles manually since conversations->profiles has no direct FK
+      const customerIds = Array.from(new Set(validConvos.map(c => c.customer_id)));
+      let profileMap: Record<string, any> = {};
+      if (customerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", customerIds);
+        profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+      }
+
       // Attach how many shops the vendor owns so the row can decide whether
       // to show a "sent to <shop>" badge (only useful in multi-shop setups).
-      return (convos ?? []).map((c) => ({ ...c, __shopCount: vendors.length }));
+      return validConvos.map((c) => ({ 
+        ...c, 
+        customer: profileMap[c.customer_id] || null,
+        __shopCount: vendors.length 
+      }));
     },
   });
 
