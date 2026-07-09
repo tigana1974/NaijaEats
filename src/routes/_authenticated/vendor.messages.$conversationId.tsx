@@ -4,7 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/naija/AppShell";
 import { ChatThread } from "@/components/naija/ChatThread";
 import { useMyRole } from "@/hooks/useMyRole";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Info, MoreHorizontal, Trash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/vendor/messages/$conversationId")({
   component: VendorConversation,
@@ -26,13 +32,13 @@ function VendorConversation() {
         .eq("id", conversationId)
         .maybeSingle();
       if (!convo) return null;
-      
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
         .eq("id", convo.customer_id)
         .maybeSingle();
-        
+
       if (profile) {
         (convo as any).customer = profile;
       }
@@ -47,30 +53,71 @@ function VendorConversation() {
   if (!roleLoading && role !== "vendor") return <Navigate to="/" replace />;
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4 sm:py-6">
-        <div className="flex items-center gap-3 mb-4">
+    <AppShell hideBottomNav hideHeader>
+      {/* Full-viewport flex column so ChatThread's flex-1 messages
+          scroller actually gets a height. Without this the composer
+          renders but the messages are collapsed and untappable. */}
+      <div className="fixed inset-0 z-20 flex flex-col bg-[oklch(0.985_0.005_90)]">
+        {/* Header */}
+        <div className="sticky top-0 z-10 px-3 py-2.5 bg-white/90 backdrop-blur border-b border-black/5 flex items-center gap-2">
           <Link
             to="/vendor/messages"
-            className="h-9 w-9 grid place-items-center rounded-full ring-1 ring-border hover:bg-muted"
+            className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5 shrink-0"
             aria-label="Back"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </Link>
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-10 w-10 rounded-full overflow-hidden bg-muted shrink-0 grid place-items-center text-sm font-semibold">
-              {cust?.avatar_url ? (
-                <img src={cust.avatar_url} alt={name} className="h-full w-full object-cover" />
-              ) : (
-                <span>{name.charAt(0).toUpperCase()}</span>
-              )}
-            </div>
-            <h1 className="font-display text-lg sm:text-xl font-semibold truncate">{name}</h1>
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted shrink-0 grid place-items-center text-sm font-semibold">
+            {cust?.avatar_url ? (
+              <img src={cust.avatar_url} alt={name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full grid place-items-center bg-[var(--brand-forest)] text-[var(--brand-ink)] font-display font-bold">
+                {name.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-semibold text-[15px] truncate leading-tight text-foreground">
+              {name}
+            </h1>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground leading-tight">
+              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
+              Customer
+            </div>
+          </div>
+          <Link
+            to="/vendor/messages"
+            className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5"
+            aria-label="Info"
+          >
+            <Info className="h-5 w-5" />
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5" aria-label="More">
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={async () => {
+                  if (confirm("Are you sure you want to clear this chat history?")) {
+                    if (data?.conversation?.id) {
+                      await supabase.from("messages").delete().eq("conversation_id", data.conversation.id);
+                    }
+                  }
+                }}
+                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                Clear chat history
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {isLoading || !data?.conversation ? (
-          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
+          <div className="flex-1 grid place-items-center text-muted-foreground text-sm">
             {isLoading ? "Opening chat…" : "Conversation not found."}
           </div>
         ) : (
@@ -78,6 +125,7 @@ function VendorConversation() {
             conversationId={data.conversation.id}
             meId={data.me}
             otherName={name}
+            otherAvatar={cust?.avatar_url ?? null}
             unreadField="vendor_unread"
             isVendor={true}
           />
