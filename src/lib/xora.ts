@@ -1,5 +1,5 @@
 /**
- * Ada — the NaijaEats AI assistant.
+ * Xora — the NaijaEats AI assistant.
  *
  * A self-contained conversation engine that streams contextual, locale-aware
  * replies. There's no external LLM call yet: responses are generated locally
@@ -11,42 +11,53 @@
 
 import { detectRegion, type BillingRegion } from "@/lib/premium";
 
-export type AdaRole = "user" | "ada";
+export type XoraRole = "user" | "xora";
 
-export type AdaMessage = {
+export type XoraMessage = {
   id: string;
-  role: AdaRole;
+  role: XoraRole;
   content: string;
   createdAt: string;
   /** Optional pill actions rendered under the message (deep-links inside the app). */
   actions?: { label: string; to: string }[];
 };
 
-export type AdaThread = {
+export type XoraThread = {
   id: string;
-  messages: AdaMessage[];
+  messages: XoraMessage[];
   updatedAt: string;
 };
 
-const KEY = "naijaeats.ada.thread.v1";
+const KEY = "naijaeats.xora.thread.v1";
+const LEGACY_KEY = "naijaeats.ada.thread.v1"; // previous name of the assistant
 
-export function loadThread(): AdaThread {
+export function loadThread(): XoraThread {
   if (typeof window === "undefined") return newThread();
+  // Migrate legacy Ada threads into the new Xora slot so history isn't lost
+  // when the assistant was renamed. Runs once — the legacy key is deleted.
+  try {
+    const legacyRaw = localStorage.getItem(LEGACY_KEY);
+    const currentRaw = localStorage.getItem(KEY);
+    if (legacyRaw && !currentRaw) localStorage.setItem(KEY, legacyRaw);
+    if (legacyRaw) localStorage.removeItem(LEGACY_KEY);
+  } catch {
+    // ignore
+  }
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || "null");
-    if (raw && Array.isArray(raw.messages)) return raw as AdaThread;
+    if (raw && Array.isArray(raw.messages)) return raw as XoraThread;
   } catch {
     // ignore corrupt payload
   }
   return newThread();
 }
 
-export function saveThread(thread: AdaThread) {
+export function saveThread(thread: XoraThread) {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(thread));
 }
 
-export function newThread(): AdaThread {
+export function newThread(): XoraThread {
   return {
     id: crypto.randomUUID(),
     messages: [],
@@ -54,7 +65,7 @@ export function newThread(): AdaThread {
   };
 }
 
-export function clearThread(): AdaThread {
+export function clearThread(): XoraThread {
   const t = newThread();
   saveThread(t);
   return t;
@@ -84,7 +95,7 @@ function greeting(region: BillingRegion): string {
 }
 
 /**
- * Small locale-aware phrase bank. Ada mixes English + a hint of Pidgin when
+ * Small locale-aware phrase bank. Xora mixes English + a hint of Pidgin when
  * chatting with Nigerian users, and stays crisp / British when talking to UK
  * users. Keeps the personality consistent without leaning into stereotype.
  */
@@ -164,7 +175,7 @@ function replyFor(intent: Intent, text: string, region: BillingRegion): Reply {
   switch (intent) {
     case "greeting":
       return {
-        content: `${greeting(region)} I'm Ada — your food buddy on Naija Eats. I can help you plan your week, find dishes on a budget, sort out dietary preferences, or just recommend something to eat right now. What are we doing today?`,
+        content: `${greeting(region)} I'm Xora — your foodie assistant on Naija Eats. I can plan your week, find dishes that fit your budget, sort your dietary preferences, or just recommend something to eat right now. What are we doing today?`,
         actions: [
           { label: "Plan my week", to: "/book/build" },
           { label: "Show me chefs", to: "/discover" },
@@ -190,12 +201,12 @@ function replyFor(intent: Intent, text: string, region: BillingRegion): Reply {
               ? raw < 3000
                 ? "akara & pap, boli & fish, or a solid rice bowl"
                 : raw < 6000
-                  ? "jollof combos with grilled chicken, ofada rice, or amala & ewedu"
+                  ? "jollof combos with grilled chicken, ofxora rice, or amala & ewedu"
                   : "a full weekend feast — pepper soup, party jollof and suya platters"
               : raw < 10
                 ? "a hearty bowl of jollof, plantain wraps or veg curry"
                 : raw < 20
-                  ? "jollof + grilled chicken, ofada bowls or a Caribbean roti platter"
+                  ? "jollof + grilled chicken, ofxora bowls or a Caribbean roti platter"
                   : "a proper Sunday sharing spread with mains, sides and drinks"
           }.`
         : v.priceHint + " on Naija Eats, so most people can eat well every day.";
@@ -236,7 +247,7 @@ function replyFor(intent: Intent, text: string, region: BillingRegion): Reply {
 
     case "price":
       return {
-        content: `${v.priceHint} on the app. Vendors set their own prices so it really depends on the chef, but Ada can filter by budget any time. Want to try?`,
+        content: `${v.priceHint} on the app. Vendors set their own prices so it really depends on the chef, but Xora can filter by budget any time. Want to try?`,
         actions: [
           { label: "Show budget picks", to: "/discover" },
           { label: "Save my budget", to: "/book/build" },
@@ -283,7 +294,7 @@ function replyFor(intent: Intent, text: string, region: BillingRegion): Reply {
 Ask me anything — I speak plain English (and a little Pidgin when you do 😉).`,
         actions: [
           { label: "Plan my week", to: "/book/build" },
-          { label: "Recommend something", to: "/ada" },
+          { label: "Recommend something", to: "/xora" },
         ],
       };
 

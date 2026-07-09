@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorSlugRouteImport } from './routes/vendor.$slug'
+import { Route as AuthenticatedXoraRouteImport } from './routes/_authenticated/xora'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
@@ -28,7 +29,6 @@ import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedBookRouteImport } from './routes/_authenticated/book'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
-import { Route as AuthenticatedAdaRouteImport } from './routes/_authenticated/ada'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedWalletIndexRouteImport } from './routes/_authenticated/wallet.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
@@ -113,6 +113,11 @@ const VendorSlugRoute = VendorSlugRouteImport.update({
   path: '/vendor/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedXoraRoute = AuthenticatedXoraRouteImport.update({
+  id: '/xora',
+  path: '/xora',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSubscriptionRoute =
   AuthenticatedSubscriptionRouteImport.update({
     id: '/subscription',
@@ -185,11 +190,6 @@ const AuthenticatedBookRoute = AuthenticatedBookRouteImport.update({
 const AuthenticatedAddressesRoute = AuthenticatedAddressesRouteImport.update({
   id: '/addresses',
   path: '/addresses',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdaRoute = AuthenticatedAdaRouteImport.update({
-  id: '/ada',
-  path: '/ada',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
@@ -540,7 +540,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/ada': typeof AuthenticatedAdaRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
@@ -555,6 +554,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/xora': typeof AuthenticatedXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
@@ -620,7 +620,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/ada': typeof AuthenticatedAdaRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
@@ -635,6 +634,7 @@ export interface FileRoutesByTo {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/xora': typeof AuthenticatedXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
@@ -702,7 +702,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
-  '/_authenticated/ada': typeof AuthenticatedAdaRoute
   '/_authenticated/addresses': typeof AuthenticatedAddressesRoute
   '/_authenticated/book': typeof AuthenticatedBookRouteWithChildren
   '/_authenticated/cart': typeof AuthenticatedCartRoute
@@ -717,6 +716,7 @@ export interface FileRoutesById {
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
+  '/_authenticated/xora': typeof AuthenticatedXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/_authenticated/admin/banking': typeof AuthenticatedAdminBankingRoute
@@ -784,7 +784,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/account'
-    | '/ada'
     | '/addresses'
     | '/book'
     | '/cart'
@@ -799,6 +798,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/subscription'
+    | '/xora'
     | '/vendor/$slug'
     | '/admin/ads'
     | '/admin/banking'
@@ -864,7 +864,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/account'
-    | '/ada'
     | '/addresses'
     | '/book'
     | '/cart'
@@ -879,6 +878,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/subscription'
+    | '/xora'
     | '/vendor/$slug'
     | '/admin/ads'
     | '/admin/banking'
@@ -945,7 +945,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/_authenticated/account'
-    | '/_authenticated/ada'
     | '/_authenticated/addresses'
     | '/_authenticated/book'
     | '/_authenticated/cart'
@@ -960,6 +959,7 @@ export interface FileRouteTypes {
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/_authenticated/subscription'
+    | '/_authenticated/xora'
     | '/vendor/$slug'
     | '/_authenticated/admin/ads'
     | '/_authenticated/admin/banking'
@@ -1068,6 +1068,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendorSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/xora': {
+      id: '/_authenticated/xora'
+      path: '/xora'
+      fullPath: '/xora'
+      preLoaderRoute: typeof AuthenticatedXoraRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/subscription': {
       id: '/_authenticated/subscription'
       path: '/subscription'
@@ -1164,13 +1171,6 @@ declare module '@tanstack/react-router' {
       path: '/addresses'
       fullPath: '/addresses'
       preLoaderRoute: typeof AuthenticatedAddressesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ada': {
-      id: '/_authenticated/ada'
-      path: '/ada'
-      fullPath: '/ada'
-      preLoaderRoute: typeof AuthenticatedAdaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/account': {
@@ -1628,7 +1628,6 @@ const AuthenticatedVendorMessagesRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
-  AuthenticatedAdaRoute: typeof AuthenticatedAdaRoute
   AuthenticatedAddressesRoute: typeof AuthenticatedAddressesRoute
   AuthenticatedBookRoute: typeof AuthenticatedBookRouteWithChildren
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
@@ -1643,6 +1642,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
+  AuthenticatedXoraRoute: typeof AuthenticatedXoraRoute
   AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminBankingRoute: typeof AuthenticatedAdminBankingRoute
   AuthenticatedAdminCustomerInsightsRoute: typeof AuthenticatedAdminCustomerInsightsRoute
@@ -1699,7 +1699,6 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
-  AuthenticatedAdaRoute: AuthenticatedAdaRoute,
   AuthenticatedAddressesRoute: AuthenticatedAddressesRoute,
   AuthenticatedBookRoute: AuthenticatedBookRouteWithChildren,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
@@ -1714,6 +1713,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
+  AuthenticatedXoraRoute: AuthenticatedXoraRoute,
   AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminBankingRoute: AuthenticatedAdminBankingRoute,
   AuthenticatedAdminCustomerInsightsRoute:

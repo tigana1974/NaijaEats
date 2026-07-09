@@ -16,18 +16,18 @@ import {
   generateReply,
   getRegion,
   newThread,
-  type AdaMessage,
-} from "@/lib/ada";
+  type XoraMessage,
+} from "@/lib/xora";
 
-export const Route = createFileRoute("/_authenticated/ada")({
+export const Route = createFileRoute("/_authenticated/xora")({
   validateSearch: (s: Record<string, unknown>): { intent?: string; q?: string } => ({
     intent: typeof s.intent === "string" ? s.intent : undefined,
     q: typeof s.q === "string" ? s.q : undefined,
   }),
-  component: AdaChatPage,
+  component: XoraChatPage,
 });
 
-type ChatMsg = AdaMessage;
+type ChatMsg = XoraMessage;
 
 const SUGGESTIONS: { Icon: React.ComponentType<{ className?: string }>; label: string; prompt: string }[] = [
   { Icon: PiCalendarCheckDuotone, label: "Plan my week", prompt: "Help me plan meals for the whole week" },
@@ -38,7 +38,7 @@ const SUGGESTIONS: { Icon: React.ComponentType<{ className?: string }>; label: s
   { Icon: PiWalletDuotone, label: "How does the wallet work?", prompt: "How does the Naija Eats wallet work?" },
 ];
 
-function AdaChatPage() {
+function XoraChatPage() {
   const navigate = useNavigate();
   const { intent, q } = Route.useSearch();
   const region = useMemo(() => getRegion(), []);
@@ -85,10 +85,10 @@ function AdaChatPage() {
       content: text,
       createdAt: new Date().toISOString(),
     };
-    const adaId = crypto.randomUUID();
+    const xoraId = crypto.randomUUID();
     const seed: ChatMsg = {
-      id: adaId,
-      role: "ada",
+      id: xoraId,
+      role: "xora",
       content: "",
       createdAt: new Date().toISOString(),
     };
@@ -108,7 +108,7 @@ function AdaChatPage() {
           acc += chunk.delta;
           setThread((prev) => ({
             ...prev,
-            messages: prev.messages.map((m) => (m.id === adaId ? { ...m, content: acc } : m)),
+            messages: prev.messages.map((m) => (m.id === xoraId ? { ...m, content: acc } : m)),
             updatedAt: new Date().toISOString(),
           }));
         }
@@ -116,7 +116,7 @@ function AdaChatPage() {
           setThread((prev) => ({
             ...prev,
             messages: prev.messages.map((m) =>
-              m.id === adaId ? { ...m, actions: chunk.actions } : m,
+              m.id === xoraId ? { ...m, actions: chunk.actions } : m,
             ),
             updatedAt: new Date().toISOString(),
           }));
@@ -135,7 +135,7 @@ function AdaChatPage() {
 
   const reset = () => {
     if (streaming) return;
-    if (!confirm("Start a new conversation with Ada? This clears the current chat.")) return;
+    if (!confirm("Start a new conversation with Xora? This clears the current chat.")) return;
     const t = clearThread();
     setThread(t);
   };
@@ -151,10 +151,10 @@ function AdaChatPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <AdaAvatar size={38} pulsing={streaming} />
+        <XoraAvatar size={38} pulsing={streaming} />
         <div className="flex-1 min-w-0 leading-tight">
           <div className="font-display font-bold text-[15px] truncate flex items-center gap-1.5">
-            Ada
+            Xora
             <span className="inline-flex items-center rounded-full bg-[var(--brand-gold)]/20 text-[oklch(0.55_0.14_75)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest">
               AI
             </span>
@@ -237,7 +237,7 @@ function AdaChatPage() {
                 }
               }}
               rows={1}
-              placeholder="Ask Ada anything…"
+              placeholder="Ask Xora anything…"
               className="flex-1 resize-none bg-transparent text-[15px] focus:outline-none placeholder:text-muted-foreground py-2 max-h-32"
               style={{ minHeight: 24 }}
               disabled={streaming}
@@ -261,7 +261,7 @@ function AdaChatPage() {
           </div>
         </div>
         <div className="mt-1.5 text-center text-[10px] text-muted-foreground">
-          Ada is an assistant — always double-check delivery times and prices with the vendor.
+          Xora is an assistant — always double-check delivery times and prices with the vendor.
         </div>
       </form>
     </div>
@@ -270,22 +270,40 @@ function AdaChatPage() {
 
 /* ─────────── Sub-components ─────────── */
 
-function AdaAvatar({ size = 38, pulsing = false }: { size?: number; pulsing?: boolean }) {
+function XoraAvatar({ size = 38, pulsing = false }: { size?: number; pulsing?: boolean }) {
   return (
     <div
       className="relative shrink-0"
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
+      {/* Clay-to-gold gradient ring */}
       <div
         className={`absolute inset-0 rounded-full bg-gradient-to-br from-[var(--brand-clay)] via-[oklch(0.68_0.22_45)] to-[var(--brand-gold)] shadow-md ${pulsing ? "animate-pulse" : ""}`}
       />
-      <div
-        className="absolute inset-[3px] rounded-full bg-background grid place-items-center font-display font-extrabold text-[var(--brand-clay)]"
-        style={{ fontSize: Math.round(size * 0.42) }}
-      >
-        A
+      {/* Character portrait — Xora */}
+      <div className="absolute inset-[3px] rounded-full overflow-hidden bg-background">
+        <img
+          src="/xora.png"
+          alt=""
+          className="h-full w-full object-cover object-top scale-[1.15]"
+          draggable={false}
+          onError={(e) => {
+            // Fallback to a big "X" mark so the avatar never renders blank
+            // when the image asset is missing.
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+            const fallback = e.currentTarget.parentElement?.querySelector(".xora-fallback") as HTMLElement | null;
+            if (fallback) fallback.style.display = "grid";
+          }}
+        />
+        <span
+          className="xora-fallback hidden h-full w-full place-items-center font-display font-extrabold text-[var(--brand-clay)]"
+          style={{ fontSize: Math.round(size * 0.42) }}
+        >
+          X
+        </span>
       </div>
+      {/* Online dot */}
       <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
     </div>
   );
@@ -296,7 +314,7 @@ function MessageBubble({ msg, region }: { msg: ChatMsg; region: ReturnType<typeo
   const content = renderInlineMarkdown(msg.content);
   return (
     <div className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
-      {!mine && <AdaAvatar size={30} />}
+      {!mine && <XoraAvatar size={30} />}
       <div className={`max-w-[85%] sm:max-w-[75%] ${mine ? "items-end" : "items-start"} flex flex-col gap-1.5`}>
         <div
           className={`rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed shadow-sm break-words whitespace-pre-wrap ${
@@ -305,7 +323,7 @@ function MessageBubble({ msg, region }: { msg: ChatMsg; region: ReturnType<typeo
               : "bg-card border border-border text-foreground rounded-bl-md"
           }`}
         >
-          {msg.role === "ada" && msg.content.length === 0 ? (
+          {msg.role === "xora" && msg.content.length === 0 ? (
             <TypingIndicator />
           ) : (
             <span dangerouslySetInnerHTML={{ __html: content }} />
@@ -326,7 +344,7 @@ function MessageBubble({ msg, region }: { msg: ChatMsg; region: ReturnType<typeo
         )}
         <div className={`text-[10px] text-muted-foreground ${mine ? "text-right" : "text-left"} px-1`}>
           {formatTime(msg.createdAt)}
-          {msg.role === "ada" && ` · Ada`}
+          {msg.role === "xora" && ` · Xora`}
           {msg.role === "user" && ` · You · ${region === "NG" ? "🇳🇬" : "🇬🇧"}`}
         </div>
       </div>
@@ -353,12 +371,12 @@ function EmptyState({
 }) {
   return (
     <div className="min-h-full flex flex-col items-center justify-center text-center px-2 py-8">
-      <AdaAvatar size={72} />
+      <XoraAvatar size={72} />
       <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)]/20 text-[oklch(0.5_0.14_75)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
         <Sparkles className="h-3 w-3" /> Naija Eats AI
       </div>
       <h1 className="mt-3 font-display text-2xl sm:text-3xl font-bold tracking-tight">
-        Hey, I'm Ada
+        Hey, I'm Xora
       </h1>
       <p className="mt-2 text-sm text-muted-foreground max-w-sm">
         {region === "NG"
@@ -394,7 +412,7 @@ function formatTime(iso: string): string {
 
 /**
  * Extremely small markdown pass — supports bold text (**text**) and bullet
- * lines starting with "• " or "- ". Enough to make Ada's replies feel styled
+ * lines starting with "• " or "- ". Enough to make Xora's replies feel styled
  * without pulling in a whole parser.
  */
 function renderInlineMarkdown(text: string): string {

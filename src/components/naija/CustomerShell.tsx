@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumUpsellDialog } from "@/components/naija/PremiumUpsellDialog";
-import { FloatingAdaButton } from "@/components/naija/FloatingAdaButton";
+import { FloatingXoraButton } from "@/components/naija/FloatingXoraButton";
 import { useUnreadNotifications, formatBadgeCount } from "@/hooks/useUnreadNotifications";
 
 /**
@@ -65,7 +65,7 @@ export function CustomerShell({
 
       {!hideBottomNav && <CustomerBottomNav />}
       <PremiumUpsellDialog />
-      <FloatingAdaButton />
+      <FloatingXoraButton />
     </div>
   );
 }

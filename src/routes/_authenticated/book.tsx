@@ -472,12 +472,12 @@ function MealPlannerPage() {
                 Tell us your dietary preferences and we'll auto-fill your week with rotating menus.
               </p>
               <Link
-                to="/ada"
+                to="/xora"
                 search={{ intent: "meal-plan" }}
                 className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white px-4 py-2 text-sm font-bold shadow-md shadow-[var(--brand-clay)]/25 hover:shadow-lg transition"
               >
                 <Sparkles className="h-4 w-4" />
-                Build my week with Ada
+                Build my week with Xora
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
