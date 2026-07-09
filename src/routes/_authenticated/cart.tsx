@@ -362,11 +362,11 @@ function CartPage() {
                 </div>
                 <button
                   onClick={placeAllOrders}
-                  disabled={!canCheckout}
+                  disabled={placing}
                   className={`inline-flex items-center gap-2 rounded-2xl px-5 sm:px-6 py-3.5 text-sm font-bold transition-all ${
-                    canCheckout
-                      ? "bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white shadow-lg shadow-[var(--brand-clay)]/30 hover:shadow-xl active:scale-[0.99]"
-                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                    placing
+                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white shadow-lg shadow-[var(--brand-clay)]/30 hover:shadow-xl active:scale-[0.99]"
                   }`}
                 >
                   {placing ? (
