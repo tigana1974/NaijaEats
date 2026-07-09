@@ -36,6 +36,26 @@ function CartPage() {
     },
   });
 
+  // Fetch real vendor logos & cover images for the vendors in the cart so we
+  // can show the shop's own branding instead of a generic Store icon.
+  const vendorIds = Object.keys(carts);
+  const { data: vendorMeta } = useQuery({
+    queryKey: ["cart-vendor-meta", vendorIds.join(",")],
+    enabled: vendorIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("vendors")
+        .select("id, logo_url, cover_image_url")
+        .in("id", vendorIds);
+      const byId: Record<string, { logo_url: string | null; cover_image_url: string | null }> = {};
+      for (const v of data ?? []) {
+        byId[v.id] = { logo_url: v.logo_url, cover_image_url: v.cover_image_url };
+      }
+      return byId;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const formatAddress = (a: any) => [a.line1, a.line2, a.city, a.postcode].filter(Boolean).join(", ");
 
   const resolvedAddress =
@@ -138,27 +158,40 @@ function CartPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4 pb-36">
+        <div className="space-y-4 pb-52 sm:pb-44">
           {/* ─── Foods grouped by vendor ─── */}
           {vendorCarts.map((cart) => {
             const fmt = (n: number) => fmtWith(n, cart.currency);
             const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
             const belowMinimum = subtotal < cart.minOrder;
+            const meta = vendorMeta?.[cart.vendorId];
+            const logoSrc = meta?.logo_url || meta?.cover_image_url || null;
 
             return (
               <section
                 key={cart.vendorId}
                 className="rounded-3xl bg-card ring-1 ring-border shadow-[0_4px_18px_-8px_rgba(0,0,0,0.12)] overflow-hidden"
               >
-                {/* Vendor header — just a label, no per-vendor checkout */}
+                {/* Vendor header — real logo + name */}
                 <div className="bg-muted/40 border-b border-border px-4 py-3 flex items-center justify-between gap-3">
                   <Link
                     to="/vendor/$slug"
                     params={{ slug: cart.vendorSlug }}
-                    className="flex items-center gap-2 min-w-0 group"
+                    className="flex items-center gap-2.5 min-w-0 group"
                   >
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
-                      <Store className="h-4 w-4" />
+                    <span className="h-10 w-10 shrink-0 rounded-full overflow-hidden ring-1 ring-border bg-muted grid place-items-center">
+                      {logoSrc ? (
+                        <img
+                          src={logoSrc}
+                          alt={cart.vendorName}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="grid h-full w-full place-items-center bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]">
+                          <Store className="h-4 w-4" />
+                        </span>
+                      )}
                     </span>
                     <div className="min-w-0">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -278,19 +311,38 @@ function CartPage() {
             />
           </section>
 
-          {/* ─── Grand total summary ─── */}
-          <section className="rounded-3xl bg-card ring-1 ring-border p-4 sm:p-5 space-y-2 shadow-sm">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal ({vendorCarts.length} vendor{vendorCarts.length === 1 ? "" : "s"})</span>
-              <span className="font-semibold tabular-nums">{fmtWith(grandSubtotal, primaryCurrency)}</span>
+          {/* ─── Grand total summary — brand-warm accent for instant recognition ─── */}
+          <section
+            className="relative overflow-hidden rounded-3xl p-4 sm:p-5 space-y-2 shadow-md"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.98 0.02 30) 0%, oklch(0.96 0.04 35) 100%)",
+              border: "1px solid oklch(0.85 0.10 30 / 0.35)",
+            }}
+          >
+            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[var(--brand-clay)]/15 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-[var(--brand-gold)]/20 blur-2xl" />
+
+            <div className="relative flex items-center gap-2 mb-1">
+              <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">
+                Order summary
+              </div>
+              <span className="rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-2 py-0.5 text-[10px] font-bold">
+                {vendorCarts.length} vendor{vendorCarts.length === 1 ? "" : "s"}
+              </span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Delivery</span>
-              <span className="font-semibold tabular-nums">{fmtWith(grandDelivery, primaryCurrency)}</span>
+
+            <div className="relative flex items-center justify-between text-sm">
+              <span className="text-zinc-700">Subtotal</span>
+              <span className="font-semibold tabular-nums text-zinc-900">{fmtWith(grandSubtotal, primaryCurrency)}</span>
             </div>
-            <div className="flex items-center justify-between pt-2 mt-1 border-t border-border">
-              <span className="font-bold">Total</span>
-              <span className="font-display text-lg font-bold tabular-nums text-foreground">
+            <div className="relative flex items-center justify-between text-sm">
+              <span className="text-zinc-700">Delivery</span>
+              <span className="font-semibold tabular-nums text-zinc-900">{fmtWith(grandDelivery, primaryCurrency)}</span>
+            </div>
+            <div className="relative flex items-center justify-between pt-2 mt-1 border-t border-[var(--brand-clay)]/20">
+              <span className="font-bold text-zinc-900">Grand total</span>
+              <span className="font-display text-2xl font-extrabold tabular-nums text-[var(--brand-clay)]">
                 {fmtWith(grandTotal, primaryCurrency)}
               </span>
             </div>

@@ -70,6 +70,21 @@ const MEALS: Meal[] = [
 ];
 
 /**
+ * Latest hour (24h) at which each meal slot can still be booked for TODAY.
+ * Past-cutoff slots are hidden from today's card entirely so customers
+ * don't try to book food they can't realistically receive on time.
+ */
+const CUTOFF_HOUR: Record<MealId, number> = {
+  breakfast: 11, // 11:00 AM
+  lunch: 16,     // 4:00 PM
+  dinner: 22,    // 10:00 PM
+};
+
+function isMealBookableForToday(mealId: MealId, now: Date): boolean {
+  return now.getHours() < CUTOFF_HOUR[mealId];
+}
+
+/**
  * Real menu item as fetched from Supabase, decorated with the vendor and
  * a computed match score against a meal type (breakfast / lunch / dinner).
  * We compute the score client-side so vendors don't have to tag their items
@@ -325,8 +340,15 @@ function MealPlannerPage() {
           {week.map((date, idx) => {
             const isToday = date.getTime() === todayTime;
             const isPast = date.getTime() < todayTime;
-            const dayItems = MEALS.map((m) => plan[keyFor(date, m.id)] ?? []);
+            // For today, drop any meal slot whose booking window has already
+            // passed. Other days show the full three-slot layout.
+            const now = new Date();
+            const mealsForDay = isToday
+              ? MEALS.filter((m) => isMealBookableForToday(m.id, now))
+              : MEALS;
+            const dayItems = mealsForDay.map((m) => plan[keyFor(date, m.id)] ?? []);
             const dayCount = dayItems.reduce((n, arr) => n + arr.length, 0);
+            const hiddenTodayMealCount = isToday ? MEALS.length - mealsForDay.length : 0;
 
             return (
               <div
@@ -374,18 +396,39 @@ function MealPlannerPage() {
                     <MealsPlannedBadge count={dayCount} />
                   </div>
 
-                  <div className="mt-5 grid gap-2.5 sm:gap-3 grid-cols-1 sm:grid-cols-3">
-                    {MEALS.map((meal, mIdx) => (
-                      <MealSlot
-                        key={meal.id}
-                        meal={meal}
-                        items={dayItems[mIdx]}
-                        disabled={isPast}
-                        onOpen={() => setPicker({ date, meal })}
-                        onRemove={(id) => removeItem(date, meal.id, id)}
-                      />
-                    ))}
-                  </div>
+                  {mealsForDay.length === 0 ? (
+                    <div className="mt-5 rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-center">
+                      <p className="text-xs text-muted-foreground font-semibold">
+                        All meal windows for today have passed — book for tomorrow.
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      className={`mt-5 grid gap-2.5 sm:gap-3 grid-cols-1 ${
+                        mealsForDay.length === 1
+                          ? "sm:grid-cols-1"
+                          : mealsForDay.length === 2
+                            ? "sm:grid-cols-2"
+                            : "sm:grid-cols-3"
+                      }`}
+                    >
+                      {mealsForDay.map((meal, mIdx) => (
+                        <MealSlot
+                          key={meal.id}
+                          meal={meal}
+                          items={dayItems[mIdx]}
+                          disabled={isPast}
+                          onOpen={() => setPicker({ date, meal })}
+                          onRemove={(id) => removeItem(date, meal.id, id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {hiddenTodayMealCount > 0 && mealsForDay.length > 0 && (
+                    <p className="mt-3 text-[11px] text-muted-foreground font-semibold text-center">
+                      {hiddenTodayMealCount} meal window{hiddenTodayMealCount > 1 ? "s" : ""} for today already closed
+                    </p>
+                  )}
                 </div>
               </div>
             );
