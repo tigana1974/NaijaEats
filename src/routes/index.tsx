@@ -373,48 +373,49 @@ function Sparkle({ className = "" }: { className?: string }) {
 function Nav() {
   const search = useSearchModal();
   return (
-    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-6 py-5 flex items-center justify-between">
-        <a href="#top" className="flex items-center gap-2">
-          <Logo className="h-10 w-10" />
-          <span className="font-display text-xl font-bold tracking-tight text-foreground">
+    <header className="sticky top-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/40">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 h-16 flex items-center justify-between">
+        <a href="#top" className="flex items-center gap-2.5">
+          <Logo className="h-8 w-8" />
+          <span className="font-display text-[15px] font-semibold tracking-tight text-foreground">
             Naija<span className="text-primary">Eats</span>
           </span>
         </a>
-        <nav className="hidden md:flex items-center gap-9 text-sm font-medium text-foreground/80">
-          <a href="#top" className="text-primary">Home</a>
-          <a href="#menu" className="hover:text-primary transition">Menu</a>
-          <a href="#story" className="hover:text-primary transition">About</a>
-          <a href="#why" className="hover:text-primary transition">Vendors</a>
-          <a href="#contact" className="hover:text-primary transition">Contact</a>
+        <nav className="hidden md:flex items-center gap-8 text-[13px] font-medium text-foreground/70">
+          <a href="#top" className="text-foreground">Home</a>
+          <a href="#menu" className="hover:text-foreground transition">Menu</a>
+          <a href="#story" className="hover:text-foreground transition">About</a>
+          <a href="#why" className="hover:text-foreground transition">Vendors</a>
+          <a href="#contact" className="hover:text-foreground transition">Contact</a>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={search.open}
-            className="hidden sm:grid place-items-center h-9 w-9 rounded-full border border-border text-foreground/70 hover:text-primary hover:border-primary transition"
+            className="hidden sm:grid place-items-center h-8 w-8 rounded-full text-foreground/60 hover:text-foreground hover:bg-muted transition"
             aria-label="Search"
           >
             <Search className="h-4 w-4" />
           </button>
-          <div className="hidden sm:flex items-center gap-1 text-xs font-semibold text-foreground/60">
-            <span className="px-2 py-1 rounded-full bg-muted">NG</span>
-            <span className="px-2 py-1 rounded-full">UK</span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground pl-1 pr-1 border-l border-border/60 ml-1">
+            <span className="ml-3">NG</span>
+            <span className="text-border">·</span>
+            <span>UK</span>
+          </span>
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-1">
             <Link
               to="/auth"
               search={{ mode: "signin" }}
-              className="rounded-full border border-primary/20 bg-background text-foreground px-3.5 sm:px-4 py-2 text-sm font-semibold hover:bg-muted transition whitespace-nowrap"
+              className="text-[13px] font-semibold text-foreground/80 hover:text-foreground px-2.5 py-1.5 transition whitespace-nowrap"
             >
               Sign in
             </Link>
             <Link
               to="/auth"
               search={{ mode: "signup" }}
-              className="rounded-full bg-primary text-primary-foreground px-3.5 sm:px-4 py-2 text-sm font-semibold hover:opacity-95 transition shadow-[var(--shadow-soft)] whitespace-nowrap"
+              className="rounded-full bg-foreground text-background px-4 py-2 text-[13px] font-semibold hover:opacity-90 transition whitespace-nowrap"
             >
-              Sign up
+              Get started
             </Link>
           </div>
         </div>
@@ -431,22 +432,30 @@ function Hero() {
   const [q, setQ] = useState("");
   return (
     <section id="top" className="relative overflow-hidden">
-      {/* Decor */}
-      <div className="absolute top-10 -left-20 text-accent/40 w-[420px] h-[420px] pointer-events-none">
-        <Blob className="w-full h-full" />
-      </div>
-      <Leaf className="absolute top-32 right-[42%] h-10 w-10 text-secondary/70" rotate={20} />
-      <Leaf className="absolute bottom-24 left-[8%] h-12 w-12 text-secondary/60" rotate={120} />
+      {/* Subtle background wash — restrained editorial feel */}
+      <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_85%_20%,var(--brand-gold)/8%,transparent),radial-gradient(50%_40%_at_10%_80%,var(--brand-clay)/6%,transparent)] pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
-      <div className="relative mx-auto max-w-7xl px-6 pt-8 pb-24 grid lg:grid-cols-2 gap-12 items-center">
+      <div className="relative mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-14 lg:gap-20 items-center">
         {/* Left */}
         <div className="relative z-10">
-          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.02] tracking-tight text-foreground">
-            Everything Food.<br />
-            One African <span className="text-primary">Marketplace.</span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/60 backdrop-blur px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/70">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-70 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+            Now serving Lagos, London &amp; Manchester
+          </div>
+
+          <h1 className="mt-6 font-display text-[42px] md:text-6xl lg:text-[76px] font-semibold leading-[0.98] tracking-[-0.03em] text-foreground">
+            Everything food.
+            <br />
+            One African
+            <br />
+            <span className="italic font-light text-primary">marketplace.</span>
           </h1>
-          <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-            Order restaurant meals, discover chefs, shop groceries, and enjoy fast delivery from a platform built for African food culture.
+          <p className="mt-7 text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed">
+            Restaurant meals, private chefs, ethnic groceries and same‑day delivery, from a platform built around African food culture.
           </p>
           <form
             onSubmit={(e) => {
@@ -454,7 +463,7 @@ function Hero() {
               setInitialQuery(q);
               search.open();
             }}
-            className="mt-8 flex items-center gap-2 rounded-full bg-card border border-border pl-5 pr-1.5 py-1.5 shadow-[var(--shadow-soft)] max-w-md focus-within:border-primary transition"
+            className="mt-8 flex items-center gap-2 rounded-full bg-card border border-border/70 pl-5 pr-1.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_30px_-16px_rgba(0,0,0,0.15)] max-w-md focus-within:border-foreground/30 focus-within:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_20px_50px_-20px_rgba(0,0,0,0.25)] transition"
           >
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
@@ -470,75 +479,96 @@ function Hero() {
             />
             <button
               type="submit"
-              className="rounded-full bg-primary text-primary-foreground h-9 w-9 grid place-items-center hover:opacity-95 transition"
+              className="rounded-full bg-foreground text-background h-9 w-9 grid place-items-center hover:opacity-90 transition"
               aria-label="Search"
             >
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               to="/discover"
-              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:opacity-95 transition shadow-[var(--shadow-warm)]"
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-6 py-3.5 text-sm font-semibold hover:opacity-90 transition"
             >
-              Order Now
-              <ArrowRight className="h-4 w-4" />
+              Order now
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <Link
               to="/auth"
               search={{ mode: "signup", role: "chef" }}
-              className="inline-flex items-center gap-2 rounded-full bg-card border border-border text-foreground px-7 py-3.5 text-sm font-semibold hover:border-primary hover:text-primary transition"
+              className="inline-flex items-center gap-2 rounded-full text-foreground/80 hover:text-foreground px-5 py-3.5 text-sm font-semibold transition"
             >
-              Become a Vendor
+              Become a vendor
+              <ArrowRight className="h-3.5 w-3.5 opacity-60" />
             </Link>
           </div>
 
-          {/* Featured chef chip */}
-          <div className="mt-12 inline-flex items-center gap-3 rounded-full bg-card border border-border pl-1.5 pr-5 py-1.5 shadow-[var(--shadow-soft)]">
-            <img
-              src={chefPortrait}
-              alt="Chef Amaka"
-              width={48}
-              height={48}
-              loading="lazy"
-              className="h-10 w-10 rounded-full object-cover"
-            />
-            <div>
-              <div className="text-sm font-semibold leading-tight">Chef Amaka</div>
-              <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Chef · Lagos</div>
-            </div>
+          {/* Trust bar — restrained editorial proof */}
+          <div className="mt-14 grid grid-cols-3 max-w-md divide-x divide-border/60">
+            {[
+              ["10K+", "Orders delivered"],
+              ["500+", "Verified chefs"],
+              ["4.9★", "Rated by diners"],
+            ].map(([n, l]) => (
+              <div key={l} className="pl-4 first:pl-0">
+                <div className="font-display text-xl md:text-2xl font-semibold text-foreground tabular-nums leading-none">{n}</div>
+                <div className="mt-1.5 text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground leading-tight">{l}</div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right — image with floating price card */}
+        {/* Right — editorial portrait card */}
         <div className="relative">
-          <div className="relative aspect-square rounded-full overflow-hidden bg-accent/30">
+          <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-muted shadow-[0_40px_80px_-30px_rgba(0,0,0,0.35)]">
             <img
               src={heroJollof}
               alt="Steaming pot of Nigerian jollof rice"
               width={1280}
-              height={1280}
+              height={1600}
               className="h-full w-full object-cover"
             />
-          </div>
-          <Leaf className="absolute -top-4 right-10 h-14 w-14 text-secondary" rotate={-20} />
-          <Leaf className="absolute top-1/3 -left-6 h-12 w-12 text-secondary/80" rotate={70} />
-          <Sparkle className="absolute top-12 left-8 h-6 w-6 text-accent" />
+            {/* Subtle vignette for depth */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-          {/* Floating price card */}
-          <div className="absolute -bottom-6 -left-6 md:-left-10 bg-card rounded-2xl shadow-[var(--shadow-card)] p-3 flex items-center gap-3 border border-border">
+            {/* Chef byline — bottom-left overlay */}
+            <div className="absolute bottom-5 left-5 right-5 flex items-center gap-3">
+              <img
+                src={chefPortrait}
+                alt="Chef Amaka"
+                width={44}
+                height={44}
+                loading="lazy"
+                className="h-11 w-11 rounded-full object-cover ring-2 ring-white/80"
+              />
+              <div className="min-w-0">
+                <div className="text-[13px] font-semibold leading-tight text-white">Chef Amaka</div>
+                <div className="text-[10.5px] uppercase tracking-[0.14em] text-white/70 leading-tight mt-0.5">Signature jollof · Lagos</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Floating price card — refined */}
+          <div className="absolute -bottom-6 -left-4 md:-left-8 bg-card rounded-2xl shadow-[0_20px_50px_-20px_rgba(0,0,0,0.35)] p-3 pr-5 flex items-center gap-3 border border-border/60 backdrop-blur">
             <img
               src={dishSuya}
               alt="Suya"
-              width={64}
-              height={64}
+              width={56}
+              height={56}
               loading="lazy"
-              className="h-14 w-14 rounded-xl object-cover"
+              className="h-12 w-12 rounded-xl object-cover"
             />
             <div>
-              <div className="text-xs font-semibold text-foreground">Suya Skewers</div>
-              <div className="text-primary font-bold text-lg leading-none">₦7,490</div>
+              <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trending</div>
+              <div className="text-sm font-semibold text-foreground leading-tight">Suya Skewers</div>
+              <div className="text-primary font-bold text-[13px] leading-tight mt-0.5">₦7,490</div>
             </div>
+          </div>
+
+          {/* Small quality tag — top-right */}
+          <div className="absolute -top-3 -right-3 md:-right-5 bg-card rounded-full border border-border/60 shadow-[0_12px_30px_-12px_rgba(0,0,0,0.3)] px-4 py-2 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-[11px] font-semibold text-foreground">Delivered in 32 min</span>
           </div>
         </div>
       </div>
@@ -557,20 +587,15 @@ function Story() {
   ];
   return (
     <section id="story" className="relative py-20 md:py-28 bg-background">
-      <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-12 items-center">
+      <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
         <div>
-          <div className="flex items-start gap-3">
-            <span className="mt-2 h-12 w-1 bg-primary rounded-full" />
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-primary">Our Story</div>
-              <h2 className="mt-3 font-display text-3xl md:text-5xl font-bold leading-tight text-foreground text-left">
-                Crafted with love,
-                spiced with passion,
-                and made to satisfy
-                every craving.
-              </h2>
-            </div>
-          </div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Our story</div>
+          <h2 className="mt-5 font-display text-3xl md:text-[52px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground text-left">
+            Crafted with love, <span className="italic font-light text-primary">spiced with passion</span>, and made to satisfy every craving.
+          </h2>
+          <p className="mt-6 text-[15px] text-muted-foreground max-w-md leading-relaxed">
+            A network of chefs, restaurants and grocers united by one belief: African food deserves the world's finest delivery experience.
+          </p>
         </div>
 
         <div className="space-y-5">
@@ -649,11 +674,12 @@ function SpecialDishes() {
   return (
     <section className="relative py-20 md:py-24 bg-background">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="text-center max-w-xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-            Special Dishes from <span className="text-primary">Our Kitchens</span>
+        <div className="text-center max-w-2xl mx-auto">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Signature dishes</div>
+          <h2 className="mt-4 font-display text-3xl md:text-[44px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground">
+            Special dishes from <span className="italic font-light text-primary">our kitchens</span>
           </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
             Bestsellers cooked by chefs and African restaurants across Lagos, Abuja, London and Manchester.
           </p>
         </div>
@@ -707,31 +733,32 @@ function WhyUs() {
       <Sparkle className="absolute bottom-16 left-[40%] h-4 w-4 text-accent/70" />
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-12 items-center">
         <div>
-          <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
-            Why <span className="text-primary">Naija Eats</span>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">The difference</div>
+          <h2 className="mt-4 font-display text-3xl md:text-[52px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground">
+            Why <span className="italic font-light text-primary">Naija Eats</span>
           </h2>
-          <p className="mt-5 text-muted-foreground max-w-md leading-relaxed">
+          <p className="mt-6 text-[15px] text-muted-foreground max-w-md leading-relaxed">
             We are more than delivery. We are a food ecosystem that connects the people who cook with culture to the people who crave it. Verified chefs, fair pricing, and stories behind every dish.
           </p>
           <Link
             to="/discover"
-            className="mt-7 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-95 transition shadow-[var(--shadow-soft)]"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-foreground text-background px-6 py-3 text-sm font-semibold hover:opacity-90 transition"
           >
-            Explore More
+            Explore more
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {tiles.map(({ icon: Icon, title, copy }) => (
             <div
               key={title}
-              className="rounded-2xl bg-card border border-border p-6 hover:border-primary/40 hover:shadow-[var(--shadow-card)] transition"
+              className="group rounded-2xl bg-card border border-border/60 p-6 hover:border-foreground/20 hover:shadow-[0_20px_40px_-24px_rgba(0,0,0,0.25)] transition"
             >
-              <div className="grid place-items-center h-11 w-11 rounded-xl bg-primary/10 text-primary">
-                <Icon className="h-5 w-5" />
+              <div className="grid place-items-center h-10 w-10 rounded-lg bg-muted text-foreground group-hover:bg-primary/10 group-hover:text-primary transition">
+                <Icon className="h-4.5 w-4.5" strokeWidth={1.75} />
               </div>
-              <h3 className="mt-4 font-semibold text-foreground">{title}</h3>
-              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">{copy}</p>
+              <h3 className="mt-5 font-semibold text-foreground text-[15px]">{title}</h3>
+              <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">{copy}</p>
             </div>
           ))}
         </div>
@@ -959,10 +986,10 @@ function StartOrderingCTA() {
     <section className="py-14 md:py-20 bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div
-          className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-14 text-white"
+          className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-16 text-white"
           style={{
             background:
-              "radial-gradient(120% 120% at 0% 0%, oklch(0.85 0.17 90 / 0.55), transparent 55%), radial-gradient(120% 120% at 100% 100%, oklch(0.55 0.22 25 / 0.95), transparent 55%), linear-gradient(150deg, #1a0e0a, #3a1a14 55%, #7c2d12)",
+              "radial-gradient(90% 90% at 100% 0%, oklch(0.75 0.16 85 / 0.28), transparent 55%), radial-gradient(90% 90% at 0% 100%, oklch(0.55 0.22 25 / 0.35), transparent 55%), linear-gradient(160deg, #0b0906 0%, #14100c 55%, #1a130e 100%)",
           }}
         >
           {/* Ambient glows */}
@@ -976,9 +1003,9 @@ function StartOrderingCTA() {
                 <Sparkle className="h-3 w-3 text-[var(--brand-gold)]" />
                 Ready when you are
               </div>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mt-4 leading-[1.05]">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-[52px] font-semibold tracking-[-0.02em] mt-5 leading-[1.02]">
                 Start ordering now.<br />
-                <span className="text-[var(--brand-gold)]">Eat happy in minutes.</span>
+                <span className="italic font-light text-[var(--brand-gold)]">Eat happy in minutes.</span>
               </h2>
               <p className="mt-4 text-sm sm:text-base text-white/80 max-w-md leading-relaxed">
                 Pick from real chefs, African restaurants, and ethnic groceries near you.

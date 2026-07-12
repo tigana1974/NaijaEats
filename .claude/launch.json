@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "C:/Users/user/Downloads/Sypda/spyda-client", "--", "--port", "4310", "--strictPort"],
       "port": 4310
+    },
+    {
+      "name": "naijaeats",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "4320", "--strictPort"],
+      "port": 4320
     }
   ]
 }
