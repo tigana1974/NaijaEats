@@ -439,14 +439,7 @@ function Hero() {
       <div className="relative mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-14 lg:gap-20 items-center">
         {/* Left */}
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/60 backdrop-blur px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/70">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-70 animate-ping" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-            </span>
-            Now serving Lagos, London &amp; Manchester
-          </div>
-
+          
           <h1 className="mt-6 font-display text-[42px] md:text-6xl lg:text-[76px] font-semibold leading-[0.98] tracking-[-0.03em] text-foreground">
             Everything food.
             <br />
@@ -503,24 +496,12 @@ function Hero() {
             </Link>
           </div>
 
-          {/* Trust bar — restrained editorial proof */}
-          <div className="mt-14 grid grid-cols-3 max-w-md divide-x divide-border/60">
-            {[
-              ["10K+", "Orders delivered"],
-              ["500+", "Verified chefs"],
-              ["4.9★", "Rated by diners"],
-            ].map(([n, l]) => (
-              <div key={l} className="pl-4 first:pl-0">
-                <div className="font-display text-xl md:text-2xl font-semibold text-foreground tabular-nums leading-none">{n}</div>
-                <div className="mt-1.5 text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground leading-tight">{l}</div>
-              </div>
-            ))}
-          </div>
+
         </div>
 
         {/* Right — editorial portrait card */}
-        <div className="relative">
-          <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-muted shadow-[0_40px_80px_-30px_rgba(0,0,0,0.35)]">
+        <div className="relative mt-12 lg:mt-0">
+          <div className="relative aspect-[16/10] md:aspect-[4/5] rounded-[2rem] overflow-hidden bg-muted shadow-[0_40px_80px_-30px_rgba(0,0,0,0.35)]">
             <img
               src={heroJollof}
               alt="Steaming pot of Nigerian jollof rice"

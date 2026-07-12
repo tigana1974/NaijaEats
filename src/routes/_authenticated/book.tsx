@@ -695,18 +695,23 @@ function MealPickerSheet({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-lg max-h-[85dvh] bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-200">
-        {/* Header — sticky so the search stays above the food list at all times */}
-        <div className={`sticky top-0 z-10 relative overflow-hidden p-4 sm:p-5 ${meal.bg} border-b border-black/5`}>
+        {/* Drag handle — gives a mobile sheet feel and visually separates the header from the viewport edge */}
+        <div className="sm:hidden pt-2.5 pb-1 grid place-items-center">
+          <span className="h-1 w-10 rounded-full bg-zinc-300" />
+        </div>
+
+        {/* Header — the "Add to {meal}" title sits comfortably on its own row */}
+        <div className={`relative overflow-hidden px-4 sm:px-5 pt-3 pb-4 ${meal.bg} border-b border-black/5`}>
           <div className="flex items-center gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-zinc-800 shadow-sm shrink-0">
               <meal.Icon className="h-6 w-6" />
             </span>
             <div className="flex-1 min-w-0">
               <div className={`text-[10px] uppercase tracking-widest font-bold ${meal.chipTone.replace("bg-", "text-").split(" ")[1]}`}>
-                Add to {meal.label}
+                {meal.time} · {date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
               </div>
-              <div className="font-display text-base sm:text-lg font-bold text-zinc-900 truncate">
-                {date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })} · {meal.time}
+              <div className="font-display text-lg sm:text-xl font-bold text-zinc-900 leading-tight truncate">
+                Add to {meal.label}
               </div>
             </div>
             <button
@@ -717,15 +722,17 @@ function MealPickerSheet({
               <X className="h-4 w-4" />
             </button>
           </div>
+        </div>
 
-          {/* Search — prominent, autofocused, always visible while scrolling */}
-          <div className="relative mt-3.5">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500 pointer-events-none" />
+        {/* Search — its own strip directly below the header, sticky so it stays visible while scrolling */}
+        <div className="px-4 sm:px-5 py-3 bg-card border-b border-border shadow-[0_2px_10px_-6px_rgba(0,0,0,0.08)]">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-zinc-500 pointer-events-none" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search any dish, chef, or restaurant"
-              className="w-full h-12 rounded-2xl border border-black/10 bg-white pl-11 pr-10 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/20 transition shadow-md"
+              className="w-full h-11 rounded-2xl border border-border bg-muted/40 pl-11 pr-10 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/20 transition"
               autoFocus
             />
             {query && (

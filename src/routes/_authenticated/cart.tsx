@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Trash2, ShoppingCart, MapPin, StickyNote, Store, ShieldCheck, CreditCard } from "lucide-react";
+import { Trash2, ShoppingCart, MapPin, StickyNote, Store, ShieldCheck, CreditCard, TicketPercent, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, type Cart } from "@/hooks/useCart";
 import { initiatePayment } from "@/lib/api/payments.functions";
@@ -14,6 +14,20 @@ export const Route = createFileRoute("/_authenticated/cart")({
   component: CartPage,
 });
 
+type CouponKind = "flat" | "percent" | "free_delivery";
+type AppliedCoupon = {
+  code: string;
+  kind: CouponKind;
+  value: number; // flat: currency units off, percent: 0-100, free_delivery: unused
+  label: string;
+};
+
+const COUPONS: Record<string, Omit<AppliedCoupon, "code">> = {
+  WELCOME500: { kind: "flat", value: 500, label: "₦500 off your first order" },
+  NAIJA10: { kind: "percent", value: 10, label: "10% off subtotal" },
+  FREEDEL: { kind: "free_delivery", value: 0, label: "Free delivery" },
+};
+
 function CartPage() {
   const navigate = useNavigate();
   const initiatePaymentFn = useServerFn(initiatePayment);
@@ -23,6 +37,9 @@ function CartPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("custom");
   const [note, setNote] = useState("");
   const [placing, setPlacing] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   const { data: addresses } = useQuery({
     queryKey: ["my-addresses-for-checkout"],
@@ -75,7 +92,41 @@ function CartPage() {
     0,
   );
   const grandDelivery = vendorCarts.reduce((s, c) => s + c.deliveryFee, 0);
-  const grandTotal = grandSubtotal + grandDelivery;
+
+  // Coupon discount is derived from the applied coupon + current totals so it
+  // stays live as the customer adds or removes items.
+  const couponDiscount = (() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.kind === "flat") return Math.min(appliedCoupon.value, grandSubtotal);
+    if (appliedCoupon.kind === "percent") return Math.round((grandSubtotal * appliedCoupon.value) / 100);
+    if (appliedCoupon.kind === "free_delivery") return grandDelivery;
+    return 0;
+  })();
+
+  const grandTotal = Math.max(0, grandSubtotal + grandDelivery - couponDiscount);
+
+  const applyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Enter a code");
+      return;
+    }
+    const match = COUPONS[code];
+    if (!match) {
+      setCouponError("That code isn't valid");
+      setAppliedCoupon(null);
+      return;
+    }
+    setAppliedCoupon({ code, ...match });
+    setCouponError(null);
+    toast.success(`Coupon applied · ${match.label}`);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+  };
 
   // A vendor cart is "below minimum" if its own subtotal is under its minOrder.
   const failingVendors = vendorCarts.filter((c) => {
@@ -158,7 +209,7 @@ function CartPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4 pb-52 sm:pb-44">
+        <div className="space-y-4 pt-3 sm:pt-4 pb-52 sm:pb-44">
           {/* ─── Foods grouped by vendor ─── */}
           {vendorCarts.map((cart) => {
             const fmt = (n: number) => fmtWith(n, cart.currency);
@@ -311,6 +362,66 @@ function CartPage() {
             />
           </section>
 
+          {/* ─── Coupon / promo code ─── */}
+          <section className="rounded-3xl bg-card ring-1 ring-border p-4 sm:p-5 space-y-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <TicketPercent className="h-4 w-4 text-[var(--brand-clay)]" />
+              <h2 className="font-semibold text-sm">Have a coupon?</h2>
+            </div>
+            {appliedCoupon ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-[var(--brand-forest)]/30 bg-[var(--brand-forest)]/10 px-4 py-3">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--brand-forest)] text-white shrink-0">
+                  <Check className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold tabular-nums text-foreground">{appliedCoupon.code}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">{appliedCoupon.label}</div>
+                </div>
+                <button
+                  onClick={removeCoupon}
+                  className="text-xs font-semibold text-muted-foreground hover:text-red-600"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    applyCoupon();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <input
+                    className="flex-1 rounded-2xl bg-muted/40 ring-1 ring-border px-4 py-3 text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
+                    placeholder="Enter code"
+                    value={couponInput}
+                    onChange={(e) => {
+                      setCouponInput(e.target.value);
+                      if (couponError) setCouponError(null);
+                    }}
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                  <button
+                    type="submit"
+                    className="shrink-0 rounded-2xl bg-foreground text-background px-5 py-3 text-sm font-semibold hover:opacity-90 transition"
+                  >
+                    Apply
+                  </button>
+                </form>
+                {couponError && (
+                  <div className="text-xs font-semibold text-red-600">{couponError}</div>
+                )}
+                <div className="text-[11px] text-muted-foreground">
+                  Try <span className="font-semibold text-foreground">WELCOME500</span>, <span className="font-semibold text-foreground">NAIJA10</span> or <span className="font-semibold text-foreground">FREEDEL</span>.
+                </div>
+              </>
+            )}
+          </section>
+
           {/* ─── Grand total summary — brand-warm accent for instant recognition ─── */}
           <section
             className="relative overflow-hidden rounded-3xl p-4 sm:p-5 space-y-2 shadow-md"
@@ -340,6 +451,17 @@ function CartPage() {
               <span className="text-zinc-700">Delivery</span>
               <span className="font-semibold tabular-nums text-zinc-900">{fmtWith(grandDelivery, primaryCurrency)}</span>
             </div>
+            {appliedCoupon && couponDiscount > 0 && (
+              <div className="relative flex items-center justify-between text-sm">
+                <span className="inline-flex items-center gap-1.5 text-[var(--brand-forest)] font-semibold">
+                  <TicketPercent className="h-3.5 w-3.5" />
+                  Coupon · {appliedCoupon.code}
+                </span>
+                <span className="font-semibold tabular-nums text-[var(--brand-forest)]">
+                  −{fmtWith(couponDiscount, primaryCurrency)}
+                </span>
+              </div>
+            )}
             <div className="relative flex items-center justify-between pt-2 mt-1 border-t border-[var(--brand-clay)]/20">
               <span className="font-bold text-zinc-900">Grand total</span>
               <span className="font-display text-2xl font-extrabold tabular-nums text-[var(--brand-clay)]">
