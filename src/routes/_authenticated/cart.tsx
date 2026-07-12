@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Trash2, ShoppingCart, MapPin, StickyNote, Store, ShieldCheck, CreditCard, TicketPercent, Check } from "lucide-react";
+import { Trash2, ShoppingCart, MapPin, StickyNote, Store, ShieldCheck, CreditCard, TicketPercent, Check, CalendarClock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, type Cart } from "@/hooks/useCart";
 import { initiatePayment } from "@/lib/api/payments.functions";
@@ -40,6 +40,9 @@ function CartPage() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+  
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState("");
 
   const { data: addresses } = useQuery({
     queryKey: ["my-addresses-for-checkout"],
@@ -161,6 +164,7 @@ function CartPage() {
           p_items: cart.items.map((i) => ({ menu_item_id: i.menuItemId, quantity: i.quantity })),
           p_delivery_address: resolvedAddress,
           p_customer_note: note.trim() || null,
+          p_scheduled_for: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null,
         });
         if (error) throw error;
         if (!orderId) throw new Error(`Could not create order for ${cart.vendorName}`);
@@ -419,6 +423,44 @@ function CartPage() {
                   Try <span className="font-semibold text-foreground">WELCOME500</span>, <span className="font-semibold text-foreground">NAIJA10</span> or <span className="font-semibold text-foreground">FREEDEL</span>.
                 </div>
               </>
+            )}
+          </section>
+
+          {/* ─── Delivery Time ─── */}
+          <section className="rounded-3xl bg-card ring-1 ring-border p-4 sm:p-5 shadow-sm space-y-4">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-[var(--brand-clay)]" />
+              <h2 className="font-semibold text-sm">Delivery Time</h2>
+            </div>
+            
+            <div className="flex bg-muted/40 p-1 rounded-2xl ring-1 ring-border">
+              <button
+                type="button"
+                onClick={() => setIsScheduled(false)}
+                className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-all ${!isScheduled ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                ASAP
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsScheduled(true)}
+                className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-all ${isScheduled ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Schedule
+              </button>
+            </div>
+
+            {isScheduled && (
+              <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                <label className="text-xs font-semibold text-muted-foreground">Select a date and time</label>
+                <input
+                  type="datetime-local"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                  className="w-full rounded-2xl bg-muted/20 ring-1 ring-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
+                />
+              </div>
             )}
           </section>
 

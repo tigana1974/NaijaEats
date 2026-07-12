@@ -337,6 +337,16 @@ export type Database = {
         }
         Relationships: []
       }
+      create_order: {
+        Args: {
+          p_vendor_id: string
+          p_items: Json
+          p_delivery_address?: string
+          p_customer_note?: string
+          p_scheduled_for?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -484,6 +494,7 @@ export type Database = {
           id: string
           payment_status: Database["public"]["Enums"]["order_payment_status"]
           ready_at: string | null
+          scheduled_for: string | null
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
           total: number
@@ -503,6 +514,7 @@ export type Database = {
           id?: string
           payment_status?: Database["public"]["Enums"]["order_payment_status"]
           ready_at?: string | null
+          scheduled_for?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           total?: number
@@ -522,6 +534,7 @@ export type Database = {
           id?: string
           payment_status?: Database["public"]["Enums"]["order_payment_status"]
           ready_at?: string | null
+          scheduled_for?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           total?: number

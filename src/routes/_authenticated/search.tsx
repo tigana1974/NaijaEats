@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/search")({
 
 const POPULAR_SEARCHES = ["Jollof Rice", "Suya", "Plantain", "Shawarma", "Burger"];
 const ITEM_SEARCH_SELECT =
-  "id, name, description, tags, price, image_url, is_available, is_featured, category:menu_categories(name), vendor:vendors!inner(id, slug, name, city, currency, country, status)";
+  "id, name, description, tags, price, image_url, is_available, is_featured, category:menu_categories(name), vendor:vendors!inner(id, slug, name, city, type, currency, country, status)";
 
 type SearchVendor = {
   id: string;
@@ -42,6 +42,7 @@ type SearchItem = {
     slug: string;
     name: string;
     city: string | null;
+    type: string;
     currency: string;
     country: string;
     status: string;
@@ -86,6 +87,7 @@ function hasApprovedVendor(item: SearchItem): item is SearchItemWithVendor {
 function SearchPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"All" | "restaurant" | "grocery" | "home_chef" | "shopping" | "pickup">("All");
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: profile } = useMyProfile();
   
@@ -105,16 +107,22 @@ function SearchPage() {
   }, []);
 
   const { data: vendors, isLoading: vendorsLoading } = useQuery<SearchVendor[]>({
-    queryKey: ["search-vendors", search],
+    queryKey: ["search-vendors", search, filter],
     queryFn: async () => {
       if (!search.trim()) return [];
       const like = makeIlikePattern(search);
-      const { data, error } = await supabase
+      let query = supabase
         .from("vendors")
         .select("*")
         .eq("status", "approved")
         .eq("country", country)
-        .or(`name.ilike.${like},tagline.ilike.${like},city.ilike.${like}`)
+        .or(`name.ilike.${like},tagline.ilike.${like},city.ilike.${like},address_line.ilike.${like}`);
+        
+      if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
+        query = query.eq("type", filter);
+      }
+
+      const { data, error } = await query
         .order("rating", { ascending: false })
         .limit(10);
       if (error) throw error;
@@ -124,7 +132,7 @@ function SearchPage() {
   });
 
   const { data: items, isLoading: itemsLoading } = useQuery<SearchItemWithVendor[]>({
-    queryKey: ["search-items", search],
+    queryKey: ["search-items", search, filter],
     queryFn: async () => {
       const term = search.trim();
       if (!term) return [];
@@ -154,6 +162,12 @@ function SearchPage() {
       const filtered = Array.from(mergedItems.values())
         .filter(hasApprovedVendor)
         .filter((it) => it.vendor.country === country)
+        .filter((it) => {
+          if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
+            return it.vendor.type === filter;
+          }
+          return true;
+        })
         .filter((it) => itemMatchesSearch(it, term));
 
       return filtered.slice(0, 20);
@@ -167,22 +181,46 @@ function SearchPage() {
   return (
     <CustomerShell
       topBar={
-        <div className="flex items-center gap-3 w-full py-1">
-          <button
-            onClick={() => navigate({ to: "/discover" })}
-            className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition"
-          >
-            <ArrowLeft className="h-5 w-5 text-zinc-700" />
-          </button>
-          <div className="flex-1 relative">
-            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--brand-clay)]" />
-            <input
-              ref={inputRef}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search for dishes or stores..."
-              className="w-full rounded-full bg-zinc-50 border-transparent ring-1 ring-zinc-200 pl-10 pr-4 py-2.5 text-sm font-medium placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] transition"
-            />
+        <div className="w-full py-1 space-y-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate({ to: "/discover" })}
+              className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition"
+            >
+              <ArrowLeft className="h-5 w-5 text-zinc-700" />
+            </button>
+            <div className="flex-1 relative">
+              <SearchIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--brand-clay)]" />
+              <input
+                ref={inputRef}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Restaurants, groceries, dishes..."
+                className="w-full rounded-full bg-zinc-50 border-transparent ring-1 ring-zinc-200 pl-10 pr-4 py-2.5 text-sm font-medium placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] transition"
+              />
+            </div>
+          </div>
+          {/* Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            {[
+              { id: "All", label: "All" },
+              { id: "restaurant", label: "Restaurants" },
+              { id: "grocery", label: "Groceries" },
+              { id: "shopping", label: "Shopping" },
+              { id: "pickup", label: "Pickup" },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id as any)}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                  filter === f.id
+                    ? "bg-[var(--brand-clay)] text-white"
+                    : "bg-zinc-50 text-[var(--brand-clay)] hover:bg-zinc-100"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
       }

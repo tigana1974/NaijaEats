@@ -36,3 +36,25 @@ export const avatarSade = u("1531123897727-8f129e1688ce", 200);
 export const illusOrder = "/landing/easy-order.jpg";
 export const illusRider = "/landing/fast-delivery.jpg";
 export const illusChef = "/landing/cooked-culture.jpg";
+
+/**
+ * Category rail thumbnails (Discover page) — small real-food crops served
+ * from Unsplash at 96px so the icon row looks like Uber Eats' photographic
+ * category strip rather than emoji.
+ */
+const cat = (id: string) => u(id, 96, 70);
+
+export const categoryPhotos: Record<string, string> = {
+  all: cat("1512621776951-a57141f2eefd"),        // colourful bowls spread
+  jollof: cat("1604329760661-e71dc83f8f26"),     // jollof rice pot
+  suya: cat("1555939594-58d7cb561ad1"),          // grilled skewers
+  soups: cat("1547592166-23ac45744acd"),         // rich soup bowl
+  swallow: cat("1546069901-ba9599a7e63c"),       // hearty plated bowl
+  rice: cat("1603133872878-684f208fb84b"),       // fried rice plate
+  grills: cat("1544025162-d76694265947"),        // barbecue grill
+  snacks: cat("1551024601-bec78aea704b"),        // golden doughnuts / puff puff
+  drinks: cat("1551024709-8f23befc6f87"),        // iced drinks
+  grocery: cat("1542838132-92c53300491e"),       // fresh market produce
+  chefs: cat("1577219491135-ce391730fb2c"),      // chef at work
+  restaurants: cat("1517248135467-4c7edcad34c4"), // restaurant tables
+};

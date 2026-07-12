@@ -35,7 +35,7 @@ function OrdersPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id, status, payment_status, total, currency, created_at, vendor:vendors(name, logo_url)")
+        .select("id, status, payment_status, total, currency, created_at, scheduled_for, vendor:vendors(name, logo_url)")
         .eq("customer_id", user.id)
         .order("created_at", { ascending: false });
       return data ?? [];
@@ -70,7 +70,12 @@ function OrdersPage() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">{o.vendor?.name ?? "Order"}</div>
                     <div className="text-xs text-zinc-500 mt-0.5">
-                      {new Date(o.created_at).toLocaleString()} · #{o.id.slice(0, 6).toUpperCase()}
+                      {o.scheduled_for ? (
+                        <span className="font-bold text-[var(--brand-clay)]">📅 Scheduled: {new Date(o.scheduled_for).toLocaleString()}</span>
+                      ) : (
+                        <>{new Date(o.created_at).toLocaleString()}</>
+                      )}
+                      {" · #"}{o.id.slice(0, 6).toUpperCase()}
                     </div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                       <span

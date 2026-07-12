@@ -131,7 +131,13 @@ function VendorOrders() {
                       {symbol}{Number(o.total).toLocaleString()}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {new Date(o.created_at).toLocaleString()}
+                      {o.scheduled_for ? (
+                        <div className="flex items-center gap-1 font-bold text-[var(--brand-clay)]">
+                          <span className="text-base">📅</span> Scheduled: {new Date(o.scheduled_for).toLocaleString()}
+                        </div>
+                      ) : (
+                        `Ordered: ${new Date(o.created_at).toLocaleString()}`
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">

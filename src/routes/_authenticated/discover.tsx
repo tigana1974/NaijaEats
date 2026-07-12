@@ -10,6 +10,7 @@ import {
   CustomerShell,
 } from "@/components/naija/CustomerShell";
 import { FoodCard } from "@/components/naija/customer-ui";
+import { categoryPhotos } from "@/assets/landing-images";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
 
@@ -178,11 +179,21 @@ function DiscoverPage() {
                 aria-pressed={active}
               >
                 <span
-                  className={`grid place-items-center h-14 w-14 rounded-full text-[26px] transition ${
-                    active ? "bg-[var(--brand-clay)]/10 ring-2 ring-[var(--brand-clay)]" : "bg-muted"
+                  className={`relative grid place-items-center h-14 w-14 rounded-full overflow-hidden transition ${
+                    active ? "ring-2 ring-[var(--brand-clay)] ring-offset-2 ring-offset-background" : "ring-1 ring-border"
                   }`}
                 >
-                  {c.emoji}
+                  <img
+                    src={categoryPhotos[c.id]}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={(e) => {
+                      // Photo unavailable → fall back to the emoji tile
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <span className="text-[24px]">{c.emoji}</span>
                 </span>
                 <span className={`text-[11px] font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>
                   {c.label}
