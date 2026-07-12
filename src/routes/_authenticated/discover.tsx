@@ -12,6 +12,7 @@ import {
 import { FoodCard } from "@/components/naija/customer-ui";
 import { categoryPhotos } from "@/assets/landing-images";
 import { useCart } from "@/hooks/useCart";
+import { useCountry, hasStoredCountry } from "@/hooks/useCountry";
 import { toast } from "sonner";
 
 /**
@@ -64,15 +65,9 @@ function DiscoverPage() {
   const navigate = useNavigate();
   const [searchDraft, setSearchDraft] = useState("");
 
-  const [country, setCountryState] = useState<"NG" | "UK">(
-    () => (typeof window !== "undefined" && (localStorage.getItem("ui_country") as "NG" | "UK")) || "NG",
-  );
-  const setCountry = (c: "NG" | "UK") => {
-    setCountryState(c);
-    localStorage.setItem("ui_country", c);
-  };
+  const [country, setCountry] = useCountry();
   useEffect(() => {
-    if (profile?.country && !localStorage.getItem("ui_country")) {
+    if (profile?.country && !hasStoredCountry()) {
       setCountry(profile.country as "NG" | "UK");
     }
   }, [profile?.country]);
@@ -155,11 +150,9 @@ function DiscoverPage() {
       containerClassName="mx-auto w-full max-w-6xl px-3 sm:px-5 pb-28 lg:pb-12"
     >
       <div className="pt-2 space-y-6">
-        {/* ─── 1 · Search + country ───
-            The typeable search box only shows on mobile; on desktop the shell's
-            top bar already provides global search, so here we just right-align
-            the country toggle. */}
-        <div className="flex items-center gap-3 lg:justify-end">
+        {/* ─── 1 · Search + country (mobile only — the desktop top bar holds
+            both the global search and the NG/UK switch) ─── */}
+        <div className="flex items-center gap-3 lg:hidden">
           <form
             className="relative flex-1 lg:hidden"
             onSubmit={(e) => {

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { FoodCard, VendorCard } from "@/components/naija/customer-ui";
+import { useCountry, hasStoredCountry } from "@/hooks/useCountry";
 
 export const Route = createFileRoute("/_authenticated/groceries")({
   component: GroceriesPage,
@@ -22,19 +23,11 @@ function GroceriesPage() {
   const { user } = Route.useRouteContext();
   const { data: profile } = useMyProfile();
 
-  const [country, setCountryState] = useState<"NG" | "UK">(
-    () => (typeof window !== "undefined" && localStorage.getItem("ui_country") as "NG" | "UK") || "NG"
-  );
-  
-  // Update local storage whenever country changes
-  const setCountry = (c: "NG" | "UK") => {
-    setCountryState(c);
-    localStorage.setItem("ui_country", c);
-  };
+  const [country, setCountry] = useCountry();
 
-  // When profile loads, if user hasn't explicitly set a country in localStorage, use their profile country
+  // When profile loads, if user hasn't explicitly set a country, use their profile country
   useEffect(() => {
-    if (profile?.country && !localStorage.getItem("ui_country")) {
+    if (profile?.country && !hasStoredCountry()) {
       setCountry(profile.country as "NG" | "UK");
     }
   }, [profile?.country]);
@@ -91,10 +84,7 @@ function GroceriesPage() {
     >
       <div className="pt-3 w-full max-w-2xl lg:max-w-6xl mx-auto">
         <div className="space-y-8">
-          <div className="hidden lg:flex items-center justify-between">
-            <h1 className="font-display text-2xl font-bold tracking-tight">Groceries</h1>
-            <CountryToggle value={country} onChange={setCountry} />
-          </div>
+          <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight">Groceries</h1>
           {/* Quick Categories */}
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             {GROCERY_CATEGORIES.map((cat) => {

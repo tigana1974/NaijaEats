@@ -705,21 +705,21 @@ function MealPickerSheet({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-lg max-h-[85dvh] bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-200">
         {/* Drag handle — gives a mobile sheet feel and visually separates the header from the viewport edge */}
-        <div className="sm:hidden pt-2.5 pb-1 grid place-items-center">
+        <div className="sm:hidden pt-3 pb-2 grid place-items-center shrink-0">
           <span className="h-1 w-10 rounded-full bg-zinc-300" />
         </div>
 
         {/* Header — the "Add to {meal}" title sits comfortably on its own row */}
-        <div className={`relative overflow-hidden px-4 sm:px-5 pt-3 pb-4 ${meal.bg} border-b border-black/5`}>
+        <div className={`relative overflow-hidden px-4 sm:px-5 pt-4 pb-4 sm:pt-5 sm:pb-5 ${meal.bg} border-b border-black/5 shrink-0`}>
           <div className="flex items-center gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-zinc-800 shadow-sm shrink-0">
               <meal.Icon className="h-6 w-6" />
             </span>
             <div className="flex-1 min-w-0">
-              <div className={`text-[10px] uppercase tracking-widest font-bold ${meal.chipTone.replace("bg-", "text-").split(" ")[1]}`}>
+              <div className={`text-[10px] sm:text-[11px] uppercase tracking-widest font-bold ${meal.chipTone.replace("bg-", "text-").split(" ")[1]}`}>
                 {meal.time} · {date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
               </div>
-              <div className="font-display text-lg sm:text-xl font-bold text-zinc-900 leading-tight truncate">
+              <div className="font-display text-lg sm:text-xl font-bold text-zinc-900 leading-snug mt-0.5">
                 Add to {meal.label}
               </div>
             </div>

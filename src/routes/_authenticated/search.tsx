@@ -5,6 +5,7 @@ import { Search as SearchIcon, ArrowLeft, Utensils, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { CustomerShell } from "@/components/naija/CustomerShell";
+import { useCountry, hasStoredCountry } from "@/hooks/useCountry";
 import { FoodCard, VendorCard } from "@/components/naija/customer-ui";
 
 export const Route = createFileRoute("/_authenticated/search")({
@@ -96,12 +97,10 @@ function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: profile } = useMyProfile();
   
-  const [country, setCountry] = useState<"NG" | "UK">(
-    () => (typeof window !== "undefined" && localStorage.getItem("ui_country") as "NG" | "UK") || "NG"
-  );
+  const [country, setCountry] = useCountry();
 
   useEffect(() => {
-    if (profile?.country && !localStorage.getItem("ui_country")) {
+    if (profile?.country && !hasStoredCountry()) {
       setCountry(profile.country as "NG" | "UK");
     }
   }, [profile?.country]);

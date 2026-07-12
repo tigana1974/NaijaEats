@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PremiumUpsellDialog } from "@/components/naija/PremiumUpsellDialog";
 import { FloatingXoraButton } from "@/components/naija/FloatingXoraButton";
 import { useUnreadNotifications, formatBadgeCount } from "@/hooks/useUnreadNotifications";
+import { useCountry } from "@/hooks/useCountry";
 
 /**
  * Customer shell.
@@ -239,6 +240,9 @@ function DesktopTopBar() {
         />
       </form>
 
+      {/* NG/UK market switch — desktop lives here, beside the search box */}
+      <HeaderCountryToggle />
+
       <div className="ml-auto flex items-center gap-2">
         <Link
           to="/notifications"
@@ -274,6 +278,36 @@ function DesktopTopBar() {
         </Link>
       </div>
     </header>
+  );
+}
+
+/** NG/UK flag switch shown in the desktop top bar. */
+function HeaderCountryToggle() {
+  const [country, setCountry] = useCountry();
+  return (
+    <div className="relative inline-flex h-10 w-[96px] shrink-0 items-center rounded-full bg-muted p-1 shadow-inner">
+      <div
+        className={`absolute top-1 bottom-1 w-[42px] rounded-full bg-card shadow-[0_2px_8px_-2px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${country === "UK" ? "translate-x-[46px]" : "translate-x-0"}`}
+      />
+      <button
+        type="button"
+        onClick={() => setCountry("NG")}
+        className={`relative z-10 flex flex-1 items-center justify-center rounded-full transition-opacity duration-300 ${country === "NG" ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
+        aria-label="Switch to Nigeria"
+        aria-pressed={country === "NG"}
+      >
+        <img src="https://flagcdn.com/w40/ng.png" alt="NG" className="h-[16px] w-[24px] rounded-sm object-cover shadow-sm ring-1 ring-black/5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setCountry("UK")}
+        className={`relative z-10 flex flex-1 items-center justify-center rounded-full transition-opacity duration-300 ${country === "UK" ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
+        aria-label="Switch to United Kingdom"
+        aria-pressed={country === "UK"}
+      >
+        <img src="https://flagcdn.com/w40/gb.png" alt="UK" className="h-[16px] w-[24px] rounded-sm object-cover shadow-sm ring-1 ring-black/5" />
+      </button>
+    </div>
   );
 }
 

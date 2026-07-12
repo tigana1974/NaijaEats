@@ -141,9 +141,12 @@ function XoraChatPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-background">
+    /* On desktop the chat sits beside the sidebar (left-60) and its content
+       is centred at a comfortable reading width instead of spanning the
+       whole monitor. */
+    <div className="fixed inset-0 lg:left-60 z-30 flex flex-col bg-background">
       {/* ─── Header ─── */}
-      <div className="shrink-0 flex items-center gap-2 px-3 py-2.5 border-b border-border bg-card/95 backdrop-blur">
+      <div className="shrink-0 flex items-center gap-2 px-3 py-2.5 border-b border-border bg-card/95 backdrop-blur lg:px-[max(0.75rem,calc((100%-48rem)/2))]">
         <button
           onClick={() => navigate({ to: "/discover" })}
           aria-label="Back"
@@ -188,7 +191,7 @@ function XoraChatPage() {
       {/* ─── Messages ─── */}
       <div
         ref={scrollerRef}
-        className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4"
+        className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4 lg:px-[max(1rem,calc((100%-48rem)/2))]"
         style={{ scrollBehavior: "smooth" }}
       >
         {thread.messages.length === 0 ? (
@@ -201,7 +204,7 @@ function XoraChatPage() {
       {/* ─── Composer ─── */}
       <form
         onSubmit={onSubmit}
-        className="shrink-0 border-t border-border bg-card/95 backdrop-blur px-3 sm:px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]"
+        className="shrink-0 border-t border-border bg-card/95 backdrop-blur px-3 sm:px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] lg:px-[max(1rem,calc((100%-48rem)/2))]"
       >
         {/* Quick suggestion chips when the input is empty */}
         {draft === "" && thread.messages.length > 0 && !streaming && (

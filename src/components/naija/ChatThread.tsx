@@ -295,7 +295,7 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
       {/* Subtle top scrim */}
       <div className="pointer-events-none absolute top-0 inset-x-0 h-8 bg-gradient-to-b from-white/60 to-transparent z-[1]" />
 
-      <div ref={scrollerRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3">
+      <div ref={scrollerRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 lg:px-[max(1rem,calc((100%-48rem)/2))]">
         {messages.length === 0 && (
           <div className="h-full grid place-items-center text-center text-muted-foreground text-sm">
             <div>
@@ -460,7 +460,7 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
           e.preventDefault();
           void send();
         }}
-        className="relative p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] bg-white/70 backdrop-blur border-t border-black/5"
+        className="relative p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] bg-white/70 backdrop-blur border-t border-black/5 lg:px-[max(1rem,calc((100%-48rem)/2))]"
       >
         {/* Attach popover */}
         {attachOpen && (

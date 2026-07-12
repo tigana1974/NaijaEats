@@ -51,9 +51,10 @@ function ChatPage() {
 
   return (
     <CustomerShell hideBottomNav>
-      <div className="fixed inset-0 z-20 flex flex-col bg-[#f5f1ea]">
+      {/* Desktop: sit beside the sidebar and centre the thread at reading width */}
+      <div className="fixed inset-0 lg:left-60 z-20 flex flex-col bg-[#f5f1ea]">
         {/* WhatsApp-style header */}
-        <div className="sticky top-0 z-10 px-3 py-2.5 bg-[#f5f1ea] border-b border-black/5 flex items-center gap-2">
+        <div className="sticky top-0 z-10 px-3 py-2.5 bg-[#f5f1ea] border-b border-black/5 flex items-center gap-2 lg:px-[max(0.75rem,calc((100%-48rem)/2))]">
           <Link
             to="/chats"
             className="h-9 w-9 grid place-items-center rounded-full hover:bg-black/5 shrink-0"
