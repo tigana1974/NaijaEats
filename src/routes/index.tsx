@@ -51,11 +51,11 @@ const landingItemsQuery = queryOptions({
   queryFn: async () => {
     const { data } = await supabase
       .from("menu_items")
-      .select("id, name, price, currency, image_url, description, vendors!inner(status)")
+      .select("id, name, price, currency, image_url, description, vendors!inner(name, city, status)")
       .eq("is_available", true)
       .eq("vendors.status", "approved")
       .not("image_url", "is", null)
-      .limit(8);
+      .limit(16);
     return data || [];
   },
   staleTime: 1000 * 60 * 15,
@@ -112,6 +112,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-clip">
+      <LandingDebugBanner />
       <SearchProvider>
         <Nav />
         <Hero />
@@ -126,6 +127,80 @@ function Index() {
       <StartOrderingCTA />
       <Footer />
       <BrandWordmark />
+    </div>
+  );
+}
+
+/**
+ * Temporary on-page diagnostic to explain why vendor images may not be
+ * showing on the live site. Reports env var presence, query error, and
+ * item count. Remove once the DB / RLS is confirmed healthy in prod.
+ */
+function LandingDebugBanner() {
+  // Run a client-side probe that mirrors landingItemsQuery but captures the
+  // raw error object so we can render it directly on the page.
+  const { data: probe, isLoading } = useQuery({
+    queryKey: ["landing-items-probe"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("id, name, image_url, vendors!inner(name, status)")
+        .eq("is_available", true)
+        .eq("vendors.status", "approved")
+        .not("image_url", "is", null)
+        .limit(16);
+      return { rows: data ?? [], error: error ? error.message : null };
+    },
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  const url = (import.meta as any).env?.VITE_SUPABASE_URL as string | undefined;
+  const key = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string | undefined;
+  const envOk = !!url && !!key;
+  const rows = probe?.rows ?? [];
+  const probeError = probe?.error ?? null;
+  const count = rows.length;
+  const withImage = rows.filter((d: any) => d?.image_url).length;
+
+  let state: "loading" | "ok" | "empty" | "envMissing" | "queryError" = "loading";
+  let message = "";
+  if (isLoading) {
+    state = "loading";
+    message = "Checking vendor catalogue…";
+  } else if (!envOk) {
+    state = "envMissing";
+    message = `Supabase env vars missing on this deployment. VITE_SUPABASE_URL=${url ? "set" : "MISSING"} · VITE_SUPABASE_ANON_KEY=${key ? "set" : "MISSING"}`;
+  } else if (probeError) {
+    state = "queryError";
+    message = `Query failed: ${probeError}`;
+  } else if (count === 0) {
+    state = "empty";
+    message = "Query ran but returned 0 rows. No approved vendor has an available menu item with an image_url in this database.";
+  } else {
+    state = "ok";
+    message = `Live DB · ${count} vendor item${count === 1 ? "" : "s"} returned (${withImage} with image_url). Landing page is showing real uploads.`;
+  }
+
+  const tone =
+    state === "ok"
+      ? "bg-emerald-50 text-emerald-900 border-emerald-200"
+      : state === "loading"
+        ? "bg-zinc-50 text-zinc-700 border-zinc-200"
+        : "bg-amber-50 text-amber-900 border-amber-300";
+
+  return (
+    <div className={`relative z-40 border-b ${tone} text-xs`}>
+      <div className="mx-auto max-w-7xl px-6 py-2 flex items-center gap-2 justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-bold uppercase tracking-widest text-[10px] shrink-0">Landing diagnostic</span>
+          <span className="truncate">{message}</span>
+        </div>
+        <span className="hidden sm:inline shrink-0 opacity-60">
+          host: {typeof window !== "undefined" ? window.location.hostname : "server"}
+          {url ? ` · sb: ${new URL(url).hostname}` : ""}
+        </span>
+      </div>
     </div>
   );
 }
@@ -430,6 +505,10 @@ function Hero() {
   const search = useSearchModal();
   const { setInitialQuery } = useContext(SearchSeedContext);
   const [q, setQ] = useState("");
+  const { data: items } = useQuery(landingItemsQuery);
+  const heroItem = items && items.length > 0 ? items[0] : null;
+  const cardItem = items && items.length > 1 ? items[1] : null;
+
   return (
     <section id="top" className="relative overflow-hidden">
       {/* Subtle background wash — restrained editorial feel */}
@@ -503,8 +582,8 @@ function Hero() {
         <div className="relative mt-12 lg:mt-0">
           <div className="relative aspect-[16/10] md:aspect-[4/5] rounded-[2rem] overflow-hidden bg-muted shadow-[0_40px_80px_-30px_rgba(0,0,0,0.35)]">
             <img
-              src={heroJollof}
-              alt="Steaming pot of Nigerian jollof rice"
+               src={heroItem ? heroItem.image_url : heroJollof}
+               alt={heroItem ? heroItem.name : "Delicious African food"}
               width={1280}
               height={1600}
               className="h-full w-full object-cover"
@@ -523,8 +602,8 @@ function Hero() {
                 className="h-11 w-11 rounded-full object-cover ring-2 ring-white/80"
               />
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold leading-tight text-white">Chef Amaka</div>
-                <div className="text-[10.5px] uppercase tracking-[0.14em] text-white/70 leading-tight mt-0.5">Signature jollof · Lagos</div>
+                <div className="text-[13px] font-semibold leading-tight text-white">{heroItem?.vendors ? heroItem.vendors.name : "Chef Amaka"}</div>
+                <div className="text-[10.5px] uppercase tracking-[0.14em] text-white/70 leading-tight mt-0.5">{heroItem ? heroItem.name : "Signature dish"} · {heroItem?.vendors ? heroItem.vendors.city : "Lagos"}</div>
               </div>
             </div>
           </div>
@@ -532,8 +611,8 @@ function Hero() {
           {/* Floating price card — refined */}
           <div className="absolute -bottom-6 -left-4 md:-left-8 bg-card rounded-2xl shadow-[0_20px_50px_-20px_rgba(0,0,0,0.35)] p-3 pr-5 flex items-center gap-3 border border-border/60 backdrop-blur">
             <img
-              src={dishSuya}
-              alt="Suya"
+              src={cardItem ? cardItem.image_url : dishSuya}
+              alt={cardItem ? cardItem.name : "Suya"}
               width={56}
               height={56}
               loading="lazy"
@@ -541,8 +620,8 @@ function Hero() {
             />
             <div>
               <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trending</div>
-              <div className="text-sm font-semibold text-foreground leading-tight">Suya Skewers</div>
-              <div className="text-primary font-bold text-[13px] leading-tight mt-0.5">₦7,490</div>
+              <div className="text-sm font-semibold text-foreground leading-tight">{cardItem ? cardItem.name : "Suya Skewers"}</div>
+              <div className="text-primary font-bold text-[13px] leading-tight mt-0.5">{cardItem ? `${cardItem.currency === 'GBP' ? '£' : '₦'}${Number(cardItem.price).toLocaleString()}` : "₦7,490"}</div>
             </div>
           </div>
 
@@ -566,6 +645,13 @@ function Story() {
     ["50+", "Cities Covered"],
     ["4.9★", "Average Rating"],
   ];
+  const { data } = useQuery(landingItemsQuery);
+  // Pick three vendor-uploaded dishes for the collage. Fall back to the local
+  // brand imagery only when the database is still empty.
+  const storyItems = data ?? [];
+  const collageA = storyItems[8] ?? storyItems[0];
+  const collageB = storyItems[9] ?? storyItems[1];
+  const collageWide = storyItems[10] ?? storyItems[2];
   return (
     <section id="story" className="relative py-20 md:py-28 bg-background">
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
@@ -582,14 +668,14 @@ function Story() {
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden">
-              <img src={dishJollof} alt="Jollof rice" width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+              <img src={collageA?.image_url ?? dishJollof} alt={collageA?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
             </div>
             <div className="aspect-[4/3] rounded-2xl overflow-hidden">
-              <img src={dishSuya} alt="Suya" width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+              <img src={collageB?.image_url ?? dishSuya} alt={collageB?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
             </div>
           </div>
           <div className="aspect-[16/7] rounded-2xl overflow-hidden">
-            <img src={offerPlatter} alt="A platter of African dishes" width={1024} height={448} loading="lazy" className="h-full w-full object-cover" />
+            <img src={collageWide?.image_url ?? offerPlatter} alt={collageWide?.name ?? "A platter of African dishes"} width={1024} height={448} loading="lazy" className="h-full w-full object-cover" />
           </div>
 
           <div className="rounded-2xl bg-card border border-border p-4 sm:p-5">
@@ -633,13 +719,25 @@ const specialDishes = [
   { name: "Suya Skewers", price: "₦7,490", rating: 4.8, img: dishSuya },
   { name: "Egusi & Pounded Yam", price: "₦6,200", rating: 4.9, img: dishEgusi },
   { name: "Puff Puff (12pc)", price: "₦2,500", rating: 4.7, img: dishPuffpuff },
+  { name: "Suya Platter", price: "₦8,900", rating: 4.9, img: dishSuya },
+  { name: "Egusi Bowl", price: "₦5,800", rating: 4.8, img: dishEgusi },
+  { name: "Jollof Party Pack", price: "₦12,500", rating: 4.9, img: dishJollof },
+  { name: "Puff Puff (24pc)", price: "₦4,500", rating: 4.7, img: dishPuffpuff },
+  { name: "Chef's Special Jollof", price: "₦6,900", rating: 4.9, img: dishJollof },
+  { name: "Suya Wrap", price: "₦3,900", rating: 4.8, img: dishSuya },
+  { name: "Family Egusi", price: "₦9,200", rating: 4.9, img: dishEgusi },
+  { name: "Sweet Puff (12pc)", price: "₦2,900", rating: 4.7, img: dishPuffpuff },
 ];
+
+const DISHES_PER_SLIDE = 4;
+const TOTAL_SLIDES = 3;
 
 function SpecialDishes() {
   const { data } = useQuery(landingItemsQuery);
-  const dbDishes = data?.slice(0, 4) || [];
-  
-  const displayDishes = Array.from({ length: 4 }).map((_, i) => {
+  const totalCount = DISHES_PER_SLIDE * TOTAL_SLIDES;
+  const dbDishes = data ?? [];
+
+  const displayDishes = Array.from({ length: totalCount }).map((_, i) => {
     if (dbDishes[i]) {
       const d = dbDishes[i];
       return {
@@ -649,8 +747,37 @@ function SpecialDishes() {
         img: d.image_url,
       };
     }
-    return specialDishes[i];
+    return specialDishes[i % specialDishes.length];
   });
+
+  const slides = Array.from({ length: TOTAL_SLIDES }).map((_, s) =>
+    displayDishes.slice(s * DISHES_PER_SLIDE, (s + 1) * DISHES_PER_SLIDE),
+  );
+
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+
+  // Watch the scroller and set the active slide from whichever page's left
+  // edge is closest to the container's left. Uses scroll events so both swipe
+  // and dot/arrow clicks stay in sync.
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const w = el.clientWidth;
+      if (w === 0) return;
+      const i = Math.round(el.scrollLeft / w);
+      setActive(Math.max(0, Math.min(TOTAL_SLIDES - 1, i)));
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goTo = (i: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  };
 
   return (
     <section className="relative py-20 md:py-24 bg-background">
@@ -665,34 +792,83 @@ function SpecialDishes() {
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {displayDishes.map((d, idx) => (
-            <article
-              key={d.name + idx}
-              className="relative rounded-3xl bg-card border border-border pt-16 pb-6 px-5 text-center shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-card)] hover:-translate-y-1 transition-all"
-            >
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-24 rounded-full overflow-hidden ring-4 ring-background shadow-[var(--shadow-warm)]">
-                <img src={d.img} alt={d.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
+        {/* Slide viewport — horizontal scroll-snap with 3 pages. Each page is
+            a 2×2 (mobile) or 1×4 (desktop) grid, so the dots correspond to
+            real navigable pages instead of being decorative. */}
+        <div className="relative mt-16">
+          <div
+            ref={scrollerRef}
+            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-6 px-6 pt-14 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {slides.map((slide, s) => (
+              <div
+                key={s}
+                className="snap-start shrink-0 w-full pr-0"
+                aria-roledescription="slide"
+                aria-label={`Slide ${s + 1} of ${TOTAL_SLIDES}`}
+              >
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {slide.map((d, idx) => (
+                    <article
+                      key={d.name + s + "-" + idx}
+                      className="relative rounded-3xl bg-card border border-border pt-16 pb-6 px-5 text-center shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-card)] hover:-translate-y-1 transition-all"
+                    >
+                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-24 rounded-full overflow-hidden ring-4 ring-background shadow-[var(--shadow-warm)]">
+                        <img src={d.img} alt={d.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
+                      </div>
+                      <div className="text-xs font-bold text-primary">{d.price}</div>
+                      <h3 className="mt-1 font-semibold text-foreground text-base leading-tight">{d.name}</h3>
+                      <div className="mt-2 flex items-center justify-center gap-0.5 text-accent">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                        ))}
+                        <span className="ml-1 text-[11px] text-muted-foreground">{d.rating}</span>
+                      </div>
+                      <button className="mt-4 w-full rounded-full bg-primary text-primary-foreground py-2 text-xs font-semibold hover:opacity-95 transition">
+                        Order Now
+                      </button>
+                    </article>
+                  ))}
+                </div>
               </div>
-              <div className="text-xs font-bold text-primary">{d.price}</div>
-              <h3 className="mt-1 font-semibold text-foreground text-base leading-tight">{d.name}</h3>
-              <div className="mt-2 flex items-center justify-center gap-0.5 text-accent">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                ))}
-                <span className="ml-1 text-[11px] text-muted-foreground">{d.rating}</span>
-              </div>
-              <button className="mt-4 w-full rounded-full bg-primary text-primary-foreground py-2 text-xs font-semibold hover:opacity-95 transition">
-                Order Now
-              </button>
-            </article>
-          ))}
+            ))}
+          </div>
+
+          {/* Prev / next controls — hidden on mobile where swipe is natural */}
+          <button
+            type="button"
+            onClick={() => goTo(Math.max(0, active - 1))}
+            disabled={active === 0}
+            aria-label="Previous dishes"
+            className="hidden md:grid absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 h-11 w-11 place-items-center rounded-full bg-card border border-border shadow-md hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => goTo(Math.min(TOTAL_SLIDES - 1, active + 1))}
+            disabled={active === TOTAL_SLIDES - 1}
+            aria-label="Next dishes"
+            className="hidden md:grid absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 h-11 w-11 place-items-center rounded-full bg-card border border-border shadow-md hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
 
+        {/* Pagination dots — reflect the current slide and jump to any page */}
         <div className="mt-10 flex items-center justify-center gap-2">
-          <span className="h-2 w-6 rounded-full bg-primary" />
-          <span className="h-2 w-2 rounded-full bg-border" />
-          <span className="h-2 w-2 rounded-full bg-border" />
+          {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              aria-current={active === i ? "true" : undefined}
+              className={`transition-all rounded-full ${
+                active === i ? "h-2 w-6 bg-primary" : "h-2 w-2 bg-border hover:bg-muted-foreground/40"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -752,8 +928,11 @@ function WhyUs() {
 
 function MenuCarousel() {
   const { data } = useQuery(landingItemsQuery);
-  const dbItems = data?.slice(4, 8) || [];
-  
+  // Prefer the tail end of the vendor catalogue so this section shows different
+  // dishes from Signature Dishes (which uses the first 12).
+  const dbItems = (data ?? []).slice(12, 16);
+  const fallbackPool = (data ?? []).slice(0, 4);
+
   const staticItems = [
     { name: "Spicy Jollof", price: "₦5,500", tag: "Popular", img: dishJollof },
     { name: "Suya Plate", price: "₦7,490", tag: "Spicy", img: dishSuya },
@@ -762,8 +941,8 @@ function MenuCarousel() {
   ];
 
   const displayItems = Array.from({ length: 4 }).map((_, i) => {
-    if (dbItems[i]) {
-      const d = dbItems[i];
+    const d = dbItems[i] ?? fallbackPool[i];
+    if (d) {
       return {
         name: d.name,
         price: `${d.currency === "GBP" ? "£" : "₦"}${Number(d.price).toLocaleString()}`,
@@ -812,6 +991,8 @@ function MenuCarousel() {
 /* ------------------------------ Offer Banner ----------------------------- */
 
 function OfferBanner() {
+  const { data } = useQuery(landingItemsQuery);
+  const bannerItem = data && data.length > 0 ? (data[11] ?? data[data.length - 1]) : null;
   return (
     <section className="py-12 md:py-20 bg-background">
       <div className="mx-auto max-w-7xl px-6">
@@ -838,7 +1019,7 @@ function OfferBanner() {
             </div>
           </div>
           <div className="relative h-64 md:h-full min-h-[280px]">
-            <img src={offerPlatter} alt="Festive platter" width={1024} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={bannerItem?.image_url ?? offerPlatter} alt={bannerItem?.name ?? "Festive platter"} width={1024} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
             <span className="absolute top-4 right-4 grid place-items-center h-16 w-16 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-[var(--shadow-warm)]">
               50%<br />OFF
             </span>
@@ -853,10 +1034,10 @@ function OfferBanner() {
 
 function Testimonials() {
   const cards = [
-    { name: "Tunde Bakare", role: "Foodie · Lagos", avatar: avatarTunde, text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave chefs a stage." },
-    { name: "Rahim Hassan", role: "Chef · London", avatar: avatarRahim, text: "I started cooking from my kitchen in Peckham. Within a month, I had 80 regulars ordering my egusi every weekend." },
-    { name: "Emily Carter", role: "Customer · Manchester", avatar: avatarEmily, text: "I found African chefs I never knew existed in my city. The chef booking made my birthday unforgettable." },
-    { name: "Sade Ojo", role: "Foodie · Abuja", avatar: avatarSade, text: "Fast delivery, real flavour, and stories about every dish. This is more than an app." },
+    { name: "Tunde Bakare", role: "Foodie · Lagos", avatar: "https://images.unsplash.com/photo-1531123897727-8f129e1bf98a?w=150&h=150&fit=crop&q=80", text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave chefs a stage." },
+    { name: "Rahim Hassan", role: "Chef · London", avatar: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=150&h=150&fit=crop&q=80", text: "I started cooking from my kitchen in Peckham. Within a month, I had 80 regulars ordering my egusi every weekend." },
+    { name: "Emily Carter", role: "Customer · Manchester", avatar: "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=150&h=150&fit=crop&q=80", text: "I found African chefs I never knew existed in my city. The chef booking made my birthday unforgettable." },
+    { name: "Sade Ojo", role: "Foodie · Abuja", avatar: "https://images.unsplash.com/photo-1543269664-76bc3997d9ea?w=150&h=150&fit=crop&q=80", text: "Fast delivery, real flavour, and stories about every dish. This is more than an app." },
   ];
   return (
     <section className="py-20 md:py-24 bg-background">

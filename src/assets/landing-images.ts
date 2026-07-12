@@ -33,6 +33,6 @@ export const avatarSade = u("1531123897727-8f129e1688ce", 200);
  * uploads, drop them at `public/landing/<filename>.jpg` and switch each
  * export back to `"/landing/<filename>.jpg"`.
  */
-export const illusOrder = u("1522202176988-66273c2fd55f", 900); // person on phone about to order food
-export const illusRider = u("1526367790999-0150786686a2", 900); // motorbike food-delivery rider on the street
-export const illusChef = u("1556909114-f6e7ad7d3136", 900);     // family sharing a meal together
+export const illusOrder = "/landing/easy-order.jpg";
+export const illusRider = "/landing/fast-delivery.jpg";
+export const illusChef = "/landing/cooked-culture.jpg";
