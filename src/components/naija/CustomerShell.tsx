@@ -384,7 +384,7 @@ function CustomerBottomNav() {
   return (
     /* Mobile-only bottom nav — on desktop the fixed sidebar handles navigation */
     <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none">
-      <nav className="pointer-events-auto mx-auto max-w-md flex items-stretch bg-card rounded-full px-2 py-1.5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.18)] ring-1 ring-border backdrop-blur-md bg-card/95">
+      <nav className="pointer-events-auto w-full mx-auto max-w-md flex items-stretch bg-card rounded-full px-2 py-1.5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.18)] ring-1 ring-border backdrop-blur-md bg-card/95">
         {items.map((item) => (
           <BottomNavButton key={item.to} item={item} active={checkActive(item)} />
         ))}

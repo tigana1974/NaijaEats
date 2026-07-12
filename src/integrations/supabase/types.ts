@@ -337,16 +337,6 @@ export type Database = {
         }
         Relationships: []
       }
-      create_order: {
-        Args: {
-          p_vendor_id: string
-          p_items: Json
-          p_delivery_address?: string
-          p_customer_note?: string
-          p_scheduled_for?: string
-        }
-        Relationships: []
-      }
       order_items: {
         Row: {
           created_at: string
@@ -854,6 +844,7 @@ export type Database = {
           p_customer_note?: string | null
           p_delivery_address?: string | null
           p_items: Json
+          p_scheduled_for?: string | null
           p_vendor_id: string
         }
         Returns: string

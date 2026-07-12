@@ -87,7 +87,7 @@ function hasApprovedVendor(item: SearchItem): item is SearchItemWithVendor {
 function SearchPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"All" | "restaurant" | "grocery" | "home_chef" | "shopping" | "pickup">("All");
+  const [filter, setFilter] = useState<"All" | "restaurant" | "grocery" | "chef" | "shopping" | "pickup">("All");
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: profile } = useMyProfile();
   

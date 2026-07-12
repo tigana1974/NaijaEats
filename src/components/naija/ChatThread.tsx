@@ -135,6 +135,7 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     setSending(false);
     if (error) {
       setText(body);
+      toast.error(`Message not sent: ${error.message}`);
       return;
     }
     qc.invalidateQueries({ queryKey: ["messages", conversationId] });

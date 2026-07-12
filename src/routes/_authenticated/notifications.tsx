@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { useState } from "react";
 import { Bell, Package, MessageCircle, Gift, CheckCircle2, ChevronRight } from "lucide-react";
@@ -16,6 +16,7 @@ type NotificationType = "order" | "message" | "promo" | "system";
 function NotificationsPage() {
   const { user } = Route.useRouteContext();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user.id],
@@ -49,11 +50,14 @@ function NotificationsPage() {
   });
 
   const markAllAsRead = () => markAllAsReadMut.mutate();
-  const markAsRead = (id: string) => {
+  const markAsRead = (id: string, link: string | null) => {
     // Only fire if it's unread
     const notif = notifications.find(n => n.id === id);
     if (notif?.is_unread) {
       markAsReadMut.mutate(id);
+    }
+    if (link) {
+      navigate({ to: link });
     }
   };
 
@@ -132,7 +136,7 @@ function NotificationsPage() {
               return (
                 <div 
                   key={notif.id}
-                  onClick={() => markAsRead(notif.id)}
+                  onClick={() => markAsRead(notif.id, notif.link)}
                   className={`group relative overflow-hidden rounded-[1.75rem] p-4 sm:p-5 transition-all duration-300 cursor-pointer ${
                     notif.is_unread 
                       ? "bg-orange-50/60 ring-1 ring-orange-200/50 shadow-sm hover:bg-orange-50/80" 
