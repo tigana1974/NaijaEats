@@ -173,7 +173,15 @@ function keyFor(d: Date, m: MealId) {
 }
 
 function MealPlannerPage() {
-  const [weekOffset, setWeekOffset] = useState(0);
+  const [weekOffset, setWeekOffset] = useState(() => {
+    const now = new Date();
+    const isSunday = now.getDay() === 0;
+    const isPastDinner = now.getHours() >= 22; // 22 is dinner cutoff
+    // If it's Sunday and dinner cutoff has passed, there are no bookable slots left this week.
+    // Default to the next week.
+    if (isSunday && isPastDinner) return 1;
+    return 0;
+  });
   const week = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
