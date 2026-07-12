@@ -41,7 +41,6 @@ import { Route as AuthenticatedVendorSubscriptionRouteImport } from './routes/_a
 import { Route as AuthenticatedVendorShopsRouteImport } from './routes/_authenticated/vendor.shops'
 import { Route as AuthenticatedVendorProfileRouteImport } from './routes/_authenticated/vendor.profile'
 import { Route as AuthenticatedVendorOrdersRouteImport } from './routes/_authenticated/vendor.orders'
-import { Route as AuthenticatedVendorMessagesRouteImport } from './routes/_authenticated/vendor.messages'
 import { Route as AuthenticatedVendorMenuRouteImport } from './routes/_authenticated/vendor.menu'
 import { Route as AuthenticatedVendorEarningsRouteImport } from './routes/_authenticated/vendor.earnings'
 import { Route as AuthenticatedVendorDashboardRouteImport } from './routes/_authenticated/vendor.dashboard'
@@ -86,6 +85,7 @@ import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminCustomerInsightsRouteImport } from './routes/_authenticated/admin.customer-insights'
 import { Route as AuthenticatedAdminBankingRouteImport } from './routes/_authenticated/admin.banking'
 import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
+import { Route as AuthenticatedVendorMessagesIndexRouteImport } from './routes/_authenticated/vendor.messages.index'
 import { Route as VendorSlugItemItemIdRouteImport } from './routes/vendor.$slug.item.$itemId'
 import { Route as AuthenticatedVendorMessagesConversationIdRouteImport } from './routes/_authenticated/vendor.messages.$conversationId'
 
@@ -257,12 +257,6 @@ const AuthenticatedVendorOrdersRoute =
   AuthenticatedVendorOrdersRouteImport.update({
     id: '/vendor/orders',
     path: '/vendor/orders',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedVendorMessagesRoute =
-  AuthenticatedVendorMessagesRouteImport.update({
-    id: '/vendor/messages',
-    path: '/vendor/messages',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedVendorMenuRoute = AuthenticatedVendorMenuRouteImport.update({
@@ -523,6 +517,12 @@ const AuthenticatedAdminAdsRoute = AuthenticatedAdminAdsRouteImport.update({
   path: '/admin/ads',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVendorMessagesIndexRoute =
+  AuthenticatedVendorMessagesIndexRouteImport.update({
+    id: '/vendor/messages/',
+    path: '/vendor/messages/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const VendorSlugItemItemIdRoute = VendorSlugItemItemIdRouteImport.update({
   id: '/item/$itemId',
   path: '/item/$itemId',
@@ -530,9 +530,9 @@ const VendorSlugItemItemIdRoute = VendorSlugItemItemIdRouteImport.update({
 } as any)
 const AuthenticatedVendorMessagesConversationIdRoute =
   AuthenticatedVendorMessagesConversationIdRouteImport.update({
-    id: '/$conversationId',
-    path: '/$conversationId',
-    getParentRoute: () => AuthenticatedVendorMessagesRoute,
+    id: '/vendor/messages/$conversationId',
+    path: '/vendor/messages/$conversationId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -600,7 +600,6 @@ export interface FileRoutesByFullPath {
   '/vendor/dashboard': typeof AuthenticatedVendorDashboardRoute
   '/vendor/earnings': typeof AuthenticatedVendorEarningsRoute
   '/vendor/menu': typeof AuthenticatedVendorMenuRoute
-  '/vendor/messages': typeof AuthenticatedVendorMessagesRouteWithChildren
   '/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/vendor/profile': typeof AuthenticatedVendorProfileRoute
   '/vendor/shops': typeof AuthenticatedVendorShopsRoute
@@ -614,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/wallet/': typeof AuthenticatedWalletIndexRoute
   '/vendor/messages/$conversationId': typeof AuthenticatedVendorMessagesConversationIdRoute
   '/vendor/$slug/item/$itemId': typeof VendorSlugItemItemIdRoute
+  '/vendor/messages/': typeof AuthenticatedVendorMessagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -680,7 +680,6 @@ export interface FileRoutesByTo {
   '/vendor/dashboard': typeof AuthenticatedVendorDashboardRoute
   '/vendor/earnings': typeof AuthenticatedVendorEarningsRoute
   '/vendor/menu': typeof AuthenticatedVendorMenuRoute
-  '/vendor/messages': typeof AuthenticatedVendorMessagesRouteWithChildren
   '/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/vendor/profile': typeof AuthenticatedVendorProfileRoute
   '/vendor/shops': typeof AuthenticatedVendorShopsRoute
@@ -694,6 +693,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof AuthenticatedWalletIndexRoute
   '/vendor/messages/$conversationId': typeof AuthenticatedVendorMessagesConversationIdRoute
   '/vendor/$slug/item/$itemId': typeof VendorSlugItemItemIdRoute
+  '/vendor/messages': typeof AuthenticatedVendorMessagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -762,7 +762,6 @@ export interface FileRoutesById {
   '/_authenticated/vendor/dashboard': typeof AuthenticatedVendorDashboardRoute
   '/_authenticated/vendor/earnings': typeof AuthenticatedVendorEarningsRoute
   '/_authenticated/vendor/menu': typeof AuthenticatedVendorMenuRoute
-  '/_authenticated/vendor/messages': typeof AuthenticatedVendorMessagesRouteWithChildren
   '/_authenticated/vendor/orders': typeof AuthenticatedVendorOrdersRoute
   '/_authenticated/vendor/profile': typeof AuthenticatedVendorProfileRoute
   '/_authenticated/vendor/shops': typeof AuthenticatedVendorShopsRoute
@@ -776,6 +775,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet/': typeof AuthenticatedWalletIndexRoute
   '/_authenticated/vendor/messages/$conversationId': typeof AuthenticatedVendorMessagesConversationIdRoute
   '/vendor/$slug/item/$itemId': typeof VendorSlugItemItemIdRoute
+  '/_authenticated/vendor/messages/': typeof AuthenticatedVendorMessagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -844,7 +844,6 @@ export interface FileRouteTypes {
     | '/vendor/dashboard'
     | '/vendor/earnings'
     | '/vendor/menu'
-    | '/vendor/messages'
     | '/vendor/orders'
     | '/vendor/profile'
     | '/vendor/shops'
@@ -858,6 +857,7 @@ export interface FileRouteTypes {
     | '/wallet/'
     | '/vendor/messages/$conversationId'
     | '/vendor/$slug/item/$itemId'
+    | '/vendor/messages/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -924,7 +924,6 @@ export interface FileRouteTypes {
     | '/vendor/dashboard'
     | '/vendor/earnings'
     | '/vendor/menu'
-    | '/vendor/messages'
     | '/vendor/orders'
     | '/vendor/profile'
     | '/vendor/shops'
@@ -938,6 +937,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/vendor/messages/$conversationId'
     | '/vendor/$slug/item/$itemId'
+    | '/vendor/messages'
   id:
     | '__root__'
     | '/'
@@ -1005,7 +1005,6 @@ export interface FileRouteTypes {
     | '/_authenticated/vendor/dashboard'
     | '/_authenticated/vendor/earnings'
     | '/_authenticated/vendor/menu'
-    | '/_authenticated/vendor/messages'
     | '/_authenticated/vendor/orders'
     | '/_authenticated/vendor/profile'
     | '/_authenticated/vendor/shops'
@@ -1019,6 +1018,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet/'
     | '/_authenticated/vendor/messages/$conversationId'
     | '/vendor/$slug/item/$itemId'
+    | '/_authenticated/vendor/messages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1255,13 +1255,6 @@ declare module '@tanstack/react-router' {
       path: '/vendor/orders'
       fullPath: '/vendor/orders'
       preLoaderRoute: typeof AuthenticatedVendorOrdersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/vendor/messages': {
-      id: '/_authenticated/vendor/messages'
-      path: '/vendor/messages'
-      fullPath: '/vendor/messages'
-      preLoaderRoute: typeof AuthenticatedVendorMessagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vendor/menu': {
@@ -1572,6 +1565,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/vendor/messages/': {
+      id: '/_authenticated/vendor/messages/'
+      path: '/vendor/messages'
+      fullPath: '/vendor/messages/'
+      preLoaderRoute: typeof AuthenticatedVendorMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/vendor/$slug/item/$itemId': {
       id: '/vendor/$slug/item/$itemId'
       path: '/item/$itemId'
@@ -1581,10 +1581,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/vendor/messages/$conversationId': {
       id: '/_authenticated/vendor/messages/$conversationId'
-      path: '/$conversationId'
+      path: '/vendor/messages/$conversationId'
       fullPath: '/vendor/messages/$conversationId'
       preLoaderRoute: typeof AuthenticatedVendorMessagesConversationIdRouteImport
-      parentRoute: typeof AuthenticatedVendorMessagesRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -1610,21 +1610,6 @@ const AuthenticatedOrdersRouteChildren: AuthenticatedOrdersRouteChildren = {
 
 const AuthenticatedOrdersRouteWithChildren =
   AuthenticatedOrdersRoute._addFileChildren(AuthenticatedOrdersRouteChildren)
-
-interface AuthenticatedVendorMessagesRouteChildren {
-  AuthenticatedVendorMessagesConversationIdRoute: typeof AuthenticatedVendorMessagesConversationIdRoute
-}
-
-const AuthenticatedVendorMessagesRouteChildren: AuthenticatedVendorMessagesRouteChildren =
-  {
-    AuthenticatedVendorMessagesConversationIdRoute:
-      AuthenticatedVendorMessagesConversationIdRoute,
-  }
-
-const AuthenticatedVendorMessagesRouteWithChildren =
-  AuthenticatedVendorMessagesRoute._addFileChildren(
-    AuthenticatedVendorMessagesRouteChildren,
-  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
@@ -1685,7 +1670,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendorDashboardRoute: typeof AuthenticatedVendorDashboardRoute
   AuthenticatedVendorEarningsRoute: typeof AuthenticatedVendorEarningsRoute
   AuthenticatedVendorMenuRoute: typeof AuthenticatedVendorMenuRoute
-  AuthenticatedVendorMessagesRoute: typeof AuthenticatedVendorMessagesRouteWithChildren
   AuthenticatedVendorOrdersRoute: typeof AuthenticatedVendorOrdersRoute
   AuthenticatedVendorProfileRoute: typeof AuthenticatedVendorProfileRoute
   AuthenticatedVendorShopsRoute: typeof AuthenticatedVendorShopsRoute
@@ -1695,6 +1679,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWalletTopUpRoute: typeof AuthenticatedWalletTopUpRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedWalletIndexRoute: typeof AuthenticatedWalletIndexRoute
+  AuthenticatedVendorMessagesConversationIdRoute: typeof AuthenticatedVendorMessagesConversationIdRoute
+  AuthenticatedVendorMessagesIndexRoute: typeof AuthenticatedVendorMessagesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1758,8 +1744,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVendorDashboardRoute: AuthenticatedVendorDashboardRoute,
   AuthenticatedVendorEarningsRoute: AuthenticatedVendorEarningsRoute,
   AuthenticatedVendorMenuRoute: AuthenticatedVendorMenuRoute,
-  AuthenticatedVendorMessagesRoute:
-    AuthenticatedVendorMessagesRouteWithChildren,
   AuthenticatedVendorOrdersRoute: AuthenticatedVendorOrdersRoute,
   AuthenticatedVendorProfileRoute: AuthenticatedVendorProfileRoute,
   AuthenticatedVendorShopsRoute: AuthenticatedVendorShopsRoute,
@@ -1769,6 +1753,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWalletTopUpRoute: AuthenticatedWalletTopUpRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedWalletIndexRoute: AuthenticatedWalletIndexRoute,
+  AuthenticatedVendorMessagesConversationIdRoute:
+    AuthenticatedVendorMessagesConversationIdRoute,
+  AuthenticatedVendorMessagesIndexRoute: AuthenticatedVendorMessagesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

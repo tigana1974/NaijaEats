@@ -8,7 +8,7 @@ import { useVendorStore } from "@/hooks/useVendorStore";
 import { ArrowLeft, Search, X } from "lucide-react";
 import { PiChatCircleDotsDuotone, PiUserCircleDuotone } from "react-icons/pi";
 
-export const Route = createFileRoute("/_authenticated/vendor/messages")({
+export const Route = createFileRoute("/_authenticated/vendor/messages/")({
   component: VendorInbox,
 });
 

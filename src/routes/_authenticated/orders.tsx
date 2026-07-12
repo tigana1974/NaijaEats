@@ -45,14 +45,15 @@ function OrdersPage() {
   return (
     <CustomerShell topBar={<h1 className="font-display text-lg font-bold">My Orders</h1>}>
       <div className="pt-3">
+        <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight mb-5">My Orders</h1>
         {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+            {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-20 rounded-3xl bg-zinc-100 animate-pulse" />
             ))}
           </div>
         ) : orders && orders.length > 0 ? (
-          <ul className="space-y-3">
+          <ul className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
             {orders.map((o: any) => (
               <li key={o.id}>
                 <Link

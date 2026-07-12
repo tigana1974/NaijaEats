@@ -89,8 +89,12 @@ function GroceriesPage() {
         </div>
       }
     >
-      <div className="pt-3 lg:grid lg:grid-cols-[1fr] lg:gap-8 w-full max-w-2xl mx-auto">
+      <div className="pt-3 w-full max-w-2xl lg:max-w-6xl mx-auto">
         <div className="space-y-8">
+          <div className="hidden lg:flex items-center justify-between">
+            <h1 className="font-display text-2xl font-bold tracking-tight">Groceries</h1>
+            <CountryToggle value={country} onChange={setCountry} />
+          </div>
           {/* Quick Categories */}
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             {GROCERY_CATEGORIES.map((cat) => {
@@ -115,7 +119,7 @@ function GroceriesPage() {
           <section>
             <SectionHeader title={activeCategory ? "Category Results" : "Fresh Daily"} />
             {itemsLoading ? (
-              <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3">
+              <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="aspect-[4/5] rounded-[1.75rem] bg-zinc-100 animate-pulse" />
                 ))}
@@ -123,7 +127,7 @@ function GroceriesPage() {
             ) : (items ?? []).length === 0 ? (
               <EmptyState title="No items available right now" hint="Vendors will list groceries soon." />
             ) : (
-              <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3">
+              <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                 {(items ?? []).map((it: any) => (
                   <FoodCard
                     key={it.id}
@@ -143,15 +147,15 @@ function GroceriesPage() {
           <section>
             <SectionHeader title="Top Stores" />
             {vendorsLoading ? (
-              <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
-                {Array.from({ length: 2 }).map((_, i) => (
+              <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="aspect-[16/10] rounded-[2rem] bg-zinc-100 animate-pulse" />
                 ))}
               </div>
             ) : (vendors ?? []).length === 0 ? (
               <EmptyState title="No stores yet" hint={`Check back soon as we expand in ${country === "NG" ? "Nigeria" : "the UK"}.`} />
             ) : (
-              <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2">
+              <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {(vendors ?? []).map((v: any) => (
                   <VendorCard
                     key={v.id}

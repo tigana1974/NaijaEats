@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronLeft, Sparkles } from "lucide-react";
 import {
   IoHome, IoHomeOutline,
@@ -12,7 +12,7 @@ import {
 } from "react-icons/io5";
 import { useCart } from "@/hooks/useCart";
 import { Logo } from "@/components/naija/Logo";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumUpsellDialog } from "@/components/naija/PremiumUpsellDialog";
@@ -215,16 +215,29 @@ function DesktopSidebar() {
 function DesktopTopBar() {
   const { itemCount } = useCart();
   const { count: unreadCount } = useUnreadNotifications();
+  const navigate = useNavigate();
+  const [q, setQ] = useState("");
 
   return (
     <header className="hidden lg:flex sticky top-0 z-30 h-16 items-center gap-4 px-8 bg-background/85 backdrop-blur-md border-b border-border/60">
-      {/* Global search */}
-      <Link to="/search" className="relative flex-1 max-w-xl">
+      {/* Global search — a real input; Enter (or just typing then Enter)
+          lands on /search seeded with the term */}
+      <form
+        className="relative flex-1 max-w-xl"
+        onSubmit={(e) => {
+          e.preventDefault();
+          navigate({ to: "/search", search: q.trim() ? { q: q.trim() } : {} });
+        }}
+      >
         <IoSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <div className="w-full rounded-full bg-muted/70 hover:bg-muted transition pl-11 pr-4 py-2.5 text-sm font-medium text-muted-foreground">
-          Search Naija Eats
-        </div>
-      </Link>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search Naija Eats"
+          aria-label="Search Naija Eats"
+          className="w-full rounded-full bg-muted/70 hover:bg-muted focus:bg-card transition pl-11 pr-4 py-2.5 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-transparent focus:ring-border"
+        />
+      </form>
 
       <div className="ml-auto flex items-center gap-2">
         <Link

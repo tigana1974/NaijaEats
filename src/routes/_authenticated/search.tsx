@@ -9,6 +9,10 @@ import { FoodCard, VendorCard } from "@/components/naija/customer-ui";
 
 export const Route = createFileRoute("/_authenticated/search")({
   component: SearchPage,
+  // `q` lets any search box elsewhere in the app (desktop top bar, discover
+  // hero) hand its typed text straight to this page.
+  validateSearch: (s: Record<string, unknown>): { q?: string } =>
+    typeof s.q === "string" && s.q ? { q: s.q } : {},
 });
 
 const POPULAR_SEARCHES = ["Jollof Rice", "Suya", "Plantain", "Shawarma", "Burger"];
@@ -86,7 +90,8 @@ function hasApprovedVendor(item: SearchItem): item is SearchItemWithVendor {
 
 function SearchPage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+  const { q } = Route.useSearch();
+  const [search, setSearch] = useState(q ?? "");
   const [filter, setFilter] = useState<"All" | "restaurant" | "grocery" | "chef" | "shopping" | "pickup">("All");
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: profile } = useMyProfile();
@@ -105,6 +110,12 @@ function SearchPage() {
   useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
+
+  // If another search box navigates here with a new ?q while this page is
+  // already mounted, adopt the new term.
+  useEffect(() => {
+    if (q !== undefined) setSearch(q);
+  }, [q]);
 
   const { data: vendors, isLoading: vendorsLoading } = useQuery<SearchVendor[]>({
     queryKey: ["search-vendors", search, filter],
@@ -226,6 +237,42 @@ function SearchPage() {
       }
     >
       <div className="pt-6 lg:max-w-3xl lg:mx-auto space-y-8">
+        {/* Desktop search header — the mobile topBar (with its own input) is
+            hidden on lg, so the page needs its own input + filter chips here */}
+        <div className="hidden lg:block space-y-4">
+          <h1 className="font-display text-2xl font-bold tracking-tight">Search</h1>
+          <div className="relative">
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--brand-clay)]" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Restaurants, groceries, dishes..."
+              autoFocus
+              className="w-full rounded-full bg-zinc-50 border-transparent ring-1 ring-zinc-200 pl-10 pr-4 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] transition"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { id: "All", label: "All" },
+              { id: "restaurant", label: "Restaurants" },
+              { id: "grocery", label: "Groceries" },
+              { id: "shopping", label: "Shopping" },
+              { id: "pickup", label: "Pickup" },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id as any)}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                  filter === f.id
+                    ? "bg-[var(--brand-clay)] text-white"
+                    : "bg-zinc-50 text-[var(--brand-clay)] hover:bg-zinc-100"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
         {!isSearching ? (
           <section>
             <h2 className="font-display text-lg font-bold text-zinc-900 mb-4">Popular Searches</h2>

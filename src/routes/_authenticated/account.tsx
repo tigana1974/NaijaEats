@@ -133,7 +133,7 @@ function AccountPage() {
 
   return (
     <RoleShell>
-      <div className="mx-auto max-w-md px-4 sm:px-6 py-8">
+      <div className="mx-auto max-w-md lg:max-w-2xl px-4 sm:px-6 py-8">
         <div className="flex flex-col items-center text-center">
           <div className="relative">
             <Avatar className="h-24 w-24 ring-4 ring-[var(--brand-cream)] shadow-md">

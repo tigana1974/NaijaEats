@@ -75,7 +75,7 @@ function ChatsList() {
 
   return (
     <CustomerShell hideBottomNav>
-      <div className="mx-auto w-full max-w-2xl px-3 sm:px-5 pt-3 pb-24">
+      <div className="mx-auto w-full max-w-2xl lg:max-w-3xl px-3 sm:px-5 pt-3 pb-24">
         <div className="mb-3">
           <Link
             to="/account"

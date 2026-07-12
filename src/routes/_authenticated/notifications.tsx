@@ -106,7 +106,7 @@ function NotificationsPage() {
         </div>
       }
     >
-      <div className="mx-auto max-w-2xl px-2 pt-6 sm:pt-8 space-y-6">
+      <div className="mx-auto max-w-2xl lg:max-w-3xl px-2 pt-6 sm:pt-8 space-y-6">
         
         {/* Header Actions */}
         <div className="flex items-end justify-between px-2">

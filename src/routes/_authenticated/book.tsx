@@ -266,7 +266,8 @@ function MealPlannerPage() {
         </div>
       }
     >
-      <div className="mx-auto w-full max-w-2xl pt-3 px-3 sm:px-4 pb-8">
+      <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-3 px-3 sm:px-4 pb-8">
+        <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight mb-5">Meal planner</h1>
         {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white shadow-[0_16px_40px_-20px_rgba(255,77,77,0.4)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
           <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />

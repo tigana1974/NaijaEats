@@ -118,7 +118,7 @@ function WalletPage() {
 
   return (
     <RoleShell>
-      <div className="mx-auto w-full max-w-2xl px-3 sm:px-4 pt-3 sm:pt-6 pb-10">
+      <div className="mx-auto w-full max-w-2xl lg:max-w-3xl px-3 sm:px-4 pt-3 sm:pt-6 pb-10">
         <div className="flex items-end justify-between">
           <div>
             <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-semibold">Wallet</div>

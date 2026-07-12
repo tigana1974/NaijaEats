@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -61,6 +61,8 @@ type QuickFilter = "top" | "fast" | "freeDelivery" | null;
 function DiscoverPage() {
   const { data: profile } = useMyProfile();
   const { addItem } = useCart();
+  const navigate = useNavigate();
+  const [searchDraft, setSearchDraft] = useState("");
 
   const [country, setCountryState] = useState<"NG" | "UK">(
     () => (typeof window !== "undefined" && (localStorage.getItem("ui_country") as "NG" | "UK")) || "NG",
@@ -153,14 +155,27 @@ function DiscoverPage() {
       containerClassName="mx-auto w-full max-w-6xl px-3 sm:px-5 pb-28 lg:pb-12"
     >
       <div className="pt-2 space-y-6">
-        {/* ─── 1 · Search + country ─── */}
-        <div className="flex items-center gap-3">
-          <Link to="/search" className="relative block flex-1">
+        {/* ─── 1 · Search + country ───
+            The typeable search box only shows on mobile; on desktop the shell's
+            top bar already provides global search, so here we just right-align
+            the country toggle. */}
+        <div className="flex items-center gap-3 lg:justify-end">
+          <form
+            className="relative flex-1 lg:hidden"
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate({ to: "/search", search: searchDraft.trim() ? { q: searchDraft.trim() } : {} });
+            }}
+          >
             <IoSearch className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
-            <div className="w-full rounded-full bg-muted/60 ring-1 ring-border pl-12 pr-4 py-3.5 text-sm font-medium text-muted-foreground flex items-center transition hover:bg-muted">
-              Search Naija Eats
-            </div>
-          </Link>
+            <input
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              placeholder="Search Naija Eats"
+              aria-label="Search Naija Eats"
+              className="w-full rounded-full bg-muted/60 ring-1 ring-border pl-12 pr-4 py-3.5 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[var(--brand-clay)]/40 focus:bg-card transition"
+            />
+          </form>
           <CountryToggle value={country} onChange={setCountry} />
         </div>
 
