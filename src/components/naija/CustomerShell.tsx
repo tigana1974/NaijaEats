@@ -463,7 +463,7 @@ function BottomNavButton({
       ) : (
         <Icon className={`h-6 w-6 transition-transform ${active ? "scale-110" : ""}`} />
       )}
-      <span className={`transition-opacity ${active ? "opacity-100" : "opacity-0 h-0 overflow-hidden sm:h-auto sm:opacity-100"}`}>
+      <span className={`transition-opacity ${active ? "opacity-100" : "opacity-60"}`}>
         {item.label}
       </span>
       {!!item.badge && item.badge > 0 && (
