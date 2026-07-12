@@ -29,6 +29,7 @@ import {
   dishSuya,
   dishEgusi,
   dishPuffpuff,
+  dishExtra,
   chefPortrait,
   offerPlatter,
   avatarTunde,
@@ -715,18 +716,18 @@ function Story() {
 /* ----------------------------- Special Dishes --------------------------- */
 
 const specialDishes = [
-  { name: "Jollof Rice", price: "₦5,500", rating: 4.9, img: dishJollof },
-  { name: "Suya Skewers", price: "₦7,490", rating: 4.8, img: dishSuya },
-  { name: "Egusi & Pounded Yam", price: "₦6,200", rating: 4.9, img: dishEgusi },
-  { name: "Puff Puff (12pc)", price: "₦2,500", rating: 4.7, img: dishPuffpuff },
-  { name: "Suya Platter", price: "₦8,900", rating: 4.9, img: dishSuya },
-  { name: "Egusi Bowl", price: "₦5,800", rating: 4.8, img: dishEgusi },
+  { name: "Jollof Rice & Chicken", price: "₦6,500", rating: 4.9, img: dishJollof },
+  { name: "Coconut Rice", price: "₦5,490", rating: 4.8, img: dishSuya },
+  { name: "White Rice & Efo Riro", price: "₦6,200", rating: 4.9, img: dishEgusi },
+  { name: "Special Jollof", price: "₦7,500", rating: 4.7, img: dishPuffpuff },
+  { name: "Ofada Rice", price: "₦8,900", rating: 4.9, img: dishExtra },
+  { name: "Assorted Rice Bowl", price: "₦5,800", rating: 4.8, img: dishEgusi },
   { name: "Jollof Party Pack", price: "₦12,500", rating: 4.9, img: dishJollof },
-  { name: "Puff Puff (24pc)", price: "₦4,500", rating: 4.7, img: dishPuffpuff },
+  { name: "Coconut Rice Combo", price: "₦7,500", rating: 4.7, img: dishSuya },
   { name: "Chef's Special Jollof", price: "₦6,900", rating: 4.9, img: dishJollof },
-  { name: "Suya Wrap", price: "₦3,900", rating: 4.8, img: dishSuya },
-  { name: "Family Egusi", price: "₦9,200", rating: 4.9, img: dishEgusi },
-  { name: "Sweet Puff (12pc)", price: "₦2,900", rating: 4.7, img: dishPuffpuff },
+  { name: "Ofada Combo", price: "₦9,900", rating: 4.8, img: dishExtra },
+  { name: "Family Efo Riro", price: "₦9,200", rating: 4.9, img: dishEgusi },
+  { name: "Plantain Jollof", price: "₦6,900", rating: 4.7, img: dishPuffpuff },
 ];
 
 const DISHES_PER_SLIDE = 4;
@@ -935,9 +936,9 @@ function MenuCarousel() {
 
   const staticItems = [
     { name: "Spicy Jollof", price: "₦5,500", tag: "Popular", img: dishJollof },
-    { name: "Suya Plate", price: "₦7,490", tag: "Spicy", img: dishSuya },
-    { name: "Egusi & Yam", price: "₦6,200", tag: "Comfort", img: dishEgusi },
-    { name: "Puff Puff Stack", price: "₦2,500", tag: "Sweet", img: dishPuffpuff },
+    { name: "Coconut Rice", price: "₦7,490", tag: "Spicy", img: dishSuya },
+    { name: "Rice & Efo Riro", price: "₦6,200", tag: "Comfort", img: dishEgusi },
+    { name: "Plantain Jollof", price: "₦6,900", tag: "Sweet", img: dishPuffpuff },
   ];
 
   const displayItems = Array.from({ length: 4 }).map((_, i) => {

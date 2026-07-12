@@ -11,11 +11,11 @@ const u = (id: string, w = 1200, q = 80) =>
 /** Big hero image (right-hand circular photo). */
 export const heroFood = u("1512621776951-a57141f2eefd", 1400); // steaming stew / bowl of rice
 
-/** Special-dishes & carousel cards */
-export const dishJollof = u("1596797038530-2c107229654b", 800);   // party rice / jollof
-export const dishSuya = u("1544025162-d76694265947", 800);        // grilled skewers
-export const dishEgusi = u("1567620832903-9fc6debc209f", 800);    // hearty stew
-export const dishPuffpuff = u("1551024601-bec78aea704b", 800);    // fried dough balls
+export const dishJollof = "/landing/dish1.jpg";
+export const dishSuya = "/landing/dish2.jpg";
+export const dishEgusi = "/landing/dish3.jpg";
+export const dishPuffpuff = "/landing/dish4.jpg";
+export const dishExtra = "/landing/dish5.jpg";
 
 /** Chef / people */
 export const chefPortrait = u("1577219491135-ce391730fb2c", 640); // African chef portrait
