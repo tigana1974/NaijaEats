@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "zero-club-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "C:/Users/user/Downloads/zero-club-builders-main", "--", "--port", "4300", "--strictPort"],
+      "port": 4300
+    },
+    {
+      "name": "spyda-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "C:/Users/user/Downloads/Sypda/spyda-client", "--", "--port", "4310", "--strictPort"],
+      "port": 4310
+    }
+  ]
+}

@@ -65,9 +65,9 @@ const landingItemsQuery = queryOptions({
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Naija Eats — The Home of African & Authentic Food, Delivered" },
+      { title: "Naija Eats: The Home of African & Authentic Food, Delivered" },
       { name: "description", content: "Order from chefs, African & Caribbean restaurants, and ethnic grocers. Cooked with culture, delivered fresh." },
-      { property: "og:title", content: "Naija Eats — Cooked with Culture, Delivered Fresh" },
+      { property: "og:title", content: "Naija Eats: Cooked with Culture, Delivered Fresh" },
       { property: "og:description", content: "The food ecosystem for African & authentic cuisine. Chefs, restaurants, and groceries." },
     ],
   }),
@@ -446,7 +446,7 @@ function Hero() {
             One African <span className="text-primary">Marketplace.</span>
           </h1>
           <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-md leading-relaxed">
-            Order restaurant meals, discover chefs, shop groceries, and enjoy fast delivery—all from a platform built for African food culture.
+            Order restaurant meals, discover chefs, shop groceries, and enjoy fast delivery from a platform built for African food culture.
           </p>
           <form
             onSubmit={(e) => {
@@ -697,7 +697,7 @@ function SpecialDishes() {
 function WhyUs() {
   const tiles = [
     { icon: ChefHat, title: "Chefs", copy: "Authentic recipes from grandmothers and aunties." },
-    { icon: Utensils, title: "African Restaurants", copy: "Lagos buka to Caribbean roti — at your door." },
+    { icon: Utensils, title: "African Restaurants", copy: "From Lagos buka to Caribbean roti, at your door." },
     { icon: ShoppingBasket, title: "Ethnic Grocery", copy: "Egusi, palm oil, plantains and scotch bonnets." },
     { icon: CalendarHeart, title: "Chef Booking", copy: "Book a chef for your dinner or celebration." },
   ];
@@ -711,7 +711,7 @@ function WhyUs() {
             Why <span className="text-primary">Naija Eats</span>
           </h2>
           <p className="mt-5 text-muted-foreground max-w-md leading-relaxed">
-            We are more than delivery. We are a food ecosystem — connecting the people who cook with culture to the people who crave it. Verified chefs, fair pricing, and stories behind every dish.
+            We are more than delivery. We are a food ecosystem that connects the people who cook with culture to the people who crave it. Verified chefs, fair pricing, and stories behind every dish.
           </p>
           <Link
             to="/discover"
@@ -814,7 +814,7 @@ function OfferBanner() {
               Tasty Fare,<br />Refreshing Drinks,<br />Joyful Company.
             </h2>
             <p className="mt-4 text-sm text-foreground/70 max-w-sm">
-              Order our weekend festive platter — suya, jollof, grilled fish and plantain. Feeds 4.
+              Order our weekend festive platter of suya, jollof, grilled fish and plantain. Feeds 4.
             </p>
             <div className="mt-6 flex items-center gap-5">
               <Link
@@ -982,7 +982,7 @@ function StartOrderingCTA() {
               </h2>
               <p className="mt-4 text-sm sm:text-base text-white/80 max-w-md leading-relaxed">
                 Pick from real chefs, African restaurants, and ethnic groceries near you.
-                Delivered hot, tracked live, cooked with culture — every single order.
+                Delivered hot, tracked live, cooked with culture on every single order.
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -1069,7 +1069,7 @@ function Footer() {
               </span>
             </div>
             <p className="mt-4 text-sm text-white/60 leading-relaxed max-w-[300px]">
-              The home of African &amp; authentic food — delivered fresh, cooked with culture.
+              The home of African &amp; authentic food, delivered fresh and cooked with culture.
             </p>
             <div className="mt-6 flex gap-2.5">
               {[Instagram, Twitter, Facebook].map((Icon, i) => (
@@ -1113,7 +1113,7 @@ function Footer() {
           <div className="lg:col-span-4">
             <div className="text-sm font-semibold text-white">Sign Up For Our Newsletter</div>
             <p className="mt-3 text-sm text-white/60 leading-relaxed">
-              Get launch news, early invites and exclusive offers — straight to your inbox.
+              Get launch news, early invites and exclusive offers straight to your inbox.
             </p>
             <FooterNewsletter />
             <div className="mt-4 flex items-center gap-2 text-xs text-white/50">
@@ -1150,7 +1150,7 @@ function FooterNewsletter() {
     setLoading(false);
     if (error) {
       if (error.code === "23505") {
-        toast.success("You're already on the list — we'll be in touch soon.");
+        toast.success("You're already on the list. We'll be in touch soon.");
         setEmail("");
         return;
       }
