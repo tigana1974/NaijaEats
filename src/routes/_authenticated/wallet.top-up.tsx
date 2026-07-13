@@ -111,8 +111,8 @@ function TopUpPage() {
   };
 
   return (
-    <RoleShell hideBottomNav containerClassName="fixed inset-0 z-50 bg-[oklch(0.985_0.002_90)] flex flex-col lg:relative lg:inset-auto lg:z-auto lg:flex-1">
-      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-3 sm:py-5 flex-1 flex flex-col h-full">
+    <RoleShell hideBottomNav containerClassName="fixed inset-0 z-50 bg-[oklch(0.985_0.002_90)] overflow-y-auto lg:relative lg:inset-auto lg:z-auto lg:flex-1">
+      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-4 sm:py-6 min-h-[100dvh] flex flex-col lg:min-h-0 lg:h-full">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <button
