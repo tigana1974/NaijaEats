@@ -550,9 +550,14 @@ function AmountStep({
             <span className="font-display text-2xl text-white/70">₦</span>
             <input
               type="text"
-              readOnly
-              value={amount ? amount.toLocaleString() : "0"}
-              className="w-full bg-transparent font-display text-4xl sm:text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
+              inputMode="none"
+              value={amount ? amount.toLocaleString() : ""}
+              placeholder="0"
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                setAmount(raw ? Number(raw) : 0);
+              }}
+              className="w-full bg-transparent font-display text-4xl sm:text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30"
             />
           </div>
           <div className="mt-3 flex items-center justify-between text-[11px]">
