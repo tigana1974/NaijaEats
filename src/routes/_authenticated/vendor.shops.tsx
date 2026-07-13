@@ -296,16 +296,6 @@ function ShopsPage() {
             )}
           </div>
 
-          <FilterPills
-            value={filter}
-            onChange={setFilter}
-            options={[
-              { id: "all", label: "All", count: shops.length },
-              { id: "restaurant", label: "Restaurants", count: typeCounts.restaurant ?? 0 },
-              { id: "grocery", label: "Groceries", count: typeCounts.grocery ?? 0 },
-              { id: "chef", label: "Chefs", count: typeCounts.chef ?? 0 },
-            ]}
-          />
 
           <FilterPills
             value={statusFilter}
