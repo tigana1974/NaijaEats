@@ -314,7 +314,7 @@ function AmountStep({
           <button
             key={q}
             onClick={() => setAmount(q)}
-            className={`rounded-xl border py-2 text-xs font-bold transition ${
+            className={`rounded-xl border py-3 text-sm font-bold transition ${
               amount === q
                 ? "border-emerald-500 bg-emerald-50 text-emerald-700"
                 : "border-zinc-200 bg-white hover:border-zinc-300"
