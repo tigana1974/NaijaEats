@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/wallet/request")({
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n);
 
-const QUICK_AMOUNTS = [1000, 2000, 5000, 10000];
+const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000, 50000];
 const REASON_CHIPS = ["Split bill", "Rent share", "Suya money", "Groceries", "Chop life 🎉"];
 
 type Step = "form" | "share";
@@ -251,7 +251,7 @@ function FormStep({
 
 
       {/* Quick amounts */}
-      <div className="mt-3 sm:mt-4 grid grid-cols-4 gap-2">
+      <div className="mt-3 sm:mt-4 grid grid-cols-3 gap-2">
         {QUICK_AMOUNTS.map((q) => (
           <button
             key={q}

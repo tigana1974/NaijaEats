@@ -589,8 +589,8 @@ function AmountStep({
 
 
       {/* Quick amounts */}
-      <div className="mt-3 sm:mt-4 grid grid-cols-4 gap-2">
-        {[1000, 2000, 5000, 10000].map((q) => (
+      <div className="mt-3 sm:mt-4 grid grid-cols-3 gap-2">
+        {[500, 1000, 2000, 5000, 10000, 20000].map((q) => (
           <button
             key={q}
             onClick={() => setAmount(q)}
