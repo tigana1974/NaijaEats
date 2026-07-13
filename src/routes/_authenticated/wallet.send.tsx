@@ -138,8 +138,8 @@ function SendPage() {
   };
 
   return (
-    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col overflow-hidden">
-      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5 flex-1 flex flex-col overflow-y-auto">
+    <RoleShell hideBottomNav containerClassName="fixed inset-0 z-50 bg-[oklch(0.985_0.002_90)] flex flex-col lg:relative lg:inset-auto lg:z-auto lg:flex-1">
+      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-3 sm:py-5 flex-1 flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <button
@@ -154,7 +154,7 @@ function SendPage() {
           </div>
 
           {step !== "success" && (
-            <div className="mt-5">
+            <div className="mt-2 sm:mt-5">
               <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Send money</div>
               <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
                 {step === "pick" && "Who's it for?"}
@@ -207,7 +207,7 @@ function SendPage() {
 
           {/* Sticky footer CTA */}
           {step !== "pick" && step !== "success" && (
-            <div className="mt-auto pt-6 sticky bottom-0 bg-[oklch(0.985_0.002_90)] z-10 pb-4">
+            <div className="mt-auto pt-2 sm:pt-6 pb-2 sm:pb-4">
               <button
                 onClick={step === "amount" ? () => setStep("review") : submit}
                 disabled={loading || amount < 100 || overBalance}
@@ -531,7 +531,7 @@ function AmountStep({
   return (
     <>
       {/* Recipient card */}
-      <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white border border-zinc-200 p-3.5">
+      <div className="mt-3 sm:mt-6 flex items-center gap-3 rounded-2xl bg-white border border-zinc-200 p-3.5">
         <Avatar contact={recipient} />
         <div className="flex-1 min-w-0">
           <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Sending to</div>
@@ -541,7 +541,7 @@ function AmountStep({
       </div>
 
       {/* Amount hero */}
-      <div className="relative mt-4 overflow-hidden rounded-2xl sm:rounded-[28px] p-4 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_100%_0%,oklch(0.75_0.15_160/0.55),transparent_55%),linear-gradient(140deg,#0a2d1f,#14463a_55%,#1f7a5d)]">
+      <div className="relative mt-3 sm:mt-4 overflow-hidden rounded-2xl sm:rounded-[28px] p-3 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_100%_0%,oklch(0.75_0.15_160/0.55),transparent_55%),linear-gradient(140deg,#0a2d1f,#14463a_55%,#1f7a5d)]">
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
         <div className="relative">
@@ -589,7 +589,7 @@ function AmountStep({
 
 
       {/* Keypad */}
-      <div className="mt-5">
+      <div className="mt-3 sm:mt-5">
         <WalletKeypad value={amount} onChange={setAmount} />
       </div>
     </>

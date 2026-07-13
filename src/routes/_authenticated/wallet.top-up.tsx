@@ -111,8 +111,8 @@ function TopUpPage() {
   };
 
   return (
-    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col overflow-hidden">
-      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5 flex-1 flex flex-col overflow-y-auto">
+    <RoleShell hideBottomNav containerClassName="fixed inset-0 z-50 bg-[oklch(0.985_0.002_90)] flex flex-col lg:relative lg:inset-auto lg:z-auto lg:flex-1">
+      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-3 sm:py-5 flex-1 flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <button
@@ -127,7 +127,7 @@ function TopUpPage() {
           </div>
 
           {step !== "success" && (
-            <div className="mt-5">
+            <div className="mt-2 sm:mt-5">
               <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Top up</div>
               <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
                 {step === "amount" && "How much?"}
@@ -177,7 +177,7 @@ function TopUpPage() {
 
           {/* Sticky footer CTA */}
           {step !== "success" && (
-            <div className="mt-auto pt-6 sticky bottom-0 bg-[oklch(0.985_0.002_90)] z-10 pb-4">
+            <div className="mt-auto pt-2 sm:pt-6 pb-2 sm:pb-4">
               <button
                 onClick={goNext}
                 disabled={!canContinue || loading}
@@ -245,7 +245,7 @@ function AmountStep({
   return (
     <>
       {/* Balance preview */}
-      <div className="relative mt-6 overflow-hidden rounded-2xl sm:rounded-[28px] p-4 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
+      <div className="relative mt-3 sm:mt-6 overflow-hidden rounded-2xl sm:rounded-[28px] p-3 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(140deg,#1a1108,#3a1a14_55%,#7c2d12)]">
         <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
 
@@ -294,8 +294,8 @@ function AmountStep({
 
 
       {/* Bonus nudge */}
-      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-3">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700">
+      <div className="mt-2 sm:mt-4 flex items-center gap-2 sm:gap-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-2 sm:p-3">
+        <span className="grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-xl bg-amber-100 text-amber-700">
           <Sparkles className="h-4 w-4" />
         </span>
         <div className="flex-1">
@@ -309,7 +309,7 @@ function AmountStep({
       </div>
 
       {/* Keypad */}
-      <div className="mt-5">
+      <div className="mt-3 sm:mt-5">
         <WalletKeypad value={amount} onChange={setAmount} />
       </div>
     </>

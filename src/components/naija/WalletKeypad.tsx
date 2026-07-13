@@ -38,7 +38,7 @@ export function WalletKeypad({
           key={k}
           type="button"
           onClick={() => press(k)}
-          className="h-14 rounded-2xl bg-white border border-zinc-100 text-zinc-900 font-display text-xl font-semibold hover:bg-zinc-50 active:scale-95 transition-all shadow-sm"
+          className="h-12 sm:h-14 rounded-2xl bg-white border border-zinc-100 text-zinc-900 font-display text-lg sm:text-xl font-semibold hover:bg-zinc-50 active:scale-95 transition-all shadow-sm"
         >
           {k === "back" ? <Delete className="h-5 w-5 mx-auto text-zinc-500" /> : k}
         </button>

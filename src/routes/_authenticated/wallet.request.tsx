@@ -89,8 +89,8 @@ function RequestPage() {
   };
 
   return (
-    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col overflow-hidden">
-      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5 flex-1 flex flex-col overflow-y-auto">
+    <RoleShell hideBottomNav containerClassName="fixed inset-0 z-50 bg-[oklch(0.985_0.002_90)] flex flex-col lg:relative lg:inset-auto lg:z-auto lg:flex-1">
+      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-3 sm:py-5 flex-1 flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <button
@@ -105,7 +105,7 @@ function RequestPage() {
           </div>
 
           {step !== "share" && (
-            <div className="mt-5">
+            <div className="mt-2 sm:mt-5">
               <div className="text-[11px] uppercase tracking-[0.18em] text-amber-600 font-bold">Request money</div>
               <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
                 Generate link
@@ -136,7 +136,7 @@ function RequestPage() {
           ) : null}
 
           {step === "form" && (
-            <div className="mt-auto pt-6 sticky bottom-0 bg-[oklch(0.985_0.002_90)] z-10 pb-4">
+            <div className="mt-auto pt-2 sm:pt-6 pb-2 sm:pb-4">
               <button
                 onClick={generate}
                 disabled={!canGenerate}
@@ -208,7 +208,7 @@ function FormStep({
   return (
     <>
       {/* Amount hero */}
-      <div className="relative mt-6 overflow-hidden rounded-2xl sm:rounded-[28px] p-4 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_100%,oklch(0.78_0.19_60/0.5),transparent_55%),linear-gradient(140deg,#1a1208,#3a230d_55%,#a65a1e)]">
+      <div className="relative mt-3 sm:mt-6 overflow-hidden rounded-2xl sm:rounded-[28px] p-3 sm:p-6 text-white shadow-[var(--shadow-warm)] bg-[radial-gradient(120%_120%_at_0%_100%,oklch(0.78_0.19_60/0.5),transparent_55%),linear-gradient(140deg,#1a1208,#3a230d_55%,#a65a1e)]">
         <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-amber-300/25 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
         <div className="relative">
@@ -251,7 +251,7 @@ function FormStep({
 
 
       {/* Keypad */}
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         <WalletKeypad value={amount} onChange={setAmount} />
       </div>
 
