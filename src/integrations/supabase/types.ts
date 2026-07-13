@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_access_codes: {
+        Row: {
+          active: boolean
+          code: string
+          country: Database["public"]["Enums"]["country_code"]
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          label: string | null
+          last_used_at: string | null
+          use_count: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          country: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          use_count?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          country?: Database["public"]["Enums"]["country_code"]
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          use_count?: number
+        }
+        Relationships: []
+      }
+      admin_audit_log: {
+        Row: {
+          action: string
+          country: Database["public"]["Enums"]["country_code"] | null
+          created_at: string
+          details: Json | null
+          id: string
+          record_id: string | null
+          table_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          country?: Database["public"]["Enums"]["country_code"] | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          record_id?: string | null
+          table_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          country?: Database["public"]["Enums"]["country_code"] | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          record_id?: string | null
+          table_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_members: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          is_parent: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          is_parent?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          is_parent?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           city: string
@@ -842,6 +935,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_admin_access_code: {
+        Args: {
+          p_country: Database["public"]["Enums"]["country_code"]
+          p_label?: string | null
+        }
+        Returns: Json
+      }
+      get_my_admin_scope: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      is_parent_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      log_admin_event: {
+        Args: {
+          p_action: string
+          p_country?: Database["public"]["Enums"]["country_code"] | null
+          p_details?: Json | null
+        }
+        Returns: undefined
+      }
+      redeem_admin_code: {
+        Args: {
+          p_code: string
+          p_country: Database["public"]["Enums"]["country_code"]
+        }
+        Returns: Json
+      }
+      set_admin_code_active: {
+        Args: { p_active: boolean; p_id: string }
+        Returns: undefined
+      }
       create_order: {
         Args: {
           p_customer_note?: string | null

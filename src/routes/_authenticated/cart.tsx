@@ -65,11 +65,11 @@ function CartPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("vendors")
-        .select("id, logo_url, cover_image_url")
+        .select("id, logo_url, cover_image_url, offers_free_delivery")
         .in("id", vendorIds);
-      const byId: Record<string, { logo_url: string | null; cover_image_url: string | null }> = {};
+      const byId: Record<string, { logo_url: string | null; cover_image_url: string | null; offers_free_delivery: boolean }> = {};
       for (const v of data ?? []) {
-        byId[v.id] = { logo_url: v.logo_url, cover_image_url: v.cover_image_url };
+        byId[v.id] = { logo_url: v.logo_url, cover_image_url: v.cover_image_url, offers_free_delivery: v.offers_free_delivery };
       }
       return byId;
     },
@@ -94,7 +94,14 @@ function CartPage() {
     (s, c) => s + c.items.reduce((si, i) => si + i.price * i.quantity, 0),
     0,
   );
-  const grandDelivery = vendorCarts.reduce((s, c) => s + c.deliveryFee, 0);
+  
+  const getStandardDeliveryFee = (currency: string) => (currency === "GBP" ? 3.50 : 1500);
+
+  const grandDelivery = vendorCarts.reduce((s, c) => {
+    const isFree = vendorMeta?.[c.vendorId]?.offers_free_delivery;
+    if (isFree) return s;
+    return s + getStandardDeliveryFee(c.currency);
+  }, 0);
 
   // Coupon discount is derived from the applied coupon + current totals so it
   // stays live as the customer adds or removes items.
@@ -165,6 +172,7 @@ function CartPage() {
           p_delivery_address: resolvedAddress,
           p_customer_note: note.trim() || null,
           p_scheduled_for: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null,
+          p_calculated_delivery_fee: getStandardDeliveryFee(cart.currency),
         });
         if (error) throw error;
         if (!orderId) throw new Error(`Could not create order for ${cart.vendorName}`);
@@ -314,7 +322,15 @@ function CartPage() {
                   <span className="text-muted-foreground">
                     Subtotal <span className="font-semibold text-foreground">{fmt(subtotal)}</span>
                     <span className="mx-2 opacity-40">·</span>
-                    Delivery <span className="font-semibold text-foreground">{fmt(cart.deliveryFee)}</span>
+                    Delivery{" "}
+                    {vendorMeta?.[cart.vendorId]?.offers_free_delivery ? (
+                      <span className="font-semibold text-foreground">
+                        <span className="line-through text-muted-foreground mr-1.5">{fmt(getStandardDeliveryFee(cart.currency))}</span>
+                        Free
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-foreground">{fmt(getStandardDeliveryFee(cart.currency))}</span>
+                    )}
                   </span>
                   {belowMinimum && (
                     <span className="rounded-full bg-amber-100 text-amber-900 px-2 py-1 text-[10px] font-bold uppercase tracking-wider">

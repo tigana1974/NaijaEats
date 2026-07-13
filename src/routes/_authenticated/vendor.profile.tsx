@@ -22,7 +22,7 @@ type Form = {
   address_line: string;
   cover_image_url: string;
   logo_url: string;
-  delivery_fee: number;
+  offers_free_delivery: boolean;
   min_order: number;
 };
 
@@ -37,7 +37,7 @@ const defaultForm: Form = {
   address_line: "",
   cover_image_url: "",
   logo_url: "",
-  delivery_fee: 0,
+  offers_free_delivery: false,
   min_order: 0,
 };
 
@@ -121,7 +121,7 @@ function VendorProfilePage() {
         address_line: existing.address_line ?? "",
         cover_image_url: existing.cover_image_url ?? "",
         logo_url: existing.logo_url ?? "",
-        delivery_fee: existing.delivery_fee || 0,
+        offers_free_delivery: existing.offers_free_delivery || false,
         min_order: existing.min_order || 0,
       });
     } else {
@@ -366,12 +366,23 @@ function VendorProfilePage() {
               </Field>
             </div>
             <div className={`grid gap-4 ${isGrocery ? "sm:grid-cols-2" : "sm:grid-cols-2"}`}>
-              <Field label="Delivery fee">
-                <input
-                  type="number" min={0} step="any" placeholder="0" className="vinput"
-                  value={form.delivery_fee === 0 ? "" : form.delivery_fee}
-                  onChange={(e) => set("delivery_fee", Number(e.target.value))}
-                />
+              <Field label="Offer free delivery?">
+                <label className="flex items-center gap-3 cursor-pointer mt-1">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={form.offers_free_delivery}
+                      onChange={(e) => set("offers_free_delivery", e.target.checked)}
+                    />
+                    <div className={`block h-6 w-11 rounded-full transition-colors ${form.offers_free_delivery ? 'bg-[var(--brand-clay)]' : 'bg-muted-foreground/30'}`}></div>
+                    <div className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${form.offers_free_delivery ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                  </div>
+                  <span className="text-sm font-medium">Yes, subsidize rider fees</span>
+                </label>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  We will cover the rider's delivery fee for your customers out of your order subtotal to help you attract more sales.
+                </p>
               </Field>
               <Field label="Min order">
                 <input

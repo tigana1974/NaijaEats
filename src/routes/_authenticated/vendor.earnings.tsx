@@ -50,7 +50,7 @@ function VendorEarnings() {
       // been delivered but never actually paid for isn't money you have.
       const { data: orders } = await supabase
         .from("orders")
-        .select("id, total, currency, created_at")
+        .select("id, total, subtotal, subsidized_delivery_fee, currency, created_at")
         .eq("vendor_id", vendor.id)
         .eq("payment_status", "paid")
         .order("created_at", { ascending: false });
@@ -58,7 +58,9 @@ function VendorEarnings() {
       const totals = list.reduce(
         (acc, o) => {
           const c = o.currency || "NGN";
-          acc[c] = (acc[c] ?? 0) + Number(o.total || 0);
+          const sub = Number(o.subtotal || o.total || 0);
+          const subFee = Number(o.subsidized_delivery_fee || 0);
+          acc[c] = (acc[c] ?? 0) + Math.max(0, sub - subFee);
           return acc;
         },
         {} as Record<string, number>,

@@ -12,11 +12,11 @@ import {
   UberTh,
   UberTr,
   UberTd,
-  UberStatus,
   uberBtn,
 } from "@/components/admin/AdminUI";
 import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { REQUIRED_RIDER_DOCS } from "@/hooks/useRiderStatus";
 import {
   Dialog,
   DialogContent,
@@ -56,22 +56,56 @@ function AdminRiders() {
     queryFn: async () => {
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "rider");
       const ids = (roles ?? []).map((r: any) => r.user_id).filter(Boolean);
-      if (ids.length === 0) return [];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id,full_name,email,phone,avatar_url,created_at")
-        .in("id", ids);
-      return profiles ?? [];
+      if (ids.length === 0) return { profiles: [], docs: [], activeRiderIds: new Set<string>() };
+      const [{ data: profiles }, { data: docs }, { data: activeDeliveries }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id,full_name,phone,avatar_url,created_at")
+          .in("id", ids),
+        supabase
+          .from("rider_documents")
+          .select("rider_id, doc_type, status")
+          .in("rider_id", ids),
+        supabase
+          .from("deliveries")
+          .select("rider_id")
+          .in("rider_id", ids)
+          .or(`status.in.(assigned,picked_up),delivered_at.gte.${startOfTodayIso()}`),
+      ]);
+      return {
+        profiles: profiles ?? [],
+        docs: docs ?? [],
+        activeRiderIds: new Set((activeDeliveries ?? []).map((d: any) => d.rider_id).filter(Boolean)),
+      };
     },
   });
 
-  const list = data ?? [];
+  const list = data?.profiles ?? [];
+  const verificationByRider = useMemo(() => {
+    const map = new Map<string, "verified" | "pending" | "incomplete">();
+    for (const r of list) {
+      const riderDocs = (data?.docs ?? []).filter((d: any) => d.rider_id === r.id);
+      let missing = 0;
+      let pending = 0;
+      for (const req of REQUIRED_RIDER_DOCS) {
+        const uploads = riderDocs.filter((d: any) => d.doc_type === req.key);
+        if (uploads.some((d: any) => d.status === "verified")) continue;
+        if (uploads.some((d: any) => d.status === "pending")) pending += 1;
+        else missing += 1;
+      }
+      map.set(r.id, missing > 0 ? "incomplete" : pending > 0 ? "pending" : "verified");
+    }
+    return map;
+  }, [list, data?.docs]);
+
+  const awaitingCount = [...verificationByRider.values()].filter((v) => v === "pending").length;
+  const activeCount = data?.activeRiderIds?.size ?? 0;
 
   const filtered = useMemo(() => {
     if (!search) return list;
     const s = search.toLowerCase();
     return list.filter((r: any) =>
-      [r.full_name, r.email, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
+      [r.full_name, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
     );
   }, [list, search]);
 
@@ -91,8 +125,8 @@ function AdminRiders() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <UberKpi label="Total riders" value={isLoading ? "…" : list.length.toLocaleString()} hint="Onboarded on the platform" />
-          <UberKpi label="Active today" value={isLoading ? "…" : Math.max(0, Math.floor(list.length * 0.35))} hint="Available for delivery" />
-          <UberKpi label="Awaiting verification" value={0} hint="Documents to review" />
+          <UberKpi label="Active today" value={isLoading ? "…" : activeCount.toLocaleString()} hint="On a delivery today" />
+          <UberKpi label="Awaiting verification" value={isLoading ? "…" : awaitingCount.toLocaleString()} hint="Documents to review" />
         </div>
 
         <div className="mt-8">
@@ -128,7 +162,7 @@ function AdminRiders() {
                     <UberTd>
                       <div className="flex items-center gap-2.5">
                         <div className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.95_0.05_65)] text-[var(--naija-orange-dark)] text-xs font-medium">
-                          {initials(r.full_name || r.email)}
+                          {initials(r.full_name)}
                         </div>
                         <div>
                           <div className="font-medium text-[oklch(0.18_0.006_260)]">{r.full_name || "Unnamed rider"}</div>
@@ -137,10 +171,9 @@ function AdminRiders() {
                       </div>
                     </UberTd>
                     <UberTd className="text-neutral-600">
-                      <div className="truncate">{r.email || "—"}</div>
-                      <div className="text-[12px] text-neutral-500">{r.phone || ""}</div>
+                      <div className="truncate">{r.phone || "—"}</div>
                     </UberTd>
-                    <UberTd><UberStatus status="active" /></UberTd>
+                    <UberTd><RiderVerificationChip status={verificationByRider.get(r.id) ?? "incomplete"} /></UberTd>
                     <UberTd className="text-neutral-500">
                       {r.created_at ? new Date(r.created_at).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }) : "—"}
                     </UberTd>
@@ -213,6 +246,26 @@ function AdminRiders() {
       </Dialog>
     </AdminShell>
   );
+}
+
+function RiderVerificationChip({ status }: { status: "verified" | "pending" | "incomplete" }) {
+  const meta = {
+    verified: { label: "Verified", cls: "bg-[oklch(0.95_0.05_145)] text-[var(--naija-green-dark)]" },
+    pending: { label: "Pending review", cls: "bg-[oklch(0.95_0.05_65)] text-[var(--naija-orange-dark)]" },
+    incomplete: { label: "Docs incomplete", cls: "bg-[oklch(0.95_0.005_260)] text-[oklch(0.32_0.006_260)]" },
+  }[status];
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-medium ${meta.cls}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-90" />
+      {meta.label}
+    </span>
+  );
+}
+
+function startOfTodayIso() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
 }
 
 function initials(name?: string | null) {

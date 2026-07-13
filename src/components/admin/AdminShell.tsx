@@ -5,6 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUnreadNotifications, formatBadgeCount } from "@/hooks/useUnreadNotifications";
 import { useMyRole } from "@/hooks/useMyRole";
 import {
+  useAdminScope,
+  isRegionUnlocked,
+  unlockRegion,
+  regionToCountry,
+  type AdminRegion,
+} from "@/hooks/useAdminScope";
+import { toast } from "sonner";
+import {
   ChevronDown,
   ChevronRight,
   Bell,
@@ -12,6 +20,7 @@ import {
   Menu as MenuIcon,
   X,
   Check,
+  Lock,
 } from "lucide-react";
 import {
   PiHouseDuotone,
@@ -30,6 +39,7 @@ import {
   PiShieldCheckDuotone,
   PiTruckDuotone,
   PiGearSixDuotone,
+  PiKeyDuotone,
 } from "react-icons/pi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/naija/Logo";
@@ -98,6 +108,7 @@ const NAV: NavItem[] = [
   },
   { to: "/admin/financing", label: "Financing", icon: PiHandCoinsDuotone },
   { to: "/admin/users", label: "Users & roles", icon: PiShieldCheckDuotone },
+  { to: "/admin/access", label: "Access control", icon: PiKeyDuotone },
   { to: "/admin/delivery", label: "Delivery settings", icon: PiTruckDuotone },
   {
     to: "/admin/settings",
@@ -154,17 +165,58 @@ const SIDEBAR_WIDTH = 248;
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: role, isLoading: roleLoading } = useMyRole();
+  const scope = useAdminScope();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [region, setRegion] = useState<string>(() => {
     if (typeof window === "undefined") return "all";
     return window.localStorage.getItem("naija-admin-region") ?? "all";
   });
   const [regionOpen, setRegionOpen] = useState(false);
+  const [codeModal, setCodeModal] = useState<"uk" | "ng" | null>(null);
+  // Bumped after a successful code redemption so the lock state re-evaluates.
+  const [, setUnlockVersion] = useState(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("naija-admin-region", region);
   }, [region]);
+
+  // Managers only see the panel for a country they've unlocked this session.
+  const managerLocked =
+    !scope.loading &&
+    !scope.isParent &&
+    (region === "all" || !isRegionUnlocked(region as AdminRegion));
+
+  const switchRegion = (id: string) => {
+    setRegion(id);
+    const country = regionToCountry(id as AdminRegion);
+    // Fire-and-forget: the switch itself lands in the audit trail.
+    supabase.rpc("log_admin_event", { p_action: "region_switched", p_country: country }).then(() => {});
+  };
+
+  const handleRegionSelect = (id: string) => {
+    setRegionOpen(false);
+    if (scope.isParent) {
+      switchRegion(id);
+      return;
+    }
+    if (id === "all") {
+      toast.error("Only the parent admin can view all regions.");
+      return;
+    }
+    if (isRegionUnlocked(id as AdminRegion)) {
+      switchRegion(id);
+      return;
+    }
+    setCodeModal(id as "uk" | "ng");
+  };
+
+  const handleUnlocked = (id: "uk" | "ng") => {
+    unlockRegion(id);
+    setRegion(id);
+    setUnlockVersion((v) => v + 1);
+    setCodeModal(null);
+  };
 
   useEffect(() => {
     setMobileOpen(false);
@@ -203,6 +255,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     .join("");
 
   const activeRegion = REGIONS.find((r) => r.id === region) ?? REGIONS[0];
+  // "All regions" is a parent-admin privilege; managers pick one country.
+  const visibleRegions = scope.isParent ? REGIONS : REGIONS.filter((r) => r.id !== "all");
 
   return (
     <div className="min-h-screen bg-white text-[oklch(0.18_0.006_260)]">
@@ -259,14 +313,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
             <RegionSelector
               activeRegion={activeRegion}
+              regions={visibleRegions}
               open={regionOpen}
               onToggle={() => setRegionOpen((v) => !v)}
-              onSelect={(id) => {
-                setRegion(id);
-                setRegionOpen(false);
-              }}
+              onSelect={handleRegionSelect}
             />
-            <SidebarNav isActive={isActive} />
+            <SidebarNav isActive={isActive} showAccessControl={scope.isParent} />
           </aside>
         </div>
       )}
@@ -282,15 +334,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           <RegionSelector
             activeRegion={activeRegion}
+            regions={visibleRegions}
             open={regionOpen}
             onToggle={() => setRegionOpen((v) => !v)}
-            onSelect={(id) => {
-              setRegion(id);
-              setRegionOpen(false);
-            }}
+            onSelect={handleRegionSelect}
           />
           <div className="flex-1 overflow-y-auto pb-3">
-            <SidebarNav isActive={isActive} />
+            <SidebarNav isActive={isActive} showAccessControl={scope.isParent} />
           </div>
         </aside>
 
@@ -325,9 +375,183 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </Link>
           </header>
 
-          <main className="min-h-screen">{children}</main>
+          <main className="min-h-screen">
+            {scope.loading ? (
+              <div className="grid min-h-[60vh] place-items-center text-sm text-neutral-500">Loading…</div>
+            ) : managerLocked ? (
+              <ManagerLockScreen onUnlocked={handleUnlocked} />
+            ) : (
+              children
+            )}
+          </main>
         </div>
       </div>
+
+      {codeModal && (
+        <AccessCodeModal
+          region={codeModal}
+          onClose={() => setCodeModal(null)}
+          onUnlocked={() => handleUnlocked(codeModal)}
+        />
+      )}
+    </div>
+  );
+}
+
+const REGION_NAMES: Record<"uk" | "ng", string> = { uk: "United Kingdom", ng: "Nigeria" };
+
+/**
+ * Full-screen gate shown to country managers until they redeem an access
+ * code from the parent admin. Redemption is validated server-side and lands
+ * in the audit log.
+ */
+function ManagerLockScreen({ onUnlocked }: { onUnlocked: (id: "uk" | "ng") => void }) {
+  const [target, setTarget] = useState<"ng" | "uk">("ng");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("redeem_admin_code", {
+        p_code: code.trim(),
+        p_country: regionToCountry(target)!,
+      });
+      if (error) throw error;
+      const res = data as { ok: boolean; reason?: string };
+      if (!res?.ok) {
+        toast.error(res?.reason ?? "That code didn't work.");
+        return;
+      }
+      toast.success(`${REGION_NAMES[target]} panel unlocked`);
+      onUnlocked(target);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not verify the code");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="grid min-h-[70vh] place-items-center px-4">
+      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-[oklch(0.92_0.003_260)] bg-white p-6 shadow-sm">
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-[oklch(0.96_0.03_145)] text-[var(--naija-green)]">
+          <Lock className="h-5 w-5" />
+        </div>
+        <h2 className="mt-4 font-display text-xl font-semibold">Manager access</h2>
+        <p className="mt-1 text-sm text-neutral-500">
+          Enter the access code the parent admin gave you to manage a region.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {(["ng", "uk"] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTarget(id)}
+              className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                target === id
+                  ? "border-[var(--naija-green)] bg-[oklch(0.96_0.03_145)] text-[oklch(0.32_0.10_145)]"
+                  : "border-[oklch(0.92_0.003_260)] hover:bg-[oklch(0.965_0.003_260)]"
+              }`}
+            >
+              {REGION_NAMES[id]}
+            </button>
+          ))}
+        </div>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          placeholder="Access code"
+          autoFocus
+          className="mt-3 w-full rounded-lg border border-[oklch(0.92_0.003_260)] px-3 py-2.5 font-mono text-sm tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-[var(--naija-green)]"
+        />
+        <button
+          type="submit"
+          disabled={busy || !code.trim()}
+          className="mt-4 w-full rounded-lg bg-[var(--naija-green)] py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {busy ? "Checking…" : `Unlock ${REGION_NAMES[target]}`}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/** Small dialog for an already-unlocked manager switching to the other country. */
+function AccessCodeModal({
+  region,
+  onClose,
+  onUnlocked,
+}: {
+  region: "uk" | "ng";
+  onClose: () => void;
+  onUnlocked: () => void;
+}) {
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("redeem_admin_code", {
+        p_code: code.trim(),
+        p_country: regionToCountry(region)!,
+      });
+      if (error) throw error;
+      const res = data as { ok: boolean; reason?: string };
+      if (!res?.ok) {
+        toast.error(res?.reason ?? "That code didn't work.");
+        return;
+      }
+      toast.success(`${REGION_NAMES[region]} panel unlocked`);
+      onUnlocked();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not verify the code");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] grid place-items-center bg-black/40 px-4" onClick={onClose}>
+      <form
+        onSubmit={submit}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-[oklch(0.96_0.03_145)] text-[var(--naija-green)]">
+            <Lock className="h-4 w-4" />
+          </span>
+          <div>
+            <div className="font-semibold">Switch to {REGION_NAMES[region]}</div>
+            <div className="text-xs text-neutral-500">Enter the {REGION_NAMES[region]} access code.</div>
+          </div>
+        </div>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          placeholder="Access code"
+          autoFocus
+          className="mt-4 w-full rounded-lg border border-[oklch(0.92_0.003_260)] px-3 py-2.5 font-mono text-sm tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-[var(--naija-green)]"
+        />
+        <div className="mt-4 flex gap-2">
+          <button
+            type="submit"
+            disabled={busy || !code.trim()}
+            className="flex-1 rounded-lg bg-[var(--naija-green)] py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {busy ? "Checking…" : "Unlock"}
+          </button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-[oklch(0.92_0.003_260)] px-4 py-2.5 text-sm">
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -345,11 +569,13 @@ function BrandMark() {
 
 function RegionSelector({
   activeRegion,
+  regions = REGIONS,
   open,
   onToggle,
   onSelect,
 }: {
   activeRegion: (typeof REGIONS)[number];
+  regions?: typeof REGIONS;
   open: boolean;
   onToggle: () => void;
   onSelect: (id: string) => void;
@@ -374,7 +600,7 @@ function RegionSelector({
       </button>
       {open && (
         <div className="absolute left-3 right-3 z-20 mt-1 overflow-hidden rounded-lg border border-[oklch(0.92_0.003_260)] bg-white shadow-lg">
-          {REGIONS.map((r) => {
+          {regions.map((r) => {
             const active = r.id === activeRegion.id;
             return (
               <button
@@ -399,11 +625,18 @@ function RegionSelector({
   );
 }
 
-function SidebarNav({ isActive }: { isActive: (to: string) => boolean }) {
+function SidebarNav({
+  isActive,
+  showAccessControl,
+}: {
+  isActive: (to: string) => boolean;
+  showAccessControl?: boolean;
+}) {
+  const items = NAV.filter((item) => item.to !== "/admin/access" || showAccessControl);
   return (
     <nav className="px-2 pt-1">
       <ul className="space-y-0.5">
-        {NAV.map((item) => (
+        {items.map((item) => (
           <NavRow key={item.to + item.label} item={item} isActive={isActive} />
         ))}
       </ul>

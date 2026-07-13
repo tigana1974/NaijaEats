@@ -85,6 +85,7 @@ import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminCustomerInsightsRouteImport } from './routes/_authenticated/admin.customer-insights'
 import { Route as AuthenticatedAdminBankingRouteImport } from './routes/_authenticated/admin.banking'
 import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
+import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
 import { Route as AuthenticatedVendorMessagesIndexRouteImport } from './routes/_authenticated/vendor.messages.index'
 import { Route as VendorSlugItemItemIdRouteImport } from './routes/vendor.$slug.item.$itemId'
 import { Route as AuthenticatedVendorMessagesConversationIdRouteImport } from './routes/_authenticated/vendor.messages.$conversationId'
@@ -517,6 +518,12 @@ const AuthenticatedAdminAdsRoute = AuthenticatedAdminAdsRouteImport.update({
   path: '/admin/ads',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminAccessRoute =
+  AuthenticatedAdminAccessRouteImport.update({
+    id: '/admin/access',
+    path: '/admin/access',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedVendorMessagesIndexRoute =
   AuthenticatedVendorMessagesIndexRouteImport.update({
     id: '/vendor/messages/',
@@ -556,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/xora': typeof AuthenticatedXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
+  '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
   '/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
@@ -636,6 +644,7 @@ export interface FileRoutesByTo {
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/xora': typeof AuthenticatedXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
+  '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banking': typeof AuthenticatedAdminBankingRoute
   '/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
@@ -718,6 +727,7 @@ export interface FileRoutesById {
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/xora': typeof AuthenticatedXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
+  '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/_authenticated/admin/banking': typeof AuthenticatedAdminBankingRoute
   '/_authenticated/admin/customer-insights': typeof AuthenticatedAdminCustomerInsightsRoute
@@ -800,6 +810,7 @@ export interface FileRouteTypes {
     | '/subscription'
     | '/xora'
     | '/vendor/$slug'
+    | '/admin/access'
     | '/admin/ads'
     | '/admin/banking'
     | '/admin/customer-insights'
@@ -880,6 +891,7 @@ export interface FileRouteTypes {
     | '/subscription'
     | '/xora'
     | '/vendor/$slug'
+    | '/admin/access'
     | '/admin/ads'
     | '/admin/banking'
     | '/admin/customer-insights'
@@ -961,6 +973,7 @@ export interface FileRouteTypes {
     | '/_authenticated/subscription'
     | '/_authenticated/xora'
     | '/vendor/$slug'
+    | '/_authenticated/admin/access'
     | '/_authenticated/admin/ads'
     | '/_authenticated/admin/banking'
     | '/_authenticated/admin/customer-insights'
@@ -1565,6 +1578,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/access': {
+      id: '/_authenticated/admin/access'
+      path: '/admin/access'
+      fullPath: '/admin/access'
+      preLoaderRoute: typeof AuthenticatedAdminAccessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/vendor/messages/': {
       id: '/_authenticated/vendor/messages/'
       path: '/vendor/messages'
@@ -1628,6 +1648,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedXoraRoute: typeof AuthenticatedXoraRoute
+  AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminBankingRoute: typeof AuthenticatedAdminBankingRoute
   AuthenticatedAdminCustomerInsightsRoute: typeof AuthenticatedAdminCustomerInsightsRoute
@@ -1700,6 +1721,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedXoraRoute: AuthenticatedXoraRoute,
+  AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminBankingRoute: AuthenticatedAdminBankingRoute,
   AuthenticatedAdminCustomerInsightsRoute:
