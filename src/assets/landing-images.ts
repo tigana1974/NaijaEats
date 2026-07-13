@@ -46,13 +46,13 @@ const cat = (id: string) => u(id, 96, 70);
 
 export const categoryPhotos: Record<string, string> = {
   all: cat("1512621776951-a57141f2eefd"),        // colourful bowls spread
-  jollof: cat("1643491451031-b68e3e1b8ae0"),     // jollof rice — reddish tomato rice in a pot
-  suya: cat("1555939594-58d7cb561ad1"),           // grilled meat skewers / kebabs (suya-style)
-  soups: cat("1547592166-23ac45744acd"),          // rich soup bowl
-  swallow: cat("1604329760661-e71dc83f8f26"),     // pounded yam / fufu with soup
-  rice: cat("1596560548464-f010549b84d7"),         // white / fried rice dish
-  grills: cat("1544025162-d76694265947"),          // barbecue grill
-  snacks: cat("1565299624946-b28f40a0ae38"),       // fried dough / puff-puff style snacks
+  jollof: "/landing/categories/jollof.png",      // local generated jollof image
+  suya: "/landing/categories/suya.png",          // local generated suya image
+  soups: "/landing/categories/soups.png",        // local generated soup image
+  swallow: "/landing/categories/swallow.png",    // local generated swallow image
+  rice: "/landing/categories/rice.png",          // local generated rice image
+  grills: "/landing/categories/grills.png",      // local generated grills image
+  snacks: "/landing/categories/snacks.png",      // local generated snacks image
   drinks: cat("1551024709-8f23befc6f87"),          // iced drinks
   grocery: cat("1542838132-92c53300491e"),         // fresh market produce
   chefs: cat("1577219491135-ce391730fb2c"),        // chef at work
