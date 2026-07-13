@@ -51,7 +51,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
       if (!uid) return null;
       const { data: p } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url")
+        .select("full_name, avatar_url, vendor_plan")
         .eq("id", uid)
         .maybeSingle();
       const profile = (p ?? {}) as { full_name?: string | null; avatar_url?: string | null; vendor_plan?: string | null };

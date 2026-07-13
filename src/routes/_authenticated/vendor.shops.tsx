@@ -125,10 +125,10 @@ function ShopsPage() {
       if (!uid) return null;
       const { data: p } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, vendor_plan")
         .eq("id", uid)
         .maybeSingle();
-      return { uid, plan: (p as any)?.vendor_plan ?? "free", name: (p as any)?.full_name ?? "" };
+      return { uid, plan: (p as any)?.vendor_plan ?? "basic", name: (p as any)?.full_name ?? "" };
     },
   });
 
