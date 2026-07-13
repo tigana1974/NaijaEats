@@ -796,24 +796,22 @@ function ShopsSkeleton({ view }: { view: "grid" | "list" }) {
 
 function PlanChip({ plan }: { plan: string }) {
   const styles: Record<string, string> = {
-    free: "bg-white/10 text-white border-white/15",
-    starter: "bg-blue-500/20 text-blue-100 border-blue-400/30",
+    basic: "bg-white/10 text-white border-white/15",
     premium: "bg-gradient-to-br from-amber-400 to-orange-500 text-white border-transparent shadow-lg shadow-amber-500/30",
-    enterprise: "bg-gradient-to-br from-purple-500 to-pink-500 text-white border-transparent shadow-lg shadow-purple-500/30",
+    pro: "bg-gradient-to-br from-purple-500 to-pink-500 text-white border-transparent shadow-lg shadow-purple-500/30",
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${styles[plan] ?? styles.free}`}>
-      {(plan === "premium" || plan === "enterprise") && <Sparkles className="h-3.5 w-3.5" />}
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${styles[plan] ?? styles.basic}`}>
+      {(plan === "premium" || plan === "pro") && <Sparkles className="h-3.5 w-3.5" />}
       {planLabel(plan)}
     </span>
   );
 }
 
 function planLabel(plan: string): string {
-  if (plan === "enterprise") return "Enterprise";
+  if (plan === "pro") return "Pro plan";
   if (plan === "premium") return "Premium";
-  if (plan === "starter") return "Starter";
-  return "Free plan";
+  return "Basic plan";
 }
 
 function typeSummary(counts: Record<string, number>): string {
