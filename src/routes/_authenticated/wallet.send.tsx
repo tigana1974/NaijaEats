@@ -138,8 +138,8 @@ function SendPage() {
   };
 
   return (
-    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col pb-32">
-      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5">
+    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col overflow-hidden">
+      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5 flex-1 flex flex-col overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <button
@@ -207,7 +207,7 @@ function SendPage() {
 
           {/* Sticky footer CTA */}
           {step !== "pick" && step !== "success" && (
-            <div className="mt-6 sticky bottom-4 z-10">
+            <div className="mt-auto pt-6 sticky bottom-0 bg-[oklch(0.985_0.002_90)] z-10 pb-4">
               <button
                 onClick={step === "amount" ? () => setStep("review") : submit}
                 disabled={loading || amount < 100 || overBalance}
@@ -586,22 +586,7 @@ function AmountStep({
         </div>
       </div>
 
-      {/* Quick amounts */}
-      <div className="mt-5 grid grid-cols-4 gap-2">
-        {[1000, 2000, 5000, 10000].map((q) => (
-          <button
-            key={q}
-            onClick={() => setAmount(q)}
-            className={`rounded-xl border py-2.5 text-xs font-bold transition ${
-              amount === q
-                ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                : "border-zinc-200 bg-white hover:border-zinc-300"
-            }`}
-          >
-            {fmt(q)}
-          </button>
-        ))}
-      </div>
+
 
       {/* Keypad */}
       <div className="mt-5">

@@ -111,8 +111,8 @@ function TopUpPage() {
   };
 
   return (
-    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col pb-32">
-      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5">
+    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col overflow-hidden">
+      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5 flex-1 flex flex-col overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <button
@@ -177,7 +177,7 @@ function TopUpPage() {
 
           {/* Sticky footer CTA */}
           {step !== "success" && (
-            <div className="mt-6 sticky bottom-4 z-10">
+            <div className="mt-auto pt-6 sticky bottom-0 bg-[oklch(0.985_0.002_90)] z-10 pb-4">
               <button
                 onClick={goNext}
                 disabled={!canContinue || loading}
@@ -291,22 +291,7 @@ function AmountStep({
         </div>
       </div>
 
-      {/* Presets */}
-      <div className="mt-5 grid grid-cols-3 gap-2">
-        {PRESETS.map((p) => (
-          <button
-            key={p}
-            onClick={() => setAmount(p)}
-            className={`rounded-2xl border py-3 text-sm font-semibold transition ${
-              amount === p
-                ? "border-[var(--brand-clay)] bg-[var(--brand-clay)]/8 text-[var(--brand-clay)] ring-2 ring-[var(--brand-clay)]/20"
-                : "border-zinc-200 bg-white hover:border-zinc-300"
-            }`}
-          >
-            {fmt(p)}
-          </button>
-        ))}
-      </div>
+
 
       {/* Bonus nudge */}
       {amount < 20000 && (

@@ -89,8 +89,8 @@ function RequestPage() {
   };
 
   return (
-    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col pb-32">
-      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5">
+    <RoleShell hideBottomNav containerClassName="flex-1 bg-[oklch(0.985_0.002_90)] flex flex-col overflow-hidden">
+      <div className="mx-auto max-w-md w-full px-4 sm:px-6 py-5 flex-1 flex flex-col overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
             <button
@@ -104,17 +104,17 @@ function RequestPage() {
             <div className="w-10" />
           </div>
 
-          <div className="mt-5">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Request</div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
-              {step === "form" ? "Get paid instantly" : "Share your link"}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {step === "form"
-                ? "Create a pay-me link. Works with any bank in Nigeria."
-                : "Anyone with the link can pay you in seconds."}
-            </p>
-          </div>
+          {step !== "share" && (
+            <div className="mt-5">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-amber-600 font-bold">Request money</div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
+                Generate link
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Anyone can pay you instantly via this link
+              </p>
+            </div>
+          )}
 
           {step === "form" ? (
             <FormStep
@@ -128,21 +128,15 @@ function RequestPage() {
               history={history}
               tab={tab}
               setTab={setTab}
-              onMarkPaid={(id) => {
-                markRequest(id, "paid");
-                toast.success("Marked as paid — added to wallet");
-              }}
-              onCancel={(id) => {
-                markRequest(id, "cancelled");
-                toast.success("Request cancelled");
-              }}
+              onMarkPaid={(id) => markRequest(id, "paid")}
+              onCancel={(id) => markRequest(id, "cancelled")}
             />
           ) : request ? (
             <ShareStep request={request} onDone={() => navigate({ to: "/wallet" })} />
           ) : null}
 
           {step === "form" && (
-            <div className="mt-6 sticky bottom-4 z-10">
+            <div className="mt-auto pt-6 sticky bottom-0 bg-[oklch(0.985_0.002_90)] z-10 pb-4">
               <button
                 onClick={generate}
                 disabled={!canGenerate}
@@ -254,22 +248,7 @@ function FormStep({
         </div>
       </div>
 
-      {/* Quick amounts */}
-      <div className="mt-4 grid grid-cols-4 gap-2">
-        {QUICK_AMOUNTS.map((q) => (
-          <button
-            key={q}
-            onClick={() => setAmount(q)}
-            className={`rounded-xl border py-2.5 text-xs font-bold transition ${
-              amount === q
-                ? "border-amber-500 bg-amber-50 text-amber-700"
-                : "border-zinc-200 bg-white hover:border-zinc-300"
-            }`}
-          >
-            {fmt(q)}
-          </button>
-        ))}
-      </div>
+
 
       {/* Keypad */}
       <div className="mt-4">
