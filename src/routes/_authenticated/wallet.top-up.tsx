@@ -255,14 +255,29 @@ function AmountStep({
             <span className="font-display text-2xl text-white/70">₦</span>
             <input
               type="text"
-              inputMode="none"
-              value={amount ? amount.toLocaleString() : ""}
-              placeholder="0"
-              onChange={(e) => {
-                const raw = e.target.value.replace(/\D/g, "");
-                setAmount(raw ? Number(raw) : 0);
+              readOnly
+              value={amount ? amount.toLocaleString() : "0"}
+              onKeyDown={(e) => {
+                if (e.key === "Backspace") {
+                  const target = e.currentTarget;
+                  if (target.selectionStart !== target.selectionEnd) {
+                    setAmount(0);
+                  } else {
+                    setAmount(prev => {
+                      const s = String(prev).slice(0, -1);
+                      return s ? Number(s) : 0;
+                    });
+                  }
+                } else if (/^[0-9]$/.test(e.key)) {
+                  setAmount(prev => {
+                    const next = prev === 0 ? Number(e.key) : Number(String(prev) + e.key);
+                    return Math.min(next, 100000000);
+                  });
+                } else if (e.key === "Escape" || e.key === "Delete" || e.key.toLowerCase() === "c") {
+                  setAmount(0);
+                }
               }}
-              className="w-full bg-transparent font-display text-4xl sm:text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30"
+              className="w-full bg-transparent font-display text-4xl sm:text-5xl font-semibold tabular-nums outline-none placeholder:text-white/30 caret-transparent"
             />
           </div>
           <div className="mt-2 flex items-center justify-between text-[11px] text-white/70">
