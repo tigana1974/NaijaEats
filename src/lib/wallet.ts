@@ -46,9 +46,23 @@ export type MoneyRequest = {
   paidAt?: string;
 };
 
-const KEY = "naijaeats.wallet.v1";
-const CONTACTS_KEY = "naijaeats.wallet.contacts.v1";
-const REQUESTS_KEY = "naijaeats.wallet.requests.v1";
+function getCurrentUserId() {
+  if (typeof window === "undefined") return "guest";
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.endsWith("-auth-token")) {
+      try {
+        const data = JSON.parse(localStorage.getItem(k) || "");
+        if (data?.user?.id) return data.user.id;
+      } catch {}
+    }
+  }
+  return "guest";
+}
+
+const getWalletKey = () => `naijaeats.wallet.v1.${getCurrentUserId()}`;
+const getContactsKey = () => `naijaeats.wallet.contacts.v1.${getCurrentUserId()}`;
+const getRequestsKey = () => `naijaeats.wallet.requests.v1.${getCurrentUserId()}`;
 
 export const WALLET_EVENT = "naijaeats-wallet-changed";
 export const CONTACTS_EVENT = "naijaeats-contacts-changed";
@@ -59,7 +73,7 @@ export const REQUESTS_EVENT = "naijaeats-requests-changed";
 export function loadWallet(): WalletState {
   if (typeof window === "undefined") return { balance: 0, txns: [] };
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) || "null");
+    const raw = JSON.parse(localStorage.getItem(getWalletKey()) || "null");
     if (raw && typeof raw.balance === "number" && Array.isArray(raw.txns)) {
       return raw as WalletState;
     }
@@ -80,7 +94,7 @@ export function addWalletTxn(txn: Omit<WalletTxn, "id" | "createdAt">): WalletSt
     balance: Math.max(0, w.balance + t.amount),
     txns: [t, ...w.txns].slice(0, 200),
   };
-  localStorage.setItem(KEY, JSON.stringify(next));
+  localStorage.setItem(getWalletKey(), JSON.stringify(next));
   window.dispatchEvent(new Event(WALLET_EVENT));
   return next;
 }
@@ -99,12 +113,12 @@ const SEED_CONTACTS: Contact[] = [
 export function loadContacts(): Contact[] {
   if (typeof window === "undefined") return SEED_CONTACTS;
   try {
-    const raw = JSON.parse(localStorage.getItem(CONTACTS_KEY) || "null");
+    const raw = JSON.parse(localStorage.getItem(getContactsKey()) || "null");
     if (Array.isArray(raw)) return raw as Contact[];
   } catch {
     // ignore
   }
-  localStorage.setItem(CONTACTS_KEY, JSON.stringify(SEED_CONTACTS));
+  localStorage.setItem(getContactsKey(), JSON.stringify(SEED_CONTACTS));
   return SEED_CONTACTS;
 }
 
@@ -146,7 +160,7 @@ export function upsertContact(input: {
   if (input.userId) contact.userId = input.userId;
   contact.lastSentAt = new Date().toISOString();
   const next = [contact, ...list.filter((c) => c.id !== contact.id)];
-  localStorage.setItem(CONTACTS_KEY, JSON.stringify(next));
+  localStorage.setItem(getContactsKey(), JSON.stringify(next));
   window.dispatchEvent(new Event(CONTACTS_EVENT));
   return contact;
 }
@@ -156,7 +170,7 @@ export function upsertContact(input: {
 export function loadRequests(): MoneyRequest[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = JSON.parse(localStorage.getItem(REQUESTS_KEY) || "null");
+    const raw = JSON.parse(localStorage.getItem(getRequestsKey()) || "null");
     if (Array.isArray(raw)) return raw as MoneyRequest[];
   } catch {
     // ignore
@@ -175,7 +189,7 @@ export function createRequest(input: { amount: number; reason: string; from?: st
     createdAt: new Date().toISOString(),
   };
   const list = [req, ...loadRequests()].slice(0, 50);
-  localStorage.setItem(REQUESTS_KEY, JSON.stringify(list));
+  localStorage.setItem(getRequestsKey(), JSON.stringify(list));
   window.dispatchEvent(new Event(REQUESTS_EVENT));
   return req;
 }
@@ -186,7 +200,7 @@ export function markRequest(id: string, status: MoneyRequest["status"]): MoneyRe
   if (!req) return null;
   req.status = status;
   if (status === "paid") req.paidAt = new Date().toISOString();
-  localStorage.setItem(REQUESTS_KEY, JSON.stringify(list));
+  localStorage.setItem(getRequestsKey(), JSON.stringify(list));
   window.dispatchEvent(new Event(REQUESTS_EVENT));
   if (status === "paid") {
     addWalletTxn({
