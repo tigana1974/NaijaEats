@@ -85,6 +85,7 @@ function AdminProfile() {
   const handleLogOut = async () => {
     try {
       clearAllLocalUsernames();
+      localStorage.removeItem("vendor-store");
       await supabase.auth.signOut();
       toast.success("Logged out successfully");
       navigate({ to: "/" });

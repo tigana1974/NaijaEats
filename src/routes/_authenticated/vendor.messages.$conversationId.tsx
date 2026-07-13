@@ -53,10 +53,10 @@ function VendorConversation() {
 
   return (
     // Bypass AppShell entirely — this is a full-viewport dedicated chat
-    // screen. Using `h-dvh flex flex-col` guarantees ChatThread's flex-1
-    // messages scroller has real vertical space to grow into, which is the
-    // fix for the "can't interact with the chat" bug.
-    <div className="h-dvh w-full flex flex-col bg-[oklch(0.985_0.005_90)]">
+    // screen. Using `fixed inset-0 flex flex-col` guarantees ChatThread's flex-1
+    // messages scroller has real vertical space to grow into, and prevents iOS Safari
+    // bounce/shake bugs when the keyboard opens.
+    <div className="fixed inset-0 w-full flex flex-col bg-[oklch(0.985_0.005_90)]">
       {/* Header */}
       <div className="shrink-0 px-3 py-2.5 bg-white/95 backdrop-blur border-b border-black/5 flex items-center gap-2">
         <Link

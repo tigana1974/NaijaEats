@@ -42,6 +42,7 @@ function AccountPage() {
   const signOut = async () => {
     await queryClient.cancelQueries();
     queryClient.clear();
+    localStorage.removeItem("vendor-store");
     clearAllLocalUsernames();
     await supabase.auth.signOut();
     toast.success("Signed out");

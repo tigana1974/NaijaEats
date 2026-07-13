@@ -107,6 +107,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     await qc.cancelQueries();
     qc.clear();
     clearAllLocalUsernames();
+    localStorage.removeItem("vendor-store");
     await supabase.auth.signOut();
     toast.success("Signed out");
     navigate({ to: "/auth", replace: true });
