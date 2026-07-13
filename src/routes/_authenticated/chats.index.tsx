@@ -185,11 +185,6 @@ function ChatRow({ convo }: { convo: any }) {
             </div>
           )}
         </div>
-        {unread > 0 && (
-          <span className="absolute -top-1 -right-1 grid h-5 min-w-5 px-1 place-items-center rounded-full bg-[var(--brand-clay)] text-white text-[10px] font-bold ring-2 ring-white">
-            {unread > 99 ? "99+" : unread}
-          </span>
-        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">

@@ -505,7 +505,7 @@ function Hero() {
   const search = useSearchModal();
   const { setInitialQuery } = useContext(SearchSeedContext);
   const [q, setQ] = useState("");
-  const { data: items } = useQuery(landingItemsQuery);
+  const { data: items, isLoading } = useQuery(landingItemsQuery);
   const heroItem = items && items.length > 0 ? items[0] : null;
   const cardItem = items && items.length > 1 ? items[1] : null;
 
@@ -581,48 +581,77 @@ function Hero() {
         {/* Right — editorial portrait card */}
         <div className="relative mt-12 lg:mt-0">
           <div className="relative aspect-[16/10] md:aspect-[4/5] rounded-[2rem] overflow-hidden bg-muted shadow-[0_40px_80px_-30px_rgba(0,0,0,0.35)]">
-            <img
-               src={heroItem ? heroItem.image_url : heroJollof}
-               alt={heroItem ? heroItem.name : "Delicious African food"}
-              width={1280}
-              height={1600}
-              className="h-full w-full object-cover"
-            />
+            {isLoading ? (
+              <div className="absolute inset-0 bg-muted animate-pulse" />
+            ) : (
+              <img
+                 src={heroItem ? heroItem.image_url : heroJollof}
+                 alt={heroItem ? heroItem.name : "Delicious African food"}
+                width={1280}
+                height={1600}
+                className="h-full w-full object-cover"
+              />
+            )}
             {/* Subtle vignette for depth */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
             {/* Chef byline — bottom-left overlay */}
             <div className="absolute bottom-5 left-5 right-5 flex items-center gap-3">
-              <img
-                src={chefPortrait}
-                alt="Chef Amaka"
-                width={44}
-                height={44}
-                loading="lazy"
-                className="h-11 w-11 rounded-full object-cover ring-2 ring-white/80"
-              />
-              <div className="min-w-0">
-                <div className="text-[13px] font-semibold leading-tight text-white">{heroItem?.vendors ? heroItem.vendors.name : "Chef Amaka"}</div>
-                <div className="text-[10.5px] uppercase tracking-[0.14em] text-white/70 leading-tight mt-0.5">{heroItem ? heroItem.name : "Signature dish"} · {heroItem?.vendors ? heroItem.vendors.city : "Lagos"}</div>
-              </div>
+              {isLoading ? (
+                <>
+                  <div className="h-11 w-11 rounded-full bg-white/20 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-24 bg-white/20 rounded animate-pulse" />
+                    <div className="h-3 w-32 bg-white/20 rounded animate-pulse" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <img
+                    src={chefPortrait}
+                    alt="Chef Amaka"
+                    width={44}
+                    height={44}
+                    loading="lazy"
+                    className="h-11 w-11 rounded-full object-cover ring-2 ring-white/80"
+                  />
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-semibold leading-tight text-white">{heroItem?.vendors ? heroItem.vendors.name : "Chef Amaka"}</div>
+                    <div className="text-[10.5px] uppercase tracking-[0.14em] text-white/70 leading-tight mt-0.5">{heroItem ? heroItem.name : "Signature dish"} · {heroItem?.vendors ? heroItem.vendors.city : "Lagos"}</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
           {/* Floating price card — refined */}
           <div className="absolute -bottom-6 -left-4 md:-left-8 bg-card rounded-2xl shadow-[0_20px_50px_-20px_rgba(0,0,0,0.35)] p-3 pr-5 flex items-center gap-3 border border-border/60 backdrop-blur">
-            <img
-              src={cardItem ? cardItem.image_url : dishSuya}
-              alt={cardItem ? cardItem.name : "Suya"}
-              width={56}
-              height={56}
-              loading="lazy"
-              className="h-12 w-12 rounded-xl object-cover"
-            />
-            <div>
-              <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trending</div>
-              <div className="text-sm font-semibold text-foreground leading-tight">{cardItem ? cardItem.name : "Suya Skewers"}</div>
-              <div className="text-primary font-bold text-[13px] leading-tight mt-0.5">{cardItem ? `${cardItem.currency === 'GBP' ? '£' : '₦'}${Number(cardItem.price).toLocaleString()}` : "₦7,490"}</div>
-            </div>
+            {isLoading ? (
+              <>
+                <div className="h-12 w-12 rounded-xl bg-muted animate-pulse" />
+                <div>
+                  <div className="h-3 w-16 bg-muted animate-pulse rounded mt-1" />
+                  <div className="h-4 w-24 bg-muted animate-pulse rounded mt-2" />
+                  <div className="h-4 w-12 bg-muted animate-pulse rounded mt-2" />
+                </div>
+              </>
+            ) : (
+              <>
+                <img
+                  src={cardItem ? cardItem.image_url : dishSuya}
+                  alt={cardItem ? cardItem.name : "Suya"}
+                  width={56}
+                  height={56}
+                  loading="lazy"
+                  className="h-12 w-12 rounded-xl object-cover"
+                />
+                <div>
+                  <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trending</div>
+                  <div className="text-sm font-semibold text-foreground leading-tight">{cardItem ? cardItem.name : "Suya Skewers"}</div>
+                  <div className="text-primary font-bold text-[13px] leading-tight mt-0.5">{cardItem ? `${cardItem.currency === 'GBP' ? '£' : '₦'}${Number(cardItem.price).toLocaleString()}` : "₦7,490"}</div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Small quality tag — top-right */}
@@ -645,7 +674,7 @@ function Story() {
     ["50+", "Cities Covered"],
     ["4.9★", "Average Rating"],
   ];
-  const { data } = useQuery(landingItemsQuery);
+  const { data, isLoading } = useQuery(landingItemsQuery);
   // Pick three vendor-uploaded dishes for the collage. Fall back to the local
   // brand imagery only when the database is still empty.
   const storyItems = data ?? [];
@@ -667,15 +696,27 @@ function Story() {
 
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden">
-              <img src={collageA?.image_url ?? dishJollof} alt={collageA?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
+              {isLoading ? (
+                <div className="h-full w-full animate-pulse bg-muted-foreground/10" />
+              ) : (
+                <img src={collageA?.image_url ?? dishJollof} alt={collageA?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+              )}
             </div>
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden">
-              <img src={collageB?.image_url ?? dishSuya} alt={collageB?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
+              {isLoading ? (
+                <div className="h-full w-full animate-pulse bg-muted-foreground/10" />
+              ) : (
+                <img src={collageB?.image_url ?? dishSuya} alt={collageB?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+              )}
             </div>
           </div>
-          <div className="aspect-[16/7] rounded-2xl overflow-hidden">
-            <img src={collageWide?.image_url ?? offerPlatter} alt={collageWide?.name ?? "A platter of African dishes"} width={1024} height={448} loading="lazy" className="h-full w-full object-cover" />
+          <div className="aspect-[16/7] rounded-2xl overflow-hidden bg-muted">
+            {isLoading ? (
+              <div className="h-full w-full animate-pulse bg-muted-foreground/10" />
+            ) : (
+              <img src={collageWide?.image_url ?? offerPlatter} alt={collageWide?.name ?? "A platter of African dishes"} width={1024} height={448} loading="lazy" className="h-full w-full object-cover" />
+            )}
           </div>
 
           <div className="rounded-2xl bg-card border border-border p-4 sm:p-5">
@@ -733,7 +774,7 @@ const DISHES_PER_SLIDE = 4;
 const TOTAL_SLIDES = 3;
 
 function SpecialDishes() {
-  const { data } = useQuery(landingItemsQuery);
+  const { data, isLoading } = useQuery(landingItemsQuery);
   const totalCount = DISHES_PER_SLIDE * TOTAL_SLIDES;
   const dbDishes = data ?? [];
 
@@ -800,7 +841,21 @@ function SpecialDishes() {
             ref={scrollerRef}
             className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-6 px-6 pt-14 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
-            {slides.map((slide, s) => (
+            {isLoading ? (
+              <div className="snap-start shrink-0 w-full pr-0" aria-roledescription="slide">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+                  {Array.from({ length: DISHES_PER_SLIDE }).map((_, i) => (
+                    <div key={i} className="group relative">
+                      <div className="aspect-square rounded-full sm:rounded-[2rem] bg-muted animate-pulse" />
+                      <div className="mt-5 text-center px-2">
+                        <div className="h-4 w-3/4 bg-muted animate-pulse rounded mx-auto" />
+                        <div className="h-3 w-1/2 bg-muted animate-pulse rounded mx-auto mt-2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : slides.map((slide, s) => (
               <div
                 key={s}
                 className="snap-start shrink-0 w-full pr-0"

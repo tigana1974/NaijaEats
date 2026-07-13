@@ -18,7 +18,7 @@ function NotificationsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const { data: notifications = [] } = useQuery({
+  const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["notifications", user.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -128,7 +128,19 @@ function NotificationsPage() {
         </div>
 
         {/* Notifications List */}
-        {notifications.length > 0 ? (
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex gap-4 sm:gap-5 p-4 sm:p-5 rounded-[1.75rem] bg-white ring-1 ring-zinc-100">
+                <div className="shrink-0 h-12 w-12 rounded-2xl bg-muted animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-1/3 bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-2/3 bg-muted animate-pulse rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : notifications.length > 0 ? (
           <div className="space-y-3">
             {notifications.map((notif) => {
               const { Icon, bg, ring } = getIconData(notif.type as NotificationType);
