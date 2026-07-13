@@ -368,14 +368,14 @@ function VendorProfilePage() {
             <div className={`grid gap-4 ${isGrocery ? "sm:grid-cols-2" : "sm:grid-cols-2"}`}>
               <Field label="Delivery fee">
                 <input
-                  type="number" min={0} placeholder="0" className="vinput"
+                  type="number" min={0} step="any" placeholder="0" className="vinput"
                   value={form.delivery_fee === 0 ? "" : form.delivery_fee}
                   onChange={(e) => set("delivery_fee", Number(e.target.value))}
                 />
               </Field>
               <Field label="Min order">
                 <input
-                  type="number" min={0} placeholder="0" className="vinput"
+                  type="number" min={0} step="any" placeholder="0" className="vinput"
                   value={form.min_order === 0 ? "" : form.min_order}
                   onChange={(e) => set("min_order", Number(e.target.value))}
                 />
