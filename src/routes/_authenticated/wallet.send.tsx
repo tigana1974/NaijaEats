@@ -558,16 +558,12 @@ function AmountStep({
                   if (target.selectionStart !== target.selectionEnd) {
                     setAmount(0);
                   } else {
-                    setAmount(prev => {
-                      const s = String(prev).slice(0, -1);
-                      return s ? Number(s) : 0;
-                    });
+                    const s = String(amount).slice(0, -1);
+                    setAmount(s ? Number(s) : 0);
                   }
                 } else if (/^[0-9]$/.test(e.key)) {
-                  setAmount(prev => {
-                    const next = prev === 0 ? Number(e.key) : Number(String(prev) + e.key);
-                    return Math.min(next, 100000000);
-                  });
+                  const next = amount === 0 ? Number(e.key) : Number(String(amount) + e.key);
+                  setAmount(Math.min(next, 100000000));
                 } else if (e.key === "Escape" || e.key === "Delete" || e.key.toLowerCase() === "c") {
                   setAmount(0);
                 }

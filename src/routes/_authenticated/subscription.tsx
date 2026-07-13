@@ -352,9 +352,9 @@ function SubscriptionPage() {
               ))}
             </div>
 
-            {FEATURE_TABLE.map((section) => (
+            {COMPARISON.map((section) => (
               <div key={section.section}>
-                <div className="min-w-[520px] grid grid-cols-[minmax(150px,1.4fr)_repeat(3,1fr)] bg-muted/20 border-t border-border">
+                <div className="min-w-[520px] grid grid-cols-[minmax(150px,1.4fr)_repeat(2,1fr)] bg-muted/20 border-t border-border">
                   <div className="p-3 flex items-center gap-2 col-span-full">
                     <section.Icon className="h-4 w-4 text-[var(--brand-clay)]" />
                     <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -365,7 +365,7 @@ function SubscriptionPage() {
                 {section.rows.map((row, i) => (
                   <div
                     key={row.label}
-                    className={`min-w-[520px] grid grid-cols-[minmax(150px,1.4fr)_repeat(3,1fr)] ${
+                    className={`min-w-[520px] grid grid-cols-[minmax(150px,1.4fr)_repeat(2,1fr)] ${
                       i === section.rows.length - 1 ? "" : "border-b border-border"
                     }`}
                   >

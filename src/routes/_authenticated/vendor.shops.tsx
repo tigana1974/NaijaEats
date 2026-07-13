@@ -258,7 +258,7 @@ function ShopsPage() {
             >
               <Plus className="h-4 w-4" />
               Add shop
-              {canAdd && limit > 1 && (
+              {canAdd && Number(limit) > 1 && (
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--brand-clay)] bg-[var(--brand-clay)]/10 rounded-full px-1.5 py-0.5">
                   {shops.length}/{limit}
                 </span>
@@ -357,7 +357,7 @@ function ShopsPage() {
                   setActiveShopId(null);
                   navigate({ to: "/vendor/profile" });
                 }}
-                remaining={limit - shops.length}
+                remaining={Number(limit) - shops.length}
               />
             )}
           </div>
