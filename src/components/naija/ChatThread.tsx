@@ -53,6 +53,62 @@ type Props = {
   isVendor?: boolean;
 };
 
+function SwipeableMessage({
+  children,
+  onSwipe,
+  mine
+}: {
+  children: React.ReactNode;
+  onSwipe: () => void;
+  mine: boolean;
+}) {
+  const [offset, setOffset] = useState(0);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const isSwiping = useRef(false);
+
+  return (
+    <div
+      className="relative touch-pan-y"
+      style={{ transform: `translateX(${offset}px)`, transition: isSwiping.current ? "none" : "transform 0.2s" }}
+      onTouchStart={(e) => {
+        startX.current = e.touches[0].clientX;
+        startY.current = e.touches[0].clientY;
+        isSwiping.current = true;
+      }}
+      onTouchMove={(e) => {
+        if (!isSwiping.current) return;
+        const dx = e.touches[0].clientX - startX.current;
+        const dy = e.touches[0].clientY - startY.current;
+        if (Math.abs(dy) > Math.abs(dx)) {
+          // It's a vertical scroll, cancel swipe
+          setOffset(0);
+          isSwiping.current = false;
+          return;
+        }
+        if ((mine && dx < 0) || (!mine && dx > 0)) {
+          // Allow swiping left for my messages, right for others
+          setOffset(Math.max(-60, Math.min(60, dx)));
+        }
+      }}
+      onTouchEnd={() => {
+        isSwiping.current = false;
+        if (Math.abs(offset) >= 50) {
+          onSwipe();
+          if (navigator.vibrate) navigator.vibrate(50);
+        }
+        setOffset(0);
+      }}
+      onTouchCancel={() => {
+        isSwiping.current = false;
+        setOffset(0);
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function ChatThread({ conversationId, meId, otherName, otherAvatar, unreadField, isVendor }: Props) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
@@ -72,6 +128,7 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
   const [paidInvoices, setPaidInvoices] = useState<Set<string>>(() => loadPaidSet());
   const [pulseInvoiceId, setPulseInvoiceId] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<any | null>(null);
 
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", conversationId],
@@ -129,15 +186,17 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     if (!body || sending) return;
     setSending(true);
     setText("");
+    const reply_to_id = replyingTo?.id || null;
     const { error } = await supabase
       .from("messages")
-      .insert({ conversation_id: conversationId, sender_id: meId, body });
+      .insert({ conversation_id: conversationId, sender_id: meId, body, reply_to_id });
     setSending(false);
     if (error) {
       setText(body);
       toast.error(`Message not sent: ${error.message}`);
       return;
     }
+    setReplyingTo(null);
     qc.invalidateQueries({ queryKey: ["messages", conversationId] });
     inputRef.current?.focus();
     if (inputRef.current) inputRef.current.style.height = "auto";
@@ -160,10 +219,12 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
           ? ""
           : `📎 ${kind === "invoice" ? "Invoice" : kind === "audio" ? "Audio message" : "File"}: ${file.name}`;
       const image_url = kind === "image" ? urlData.publicUrl : null;
+      const reply_to_id = replyingTo?.id || null;
       const { error: insErr } = await supabase
         .from("messages")
-        .insert({ conversation_id: conversationId, sender_id: meId, body, image_url });
+        .insert({ conversation_id: conversationId, sender_id: meId, body, image_url, reply_to_id });
       if (insErr) throw insErr;
+      setReplyingTo(null);
       qc.invalidateQueries({ queryKey: ["messages", conversationId] });
       toast.success(kind === "image" ? "Photo sent" : `${kind[0].toUpperCase()}${kind.slice(1)} sent`);
     } catch (err: any) {
@@ -182,15 +243,18 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     
     setSending(true);
     const body = `[[INVOICE:${amt}:${note}]]`;
+    const reply_to_id = replyingTo?.id || null;
     const { error } = await supabase
       .from("messages")
-      .insert({ conversation_id: conversationId, sender_id: meId, body });
+      .insert({ conversation_id: conversationId, sender_id: meId, body, reply_to_id });
     setSending(false);
     
     if (error) {
       toast.error("Failed to send invoice");
       return;
     }
+    
+    setReplyingTo(null);
     
     setInvoicePopupOpen(false);
     setInvoiceAmount("");
@@ -324,13 +388,31 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
               if (mine) {
                 const mineInvoice = parseInvoice(m.body);
                 const isPaidMine = mineInvoice && paidInvoices.has(m.id);
+                const repliedMsg = m.reply_to_id ? messages.find((x: any) => x.id === m.reply_to_id) : null;
                 return (
-                  <div key={m.id} id={`msg-${m.id}`} className="flex justify-end">
+                  <SwipeableMessage key={m.id} mine={true} onSwipe={() => setReplyingTo(m)}>
+                    <div id={`msg-${m.id}`} className="flex justify-end">
                     <div
-                      className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 shadow-[0_2px_10px_-4px_rgba(217,75,58,0.35)] bg-gradient-to-br from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white ${
+                      className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 shadow-[0_2px_10px_-4px_rgba(217,75,58,0.35)] bg-gradient-to-br from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white flex flex-col ${
                         same ? "rounded-2xl rounded-br-lg" : "rounded-2xl rounded-br-md"
                       }`}
                     >
+                      {repliedMsg && (
+                        <div
+                          className="mb-2 bg-black/10 rounded-xl p-2 border-l-4 border-white/50 text-sm cursor-pointer hover:bg-black/20 transition text-white/90"
+                          onClick={() => {
+                            const el = document.getElementById(`msg-${repliedMsg.id}`);
+                            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }}
+                        >
+                          <div className="font-bold text-xs opacity-80 mb-0.5">
+                            {repliedMsg.sender_id === meId ? "You" : otherName ?? "Chef"}
+                          </div>
+                          <div className="line-clamp-2 text-xs opacity-90">
+                            {repliedMsg.body ? repliedMsg.body : (repliedMsg.image_url ? "📷 Photo" : "📎 Attachment")}
+                          </div>
+                        </div>
+                      )}
                       {m.image_url && (
                         <img
                           src={m.image_url}
@@ -362,6 +444,7 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                       </div>
                     </div>
                   </div>
+                  </SwipeableMessage>
                 );
               }
 
@@ -369,8 +452,10 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
               const isPaid = invoice ? paidInvoices.has(m.id) : false;
               const isPaying = payingInvoiceId === m.id;
               const shouldPulse = pulseInvoiceId === m.id;
+              const repliedMsg = m.reply_to_id ? messages.find((x: any) => x.id === m.reply_to_id) : null;
               return (
-                <div key={m.id} id={`msg-${m.id}`} className="flex items-end gap-2 justify-start">
+                <SwipeableMessage key={m.id} mine={false} onSwipe={() => setReplyingTo(m)}>
+                  <div id={`msg-${m.id}`} className="flex items-end gap-2 justify-start">
                   <div className={`h-8 w-8 rounded-full overflow-hidden bg-muted shrink-0 ${same ? "opacity-0" : ""}`}>
                     {otherAvatar ? (
                       <img src={otherAvatar} alt="" className="h-full w-full object-cover" />
@@ -381,12 +466,28 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                     )}
                   </div>
                   <div
-                    className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 shadow-[0_2px_10px_-4px_rgba(132,204,22,0.35)] bg-[var(--brand-forest)] text-[var(--brand-ink)] transition-all duration-500 ${
+                    className={`max-w-[82%] sm:max-w-[70%] px-4 py-2.5 shadow-[0_2px_10px_-4px_rgba(132,204,22,0.35)] bg-[var(--brand-forest)] text-[var(--brand-ink)] transition-all duration-500 flex flex-col ${
                       same ? "rounded-2xl rounded-bl-lg" : "rounded-2xl rounded-bl-md"
                     } ${shouldPulse ? "ring-4 ring-[var(--brand-clay)]/50 scale-[1.03]" : ""}`}
                   >
                     {!same && (
                       <p className="text-[12px] font-extrabold mb-1 opacity-80">{otherName ?? "Chef"}</p>
+                    )}
+                    {repliedMsg && (
+                      <div
+                        className="mb-2 bg-black/10 rounded-xl p-2 border-l-4 border-[var(--brand-clay)]/60 text-sm cursor-pointer hover:bg-black/20 transition text-[var(--brand-ink)]/90"
+                        onClick={() => {
+                          const el = document.getElementById(`msg-${repliedMsg.id}`);
+                          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }}
+                      >
+                        <div className="font-bold text-xs opacity-80 mb-0.5">
+                          {repliedMsg.sender_id === meId ? "You" : otherName ?? "Chef"}
+                        </div>
+                        <div className="line-clamp-2 text-xs opacity-90">
+                          {repliedMsg.body ? repliedMsg.body : (repliedMsg.image_url ? "📷 Photo" : "📎 Attachment")}
+                        </div>
+                      </div>
                     )}
                     {m.image_url && (
                       <img
@@ -449,6 +550,7 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                     </div>
                   </div>
                 </div>
+                </SwipeableMessage>
               );
             })}
           </div>
@@ -570,6 +672,25 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                 {sending ? "Sending..." : "Send Invoice"}
               </button>
             </div>
+          </div>
+        )}
+        {replyingTo && (
+          <div className="flex items-center justify-between bg-white rounded-t-2xl px-4 py-2 border-l-4 border-[var(--brand-clay)] mb-2 shadow-sm relative">
+            <div className="flex-1 min-w-0 pr-4">
+              <div className="text-xs font-bold text-[var(--brand-clay)] mb-0.5">
+                Replying to {replyingTo.sender_id === meId ? "yourself" : otherName ?? "Chef"}
+              </div>
+              <div className="text-sm text-muted-foreground truncate">
+                {replyingTo.body ? replyingTo.body : (replyingTo.image_url ? "📷 Photo" : "📎 Attachment")}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyingTo(null)}
+              className="h-7 w-7 rounded-full flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 transition shrink-0"
+            >
+              <X className="h-4 w-4 text-zinc-500" />
+            </button>
           </div>
         )}
 
