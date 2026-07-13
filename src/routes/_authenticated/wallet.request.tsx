@@ -136,7 +136,7 @@ function RequestPage() {
           ) : null}
 
           {step === "form" && (
-            <div className="mt-auto pt-2 sm:pt-6 pb-2 sm:pb-4">
+            <div className={`pt-2 sm:pt-6 pb-2 sm:pb-4 ${step === "form" ? "mt-4" : "mt-auto"}`}>
               <button
                 onClick={generate}
                 disabled={!canGenerate}
@@ -251,7 +251,7 @@ function FormStep({
 
 
       {/* Keypad */}
-      <div className="mt-3 sm:mt-4">
+      <div className="mt-auto pt-3 sm:pt-4">
         <WalletKeypad value={amount} onChange={setAmount} />
       </div>
 

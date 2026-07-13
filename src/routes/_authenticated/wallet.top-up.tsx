@@ -177,7 +177,7 @@ function TopUpPage() {
 
           {/* Sticky footer CTA */}
           {step !== "success" && (
-            <div className="mt-auto pt-2 sm:pt-6 pb-2 sm:pb-4">
+            <div className={`pt-2 sm:pt-6 pb-2 sm:pb-4 ${step === "amount" ? "mt-4" : "mt-auto"}`}>
               <button
                 onClick={goNext}
                 disabled={!canContinue || loading}
@@ -309,7 +309,7 @@ function AmountStep({
       </div>
 
       {/* Keypad */}
-      <div className="mt-3 sm:mt-5">
+      <div className="mt-auto pt-3 sm:pt-5">
         <WalletKeypad value={amount} onChange={setAmount} />
       </div>
     </>
