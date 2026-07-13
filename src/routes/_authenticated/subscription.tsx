@@ -78,56 +78,31 @@ const PLANS: Plan[] = [
     gradient: "from-zinc-50 to-white",
   },
   {
-    key: "plus",
-    name: "Naija Eats Plus",
-    tagline: "Free delivery + rewards on every order",
-    Icon: Crown,
+    key: "naija_one",
+    name: "Naija One",
+    tagline: "The premium experience on NaijaEats",
+    Icon: PiCrownDuotone,
     featured: true,
     price: {
-      NG: { monthly: 1500, yearly: 14400 },
-      UK: { monthly: 4.99, yearly: 47.88 },
-    },
-    perks: [
-      { Icon: PiTruckDuotone, label: "Free delivery over ₦5,000 / £15" },
-      { Icon: PiPercentDuotone, label: "5% cashback on every order" },
-      { Icon: PiGiftDuotone, label: "Members-only weekly drops" },
-    ],
-    highlights: [
-      "Free delivery on eligible orders",
-      "5% Naija Eats cashback",
-      "Priority kitchen slots",
-      "Members-only chef drops",
-      "Birthday meal on us 🎂",
-      "Priority chat support (12 hr)",
-    ],
-    chipTone: "bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]",
-    gradient: "from-[oklch(0.98_0.02_25)] to-white",
-  },
-  {
-    key: "elite",
-    name: "Naija Eats Elite",
-    tagline: "VIP status. Every meal, every time.",
-    Icon: PiCrownDuotone,
-    price: {
-      NG: { monthly: 4500, yearly: 43200 },
-      UK: { monthly: 14.99, yearly: 143.88 },
+      NG: { monthly: 5000, yearly: 48000 },
+      UK: { monthly: 9.99, yearly: 95.88 },
     },
     perks: [
       { Icon: PiTruckDuotone, label: "Unlimited free delivery" },
-      { Icon: PiPercentDuotone, label: "10% cashback + fee-free wallet" },
-      { Icon: PiConfettiDuotone, label: "Early access & VIP invites" },
+      { Icon: PiPercentDuotone, label: "10% cashback on every order" },
+      { Icon: PiConfettiDuotone, label: "VIP invites & Early access" },
     ],
     highlights: [
       "Unlimited free delivery on all orders",
       "10% Naija Eats cashback",
-      "Zero wallet & top-up fees",
+      "Priority kitchen slots",
       "Early access to new chefs",
       "VIP invites to Naija Eats supper clubs",
-      "Concierge chef reservations",
-      "24/7 dedicated support",
+      "Birthday meal on us 🎂",
+      "24/7 Priority support",
     ],
-    chipTone: "bg-purple-100 text-purple-700",
-    gradient: "from-purple-50 to-white",
+    chipTone: "bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]",
+    gradient: "from-[oklch(0.98_0.02_25)] to-white",
   },
 ];
 
@@ -176,53 +151,50 @@ const REGIONS: {
   },
 ];
 
-type FeatureRow = { label: string; values: Record<CustomerPlan, string | boolean> };
-const FEATURE_TABLE: {
+const COMPARISON: {
   section: string;
   Icon: React.ComponentType<{ className?: string }>;
-  rows: FeatureRow[];
+  rows: { label: string; values: Partial<Record<CustomerPlan, string | boolean>> }[];
 }[] = [
   {
     section: "Delivery",
     Icon: PiTruckDuotone,
     rows: [
-      { label: "Delivery fee", values: { basic: "Standard", plus: "Free on eligible", elite: "Always free" } },
-      { label: "Priority pickup slots", values: { basic: false, plus: true, elite: true } },
-      { label: "Live rider tracking", values: { basic: true, plus: true, elite: true } },
+      { label: "Delivery fee", values: { basic: "Standard", naija_one: "Always free" } },
+      { label: "Priority pickup slots", values: { basic: false, naija_one: true } },
+      { label: "Live rider tracking", values: { basic: true, naija_one: true } },
     ],
   },
   {
     section: "Rewards",
     Icon: PiGiftDuotone,
     rows: [
-      { label: "Cashback per order", values: { basic: "1%", plus: "5%", elite: "10%" } },
-      { label: "Members-only chef drops", values: { basic: false, plus: true, elite: true } },
-      { label: "Birthday meal", values: { basic: false, plus: true, elite: true } },
-      { label: "Wallet & top-up fees", values: { basic: "Standard", plus: "Reduced", elite: "Waived" } },
+      { label: "Cashback per order", values: { basic: "1%", naija_one: "10%" } },
+      { label: "Wallet & top-up fees", values: { basic: "Standard", naija_one: "Waived" } },
+      { label: "Birthday meal", values: { basic: false, naija_one: true } },
     ],
   },
   {
     section: "Experiences",
     Icon: PiConfettiDuotone,
     rows: [
-      { label: "Early access to new chefs", values: { basic: false, plus: false, elite: true } },
-      { label: "VIP supper club invites", values: { basic: false, plus: false, elite: true } },
-      { label: "Concierge reservations", values: { basic: false, plus: false, elite: true } },
+      { label: "Early access to new chefs", values: { basic: false, naija_one: true } },
+      { label: "VIP supper club invites", values: { basic: false, naija_one: true } },
     ],
   },
   {
     section: "Support",
     Icon: PiHeadsetDuotone,
     rows: [
-      { label: "Support channels", values: { basic: "Email", plus: "Email + Chat", elite: "24/7 phone + Chat" } },
-      { label: "Response SLA", values: { basic: "48 hours", plus: "12 hours", elite: "1 hour" } },
+      { label: "Support channels", values: { basic: "Email", naija_one: "24/7 Priority" } },
+      { label: "Response SLA", values: { basic: "48 hours", naija_one: "1 hour" } },
     ],
   },
 ];
 
 const FAQ = [
   {
-    q: "Can I cancel Naija Eats Plus or Elite anytime?",
+    q: "Can I cancel Naija One anytime?",
     a: "Yes. Cancel from this page and you'll keep your premium benefits until the end of your billing period.",
   },
   {
@@ -235,7 +207,7 @@ const FAQ = [
   },
   {
     q: "Do I get free delivery even if my order is small?",
-    a: "Plus members get free delivery on orders over ₦5,000 (or £15). Elite members get free delivery on every order regardless of size.",
+    a: "Naija One members get free delivery on every order regardless of size.",
   },
   {
     q: "What payment methods are accepted?",
@@ -244,7 +216,7 @@ const FAQ = [
 ];
 
 function rank(k: CustomerPlan) {
-  return k === "basic" ? 0 : k === "plus" ? 1 : 2;
+  return k === "basic" ? 0 : 1;
 }
 
 function SubscriptionPage() {
@@ -269,7 +241,7 @@ function SubscriptionPage() {
   const regionMeta = REGIONS.find((r) => r.id === region)!;
 
   const yearlyDiscount = useMemo(() => {
-    const p = PLANS.find((p) => p.key === "plus")!;
+    const p = PLANS.find((p) => p.key === "naija_one")!;
     const m = p.price[region].monthly * 12;
     const y = p.price[region].yearly;
     if (m === 0) return 0;
@@ -355,7 +327,7 @@ function SubscriptionPage() {
         <div className="mt-6 rounded-3xl bg-card border border-border p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <TrustItem Icon={ShieldCheck} label="Secure payments" sub="Paystack & Stripe" />
-            <TrustItem Icon={PiSealCheckDuotone} label="7-day free trial" sub="Plus & Elite" />
+            <TrustItem Icon={PiSealCheckDuotone} label="7-day free trial" sub="Naija One" />
             <TrustItem Icon={PiConfettiDuotone} label="Cancel anytime" sub="No lock-in" />
             <TrustItem Icon={PiCookingPotDuotone} label="800+ chefs & stores" sub="NG & UK" />
           </div>
@@ -374,7 +346,7 @@ function SubscriptionPage() {
                 <div key={p.key} className="p-4 text-center border-l border-border">
                   <div className={`inline-flex items-center gap-1.5 rounded-full ${p.chipTone} px-2.5 py-1 text-[11px] font-bold uppercase`}>
                     <p.Icon className="h-3.5 w-3.5" />
-                    {p.key === "basic" ? "Basic" : p.key === "plus" ? "Plus" : "Elite"}
+                    {p.key === "basic" ? "Basic" : "Naija One"}
                   </div>
                 </div>
               ))}
@@ -398,7 +370,7 @@ function SubscriptionPage() {
                     }`}
                   >
                     <div className="p-4 text-sm">{row.label}</div>
-                    {(["basic", "plus", "elite"] as CustomerPlan[]).map((k) => (
+                    {(["basic", "naija_one"] as CustomerPlan[]).map((k) => (
                       <div key={k} className="p-4 text-center border-l border-border text-sm">
                         {typeof row.values[k] === "boolean" ? (
                           row.values[k] ? (
@@ -596,11 +568,9 @@ function PlanCard({
       <div className="flex items-center gap-3">
         <span
           className={`grid h-11 w-11 place-items-center rounded-2xl shrink-0 ${
-            plan.key === "elite"
-              ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30"
-              : plan.key === "plus"
-                ? "bg-gradient-to-br from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/30"
-                : "bg-zinc-100 text-zinc-700"
+            plan.key === "naija_one"
+              ? "bg-gradient-to-br from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/30"
+              : "bg-zinc-100 text-zinc-700"
           }`}
         >
           <plan.Icon className="h-5 w-5" />
@@ -659,8 +629,8 @@ function PlanCard({
             ? "bg-zinc-100 text-zinc-500 cursor-default"
             : featured
               ? "bg-gradient-to-r from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/30 hover:shadow-xl active:scale-[0.99]"
-              : plan.key === "elite"
-                ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl active:scale-[0.99]"
+              : plan.key === "naija_one"
+                ? "bg-gradient-to-r from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/30 hover:shadow-xl active:scale-[0.99]"
                 : "bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.99]"
         }`}
       >
@@ -672,7 +642,7 @@ function PlanCard({
           <>Switch to Basic <ArrowRight className="h-4 w-4" /></>
         ) : (
           <>
-            {plan.key === "plus" ? "Start 7-day trial" : `Upgrade to ${plan.name.split(" ").pop()}`}
+            {plan.key === "naija_one" ? "Start 7-day trial" : `Upgrade to ${plan.name.split(" ").pop()}`}
             <ArrowRight className="h-4 w-4" />
           </>
         )}

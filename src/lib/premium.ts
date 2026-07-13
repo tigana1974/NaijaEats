@@ -8,7 +8,7 @@
  * users on every page load.
  */
 
-export type CustomerPlan = "basic" | "plus" | "elite";
+export type CustomerPlan = "basic" | "naija_one";
 export type BillingRegion = "NG" | "UK";
 export type BillingCadence = "monthly" | "yearly";
 
@@ -20,7 +20,7 @@ export const PLAN_EVENT = "naijaeats-customer-plan-changed";
 export function loadCustomerPlan(): CustomerPlan {
   if (typeof window === "undefined") return "basic";
   const v = localStorage.getItem(PLAN_KEY);
-  if (v === "plus" || v === "elite") return v;
+  if (v === "naija_one") return v;
   return "basic";
 }
 

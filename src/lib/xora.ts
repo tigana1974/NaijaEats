@@ -158,7 +158,7 @@ function detectIntent(text: string): Intent {
   if (/\bprice|cost|how much|expensive\b/.test(t)) return "price";
   if (/\b(chef|restaurant|vendor|store|grocery|store list|kitchen)\b/.test(t)) return "vendors";
   if (/\bwallet|top ?up|balance|refer|referral|reward|cashback\b/.test(t)) return "wallet";
-  if (/\bpremium|subscribe|plus|elite\b/.test(t)) return "premium";
+  if (/\bpremium|subscribe|naija one\b/.test(t)) return "premium";
   if (/\bthank(s|you|ies)?\b/.test(t)) return "thanks";
   if (/\bhelp|what can you do|features\b/.test(t)) return "help";
   return "fallback";
@@ -274,7 +274,7 @@ function replyFor(intent: Intent, text: string, region: BillingRegion): Reply {
 
     case "premium":
       return {
-        content: `Two premium tiers — **Naija Eats Plus** (free delivery + 5% cashback + weekly chef drops) and **Elite** (unlimited free delivery + 10% cashback + VIP invites). ${region === "NG" ? "Plus starts at ₦1,500/mo, Elite ₦4,500/mo." : "Plus is £4.99/mo, Elite £14.99/mo."} Both start with a 7-day free trial.`,
+        content: `**Naija One** is the premium experience on NaijaEats. It includes unlimited free delivery, 10% cashback on every order, VIP invites, and early access to new chefs. ${region === "NG" ? "It costs ₦5,000/mo or ₦48,000/yr." : "It costs £9.99/mo or £95.88/yr."} You can start with a 7-day free trial!`,
         actions: [{ label: "See plans", to: "/subscription" }],
       };
 

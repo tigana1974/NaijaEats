@@ -127,7 +127,7 @@ function AccountPage() {
     { label: "My Orders", Icon: ShoppingBag, to: "/orders" },
     { label: "Addresses", Icon: MapPin, to: "/addresses" },
     { label: "Payment Methods", Icon: CreditCard, to: "/payment-methods" },
-    { label: "Naija Eats Premium", Icon: Sparkles, to: "/subscription", hint: "Free delivery, cashback, VIP" },
+    { label: "Naija One", Icon: Sparkles, to: "/subscription", hint: "Free delivery, cashback, VIP" },
     { label: "Settings", Icon: Settings, to: "/settings" },
     { label: "Help & Support", Icon: HelpCircle, to: "/help" },
   ];

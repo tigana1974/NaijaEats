@@ -220,29 +220,7 @@ export function PremiumAccountBanner() {
     return () => window.removeEventListener(PLAN_EVENT, refresh);
   }, []);
 
-  if (plan === "elite") {
-    return (
-      <Link
-        to="/subscription"
-        className="relative block overflow-hidden rounded-2xl p-4 text-white bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 shadow-[0_20px_50px_-20px_rgba(147,51,234,0.45)]"
-      >
-        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
-        <div className="relative flex items-center gap-4">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 backdrop-blur">
-            <PiCrownDuotone className="h-6 w-6" />
-          </span>
-          <div className="flex-1">
-            <div className="text-[10px] uppercase tracking-widest font-bold text-white/80">Elite member</div>
-            <div className="font-display text-lg font-bold">VIP status active</div>
-            <div className="text-xs text-white/80">Unlimited free delivery + 10% cashback</div>
-          </div>
-          <ArrowRight className="h-4 w-4 opacity-70" />
-        </div>
-      </Link>
-    );
-  }
-
-  if (plan === "plus") {
+  if (plan === "naija_one") {
     return (
       <Link
         to="/subscription"
@@ -251,12 +229,12 @@ export function PremiumAccountBanner() {
         <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
         <div className="relative flex items-center gap-4">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 backdrop-blur">
-            <Sparkles className="h-6 w-6" />
+            <PiCrownDuotone className="h-6 w-6" />
           </span>
           <div className="flex-1">
-            <div className="text-[10px] uppercase tracking-widest font-bold text-white/80">Plus member</div>
-            <div className="font-display text-lg font-bold">You're on Plus 🎉</div>
-            <div className="text-xs text-white/80">Upgrade to Elite for unlimited free delivery</div>
+            <div className="text-[10px] uppercase tracking-widest font-bold text-white/80">Premium member</div>
+            <div className="font-display text-lg font-bold">Naija One active 🎉</div>
+            <div className="text-xs text-white/80">Unlimited free delivery + 10% cashback</div>
           </div>
           <ArrowRight className="h-4 w-4 opacity-70" />
         </div>
@@ -276,10 +254,10 @@ export function PremiumAccountBanner() {
           <Sparkles className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Go Premium
         </div>
         <h3 className="font-display text-xl font-bold mt-2 leading-tight">
-          Free delivery + 5% cashback
+          Naija One Experience
         </h3>
         <p className="text-xs text-white/75 mt-1 max-w-xs">
-          Try Naija Eats Plus free for 7 days. Cancel anytime.
+          Try Naija One free for 7 days. Cancel anytime.
         </p>
         <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white text-[#3a1a14] px-4 py-2 text-xs font-bold group-hover:scale-105 transition-transform">
           Start free trial <ArrowRight className="h-3.5 w-3.5" />
