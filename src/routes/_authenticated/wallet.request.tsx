@@ -250,6 +250,23 @@ function FormStep({
 
 
 
+      {/* Quick amounts */}
+      <div className="mt-3 sm:mt-4 grid grid-cols-4 gap-2">
+        {QUICK_AMOUNTS.map((q) => (
+          <button
+            key={q}
+            onClick={() => setAmount(q)}
+            className={`rounded-xl border py-2 text-xs font-bold transition ${
+              amount === q
+                ? "border-amber-500 bg-amber-50 text-amber-700"
+                : "border-zinc-200 bg-white hover:border-zinc-300"
+            }`}
+          >
+            {fmt(q).replace('.00', '')}
+          </button>
+        ))}
+      </div>
+
       {/* Keypad */}
       <div className="mt-auto pt-3 sm:pt-4">
         <WalletKeypad value={amount} onChange={setAmount} />

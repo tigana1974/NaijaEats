@@ -588,6 +588,23 @@ function AmountStep({
 
 
 
+      {/* Quick amounts */}
+      <div className="mt-3 sm:mt-4 grid grid-cols-4 gap-2">
+        {[1000, 2000, 5000, 10000].map((q) => (
+          <button
+            key={q}
+            onClick={() => setAmount(q)}
+            className={`rounded-xl border py-2 text-xs font-bold transition ${
+              amount === q
+                ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                : "border-zinc-200 bg-white hover:border-zinc-300"
+            }`}
+          >
+            {fmt(q).replace('.00', '')}
+          </button>
+        ))}
+      </div>
+
       {/* Keypad */}
       <div className="mt-auto pt-3 sm:pt-5">
         <WalletKeypad value={amount} onChange={setAmount} />
