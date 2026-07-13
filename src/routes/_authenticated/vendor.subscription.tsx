@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/vendor/subscription")({
 
 type Region = "NG" | "UK";
 type Billing = "monthly" | "yearly";
-type PlanKey = "basic" | "premium" | "pro";
+type PlanKey = "basic" | "premium" | "pro" | "enterprise";
 
 type Plan = {
   key: PlanKey;
@@ -106,13 +106,13 @@ const PLANS: Plan[] = [
     tagline: "For chains & multi-location brands",
     Icon: Rocket,
     price: {
-      NG: { monthly: 45000, yearly: 432000 },
-      UK: { monthly: 119, yearly: 1142 },
+      NG: { monthly: 30000, yearly: 288000 },
+      UK: { monthly: 79, yearly: 758 },
     },
-    shopLimit: "unlimited",
+    shopLimit: 15,
     commission: "5% per order",
     highlights: [
-      "Unlimited storefronts",
+      "Up to 15 storefronts",
       "Featured placement on Home",
       "Dedicated account manager",
       "24/7 phone & chat support",
@@ -124,6 +124,27 @@ const PLANS: Plan[] = [
     ],
     gradient: "from-purple-50 to-white",
     chipTone: "bg-purple-100 text-purple-700",
+  },
+  {
+    key: "enterprise",
+    name: "Enterprise",
+    tagline: "For major chains & franchises",
+    Icon: Sparkles,
+    price: {
+      NG: { monthly: 75000, yearly: 720000 },
+      UK: { monthly: 199, yearly: 1910 },
+    },
+    shopLimit: "unlimited",
+    commission: "Custom",
+    highlights: [
+      "15+ storefronts (Unlimited)",
+      "Dedicated success manager",
+      "Custom integrations & API",
+      "White-label options",
+      "Custom marketing campaigns",
+    ],
+    gradient: "from-slate-50 to-white",
+    chipTone: "bg-slate-100 text-slate-800",
   },
 ];
 

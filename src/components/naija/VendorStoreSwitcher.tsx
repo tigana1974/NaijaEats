@@ -31,11 +31,11 @@ type Shop = {
   logo_url: string | null;
 };
 
-const PLAN_LIMITS: Record<string, number> = {
-  free: 1,
-  starter: 2,
+const PLAN_LIMITS: Record<string, number | "unlimited"> = {
+  basic: 1,
   premium: 5,
-  enterprise: 25,
+  pro: 15,
+  enterprise: "unlimited",
 };
 
 function typeIcon(type: string | null | undefined) {
@@ -92,10 +92,10 @@ export function VendorStoreSwitcher({ userId, plan }: { userId?: string; plan?: 
   );
 
   const isAllMode = activeShopId === "ALL";
-  const planKey = (plan ?? "free").toLowerCase();
+  const planKey = (plan ?? "basic").toLowerCase();
   const limit = PLAN_LIMITS[planKey] ?? 1;
-  const remaining = Math.max(0, limit - shops.length);
-  const canAdd = shops.length < limit;
+  const remaining = limit === "unlimited" ? "Unlimited" : Math.max(0, limit - shops.length);
+  const canAdd = limit === "unlimited" || shops.length < limit;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -334,22 +334,22 @@ export function VendorStoreSwitcher({ userId, plan }: { userId?: string; plan?: 
 
 function planLabel(plan: string): string {
   if (plan === "enterprise") return "Enterprise";
+  if (plan === "pro") return "Pro plan";
   if (plan === "premium") return "Premium plan";
-  if (plan === "starter") return "Starter plan";
-  return "Free plan";
+  return "Basic plan";
 }
 
 function PlanBadge({ plan }: { plan: string }) {
   const styles: Record<string, string> = {
-    free: "bg-zinc-100 text-zinc-700",
-    starter: "bg-blue-100 text-blue-700",
+    basic: "bg-zinc-100 text-zinc-700",
     premium: "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/25",
-    enterprise: "bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/25",
+    pro: "bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md shadow-purple-500/25",
+    enterprise: "bg-gradient-to-br from-slate-800 to-black text-white shadow-md shadow-black/25",
   };
-  const label = plan === "free" ? "FREE" : plan.slice(0, 3).toUpperCase();
+  const label = plan === "basic" ? "BASIC" : plan.slice(0, 3).toUpperCase();
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${styles[plan] ?? styles.free}`}>
-      {plan === "premium" || plan === "enterprise" ? <Sparkles className="h-3 w-3" /> : null}
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${styles[plan] ?? styles.basic}`}>
+      {plan === "premium" || plan === "pro" || plan === "enterprise" ? <Sparkles className="h-3 w-3" /> : null}
       {label}
     </span>
   );
