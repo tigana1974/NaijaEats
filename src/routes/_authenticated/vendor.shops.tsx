@@ -61,11 +61,10 @@ type ShopMetrics = {
   openOrders: number;
 };
 
-const PLAN_LIMITS: Record<string, number> = {
-  free: 1,
-  starter: 2,
+const PLAN_LIMITS: Record<string, number | "unlimited"> = {
+  basic: 1,
   premium: 5,
-  enterprise: 25,
+  pro: "unlimited",
 };
 
 function typeIcon(type: string | null | undefined) {
@@ -208,9 +207,9 @@ function ShopsPage() {
 
   if (!roleLoading && role !== "vendor") return <Navigate to="/" replace />;
 
-  const planKey = (profile?.plan ?? "free").toLowerCase();
+  const planKey = (profile?.plan ?? "basic").toLowerCase();
   const limit = PLAN_LIMITS[planKey] ?? 1;
-  const canAdd = shops.length < limit;
+  const canAdd = limit === "unlimited" || shops.length < limit;
   const currency = shops[0]?.currency ?? "NGN";
 
   const typeCounts = shops.reduce<Record<string, number>>((acc, s) => {
