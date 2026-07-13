@@ -53,7 +53,7 @@ type Step = "amount" | "method" | "details" | "success";
 function TopUpPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("amount");
-  const [amount, setAmount] = useState<number>(20000);
+  const [amount, setAmount] = useState<number>(0);
   const [method, setMethod] = useState<MethodId>("card");
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);
@@ -294,17 +294,19 @@ function AmountStep({
 
 
       {/* Bonus nudge */}
-      {amount < 20000 && (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-3">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div className="flex-1">
-            <div className="text-xs font-bold text-amber-900">Top up ₦20,000+ and get 10% free</div>
+      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-3">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-700">
+          <Sparkles className="h-4 w-4" />
+        </span>
+        <div className="flex-1">
+          <div className="text-xs font-bold text-amber-900">Top up ₦20,000+ and get 10% free</div>
+          {amount >= 20000 ? (
+            <div className="text-[11px] text-emerald-600 font-bold">🎉 You unlocked {fmt(bonus)} bonus!</div>
+          ) : (
             <div className="text-[11px] text-amber-800/80">Add {fmt(20000 - amount)} more to unlock</div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Keypad */}
       <div className="mt-5">
