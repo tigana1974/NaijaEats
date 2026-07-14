@@ -791,34 +791,7 @@ function SpecialDishes() {
     return specialDishes[i % specialDishes.length];
   });
 
-  const slides = Array.from({ length: TOTAL_SLIDES }).map((_, s) =>
-    displayDishes.slice(s * DISHES_PER_SLIDE, (s + 1) * DISHES_PER_SLIDE),
-  );
-
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
-
-  // Watch the scroller and set the active slide from whichever page's left
-  // edge is closest to the container's left. Uses scroll events so both swipe
-  // and dot/arrow clicks stay in sync.
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      const w = el.clientWidth;
-      if (w === 0) return;
-      const i = Math.round(el.scrollLeft / w);
-      setActive(Math.max(0, Math.min(TOTAL_SLIDES - 1, i)));
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const goTo = (i: number) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
-  };
+  const marqueeItems = [...displayDishes, ...displayDishes];
 
   return (
     <section className="relative py-20 md:py-24 bg-background">
@@ -833,97 +806,42 @@ function SpecialDishes() {
           </p>
         </div>
 
-        {/* Slide viewport — horizontal scroll-snap with 3 pages. Each page is
-            a 2×2 (mobile) or 1×4 (desktop) grid, so the dots correspond to
-            real navigable pages instead of being decorative. */}
-        <div className="relative mt-16">
-          <div
-            ref={scrollerRef}
-            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-6 px-6 pt-14 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          >
+        <div className="relative mt-16 overflow-hidden">
+          <div className="flex w-max pt-14 pb-4 px-4 hover:[animation-play-state:paused] animate-marquee-ltr gap-6">
             {isLoading ? (
-              <div className="snap-start shrink-0 w-full pr-0" aria-roledescription="slide">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-                  {Array.from({ length: DISHES_PER_SLIDE }).map((_, i) => (
-                    <div key={i} className="group relative">
-                      <div className="aspect-square rounded-full sm:rounded-[2rem] bg-muted animate-pulse" />
-                      <div className="mt-5 text-center px-2">
-                        <div className="h-4 w-3/4 bg-muted animate-pulse rounded mx-auto" />
-                        <div className="h-3 w-1/2 bg-muted animate-pulse rounded mx-auto mt-2" />
-                      </div>
-                    </div>
-                  ))}
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="group relative w-64 shrink-0">
+                  <div className="aspect-square rounded-full sm:rounded-[2rem] bg-muted animate-pulse" />
+                  <div className="mt-5 text-center px-2">
+                    <div className="h-4 w-3/4 bg-muted animate-pulse rounded mx-auto" />
+                    <div className="h-3 w-1/2 bg-muted animate-pulse rounded mx-auto mt-2" />
+                  </div>
                 </div>
-              </div>
-            ) : slides.map((slide, s) => (
-              <div
-                key={s}
-                className="snap-start shrink-0 w-full pr-0"
-                aria-roledescription="slide"
-                aria-label={`Slide ${s + 1} of ${TOTAL_SLIDES}`}
-              >
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {slide.map((d, idx) => (
-                    <article
-                      key={d.name + s + "-" + idx}
-                      className="relative rounded-3xl bg-card border border-border pt-16 pb-6 px-5 text-center shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-card)] hover:-translate-y-1 transition-all"
-                    >
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-24 rounded-full overflow-hidden ring-4 ring-background shadow-[var(--shadow-warm)]">
-                        <img src={d.img} alt={d.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
-                      </div>
-                      <div className="text-xs font-bold text-primary">{d.price}</div>
-                      <h3 className="mt-1 font-semibold text-foreground text-base leading-tight">{d.name}</h3>
-                      <div className="mt-2 flex items-center justify-center gap-0.5 text-accent">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                        ))}
-                        <span className="ml-1 text-[11px] text-muted-foreground">{d.rating}</span>
-                      </div>
-                      <button className="mt-4 w-full rounded-full bg-primary text-primary-foreground py-2 text-xs font-semibold hover:opacity-95 transition">
-                        Order Now
-                      </button>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              marqueeItems.map((d, idx) => (
+                <article
+                  key={d.name + "-" + idx}
+                  className="relative w-64 shrink-0 rounded-3xl bg-card border border-border pt-16 pb-6 px-5 text-center shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-card)] hover:-translate-y-1 transition-all"
+                >
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-24 rounded-full overflow-hidden ring-4 ring-background shadow-[var(--shadow-warm)]">
+                    <img src={d.img} alt={d.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
+                  </div>
+                  <div className="text-xs font-bold text-primary">{d.price}</div>
+                  <h3 className="mt-1 font-semibold text-foreground text-base leading-tight truncate">{d.name}</h3>
+                  <div className="mt-2 flex items-center justify-center gap-0.5 text-accent">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                    ))}
+                    <span className="ml-1 text-[11px] text-muted-foreground">{d.rating}</span>
+                  </div>
+                  <button className="mt-4 w-full rounded-full bg-primary text-primary-foreground py-2 text-xs font-semibold hover:opacity-95 transition">
+                    Order Now
+                  </button>
+                </article>
+              ))
+            )}
           </div>
-
-          {/* Prev / next controls — hidden on mobile where swipe is natural */}
-          <button
-            type="button"
-            onClick={() => goTo(Math.max(0, active - 1))}
-            disabled={active === 0}
-            aria-label="Previous dishes"
-            className="hidden md:grid absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 h-11 w-11 place-items-center rounded-full bg-card border border-border shadow-md hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => goTo(Math.min(TOTAL_SLIDES - 1, active + 1))}
-            disabled={active === TOTAL_SLIDES - 1}
-            aria-label="Next dishes"
-            className="hidden md:grid absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 h-11 w-11 place-items-center rounded-full bg-card border border-border shadow-md hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Pagination dots — reflect the current slide and jump to any page */}
-        <div className="mt-10 flex items-center justify-center gap-2">
-          {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => goTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
-              aria-current={active === i ? "true" : undefined}
-              className={`transition-all rounded-full ${
-                active === i ? "h-2 w-6 bg-primary" : "h-2 w-2 bg-border hover:bg-muted-foreground/40"
-              }`}
-            />
-          ))}
         </div>
       </div>
     </section>
