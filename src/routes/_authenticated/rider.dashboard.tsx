@@ -5,6 +5,9 @@ import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
 import { useRiderOnline, useRiderVerification } from "@/hooks/useRiderStatus";
 import { RiderVerificationBanner, RiderVerifiedBadge } from "@/components/naija/RiderVerificationBanner";
+import { RiderDeliveryMap, RiderNavigationOverlay } from "@/components/naija/RiderDeliveryMap";
+import { useState } from "react";
+import { usePublishRiderLocation } from "@/hooks/useRiderLocation";
 import { toast } from "sonner";
 import { MapPin, Navigation, ChefHat } from "lucide-react";
 import {
@@ -66,6 +69,9 @@ function RiderDashboard() {
       };
     },
   });
+
+  // Stream GPS onto the active delivery so the customer sees the driver move.
+  usePublishRiderLocation(data?.active?.id ?? null);
 
   const advance = async (delivery: any, status: "picked_up" | "delivered") => {
     // The DB only lets riders move an order ready→picked_up, so confirming
@@ -159,12 +165,10 @@ function RiderDashboard() {
   );
 }
 
-function mapsUrl(address: string) {
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
-}
-
 function ActiveCard({ delivery, symbol, onAdvance }: { delivery: any; symbol: string; onAdvance: (d: any, s: "picked_up" | "delivered") => void }) {
   const phase = delivery.status === "assigned" ? "to_pickup" : "to_dropoff";
+  // In-app navigation overlay target (null = closed).
+  const [navTarget, setNavTarget] = useState<{ address: string; label: string } | null>(null);
   const order = delivery.orders;
   const vendor = order?.vendors;
   const items: { name: string; quantity: number }[] = order?.order_items ?? [];
@@ -194,6 +198,17 @@ function ActiveCard({ delivery, symbol, onAdvance }: { delivery: any; symbol: st
         </div>
       </div>
 
+      {pickupAddress && dropoffAddress && (
+        <div className="mt-4">
+          <RiderDeliveryMap
+            pickupAddress={pickupAddress}
+            dropoffAddress={dropoffAddress}
+            phase={phase}
+            country={delivery.currency === "GBP" ? "UK" : "NG"}
+          />
+        </div>
+      )}
+
       <ol className="mt-4 space-y-3 text-sm">
         <li className="flex gap-3 items-start">
           <MapPin className={`h-5 w-5 mt-0.5 shrink-0 ${phase === "to_pickup" ? "text-[var(--brand-clay)]" : "text-muted-foreground"}`} />
@@ -202,10 +217,13 @@ function ActiveCard({ delivery, symbol, onAdvance }: { delivery: any; symbol: st
             <div className="text-muted-foreground">{pickupAddress || "—"}</div>
           </div>
           {pickupAddress && phase === "to_pickup" && (
-            <a href={mapsUrl(pickupAddress)} target="_blank" rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted">
+            <button
+              type="button"
+              onClick={() => setNavTarget({ address: pickupAddress, label: `Pickup${vendor?.name ? ` · ${vendor.name}` : ""}` })}
+              className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+            >
               <Navigation className="h-3 w-3" /> Navigate
-            </a>
+            </button>
           )}
         </li>
         <li className="flex gap-3 items-start">
@@ -215,10 +233,13 @@ function ActiveCard({ delivery, symbol, onAdvance }: { delivery: any; symbol: st
             <div className="text-muted-foreground">{dropoffAddress || "—"}</div>
           </div>
           {dropoffAddress && phase === "to_dropoff" && (
-            <a href={mapsUrl(dropoffAddress)} target="_blank" rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted">
+            <button
+              type="button"
+              onClick={() => setNavTarget({ address: dropoffAddress, label: "Drop-off" })}
+              className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+            >
               <Navigation className="h-3 w-3" /> Navigate
-            </a>
+            </button>
           )}
         </li>
       </ol>
@@ -258,6 +279,15 @@ function ActiveCard({ delivery, symbol, onAdvance }: { delivery: any; symbol: st
           </button>
         )}
       </div>
+
+      {navTarget && (
+        <RiderNavigationOverlay
+          targetAddress={navTarget.address}
+          targetLabel={navTarget.label}
+          country={delivery.currency === "GBP" ? "UK" : "NG"}
+          onClose={() => setNavTarget(null)}
+        />
+      )}
     </div>
   );
 }

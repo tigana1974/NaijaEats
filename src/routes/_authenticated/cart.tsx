@@ -170,8 +170,8 @@ function CartPage() {
           p_vendor_id: cart.vendorId,
           p_items: cart.items.map((i) => ({ menu_item_id: i.menuItemId, quantity: i.quantity })),
           p_delivery_address: resolvedAddress,
-          p_customer_note: note.trim() || null,
-          p_scheduled_for: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : null,
+          p_customer_note: note.trim() || undefined,
+          p_scheduled_for: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : undefined,
           p_calculated_delivery_fee: getStandardDeliveryFee(cart.currency),
         });
         if (error) throw error;

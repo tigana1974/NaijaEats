@@ -5,7 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, CreditCard, ChevronDown, ChevronUp, Bike, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { initiatePayment } from "@/lib/api/payments.functions";
-import { OrderStatusTracker, OrderTrackingMap, statusHeadlineFor } from "@/components/naija/OrderTracking";
+import { OrderStatusTracker, statusHeadlineFor } from "@/components/naija/OrderTracking";
+import { LiveOrderMap } from "@/components/naija/LiveOrderMap";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/orders/$orderId")({
@@ -28,7 +29,7 @@ function OrderDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, order_items(*), vendor:vendors(name, logo_url, city, country, prep_time_minutes)")
+        .select("*, order_items(*), vendor:vendors(name, logo_url, city, country, prep_time_minutes, address_line)")
         .eq("id", orderId)
         .maybeSingle();
       if (error) throw error;
@@ -82,7 +83,13 @@ function OrderDetailPage() {
         {isCancelled ? (
           <div className="absolute inset-0 bg-zinc-100" />
         ) : (
-          <OrderTrackingMap currency={data.currency} status={data.status} />
+          <LiveOrderMap
+            orderId={data.id}
+            currency={data.currency}
+            status={data.status}
+            vendorAddress={[data.vendor?.address_line, data.vendor?.city].filter(Boolean).join(", ") || null}
+            deliveryAddress={typeof data.delivery_address === "string" ? data.delivery_address : null}
+          />
         )}
       </div>
 

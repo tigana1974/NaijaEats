@@ -195,7 +195,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setRegion(id);
     const country = regionToCountry(id as AdminRegion);
     // Fire-and-forget: the switch itself lands in the audit trail.
-    supabase.rpc("log_admin_event", { p_action: "region_switched", p_country: country }).then(() => {});
+    supabase.rpc("log_admin_event", { p_action: "region_switched", p_country: country ?? undefined }).then(() => {});
   };
 
   const handleRegionSelect = (id: string) => {

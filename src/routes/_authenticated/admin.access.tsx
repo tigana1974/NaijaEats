@@ -94,7 +94,7 @@ function AdminAccess() {
     try {
       const { data, error } = await supabase.rpc("create_admin_access_code", {
         p_country: newCountry,
-        p_label: newLabel.trim() || null,
+        p_label: newLabel.trim() || undefined,
       });
       if (error) throw error;
       const res = data as { code: string };
