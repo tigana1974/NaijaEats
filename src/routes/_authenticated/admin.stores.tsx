@@ -13,6 +13,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -36,6 +37,7 @@ type TypeTab = "all" | "restaurant" | "chef" | "grocery" | "caterer";
 
 function AdminStores() {
   const qc = useQueryClient();
+  const { region, country, countryLabel } = useAdminRegion();
   const [tab, setTab] = useState<TypeTab>("all");
   const [search, setSearch] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -75,13 +77,15 @@ function AdminStores() {
   });
 
   const { data: vendors, isLoading } = useQuery({
-    queryKey: ["admin-stores-full"],
+    queryKey: ["admin-stores-full", region],
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("vendors")
         .select("id,name,type,status,city,country,created_at,address_line,description")
         .order("created_at", { ascending: false });
+      if (country) q = q.eq("country", country);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as any[];
     },
@@ -121,8 +125,8 @@ function AdminStores() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Store"
-          title="Store list"
-          description="Restaurants, chefs, grocery shops and caterers across United Kingdom and Nigeria."
+          title={`Store list — ${countryLabel}`}
+          description={country ? `Restaurants, chefs, grocery shops and caterers in ${countryLabel}.` : "Restaurants, chefs, grocery shops and caterers across United Kingdom and Nigeria."}
           actions={
             <button type="button" className={uberBtn.primary} onClick={() => setIsOnboardOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Onboard vendor

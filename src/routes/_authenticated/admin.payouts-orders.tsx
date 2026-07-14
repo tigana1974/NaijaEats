@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -23,23 +24,26 @@ export const Route = createFileRoute("/_authenticated/admin/payouts-orders")({
 });
 
 function AdminPayoutsByOrder() {
+  const { region, currency: regionCurrency, countryLabel } = useAdminRegion();
+  const kpiCurrency = regionCurrency ?? "NGN";
   const [search, setSearch] = useState("");
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ["admin-payouts-orders"],
+    queryKey: ["admin-payouts-orders", region],
     queryFn: async () => {
-      // In a real app we would paginate this heavily. 
+      // In a real app we would paginate this heavily.
       // For the demo we fetch the most recent 100 delivered orders.
-      const { data, error } = await supabase
+      let q = supabase
         .from("orders")
         .select(`
-          id, total, delivery_fee, created_at, status, payment_method,
+          id, total, delivery_fee, currency, created_at, status, payment_method,
           vendors (name)
         `)
         .eq('status', 'delivered')
         .order('created_at', { ascending: false })
         .limit(100);
-      
+      if (regionCurrency) q = q.eq("currency", regionCurrency);
+      const { data, error } = await q;
       if (error) throw error;
       return data || [];
     },
@@ -87,15 +91,15 @@ function AdminPayoutsByOrder() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Finance"
-          title="Order Reconciliation"
+          title={`Order Reconciliation — ${countryLabel}`}
           description="Per-order breakdown of commission, delivery fees, and platform earnings."
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-8">
           <UberKpi label="Total Orders (Shown)" value={isLoading ? "…" : kpis.volume} Icon={ReceiptText} accent="blue" />
-          <UberKpi label="Total Commission" value={isLoading ? "…" : formatMoney(kpis.commission, "NGN")} Icon={PercentCircle} accent="green" />
-          <UberKpi label="Rider Payouts" value={isLoading ? "…" : formatMoney(kpis.riderShare, "NGN")} Icon={Truck} accent="orange" />
-          <UberKpi label="Net Platform Earnings" value={isLoading ? "…" : formatMoney(kpis.platformNet, "NGN")} Icon={Building2} accent="ink" />
+          <UberKpi label="Total Commission" value={isLoading ? "…" : formatMoney(kpis.commission, kpiCurrency)} Icon={PercentCircle} accent="green" />
+          <UberKpi label="Rider Payouts" value={isLoading ? "…" : formatMoney(kpis.riderShare, kpiCurrency)} Icon={Truck} accent="orange" />
+          <UberKpi label="Net Platform Earnings" value={isLoading ? "…" : formatMoney(kpis.platformNet, kpiCurrency)} Icon={Building2} accent="ink" />
         </div>
 
         <div className="mt-8">
@@ -144,25 +148,25 @@ function AdminPayoutsByOrder() {
                         <UberTd className="font-medium text-neutral-900">{(o.vendors as any)?.name || 'Unknown'}</UberTd>
                         <UberTd>
                           <div className="flex flex-col">
-                            <span className="font-medium">{formatMoney(o.financials.total, "NGN")}</span>
+                            <span className="font-medium">{formatMoney(o.financials.total, o.currency || kpiCurrency)}</span>
                             <span className="text-xs text-neutral-500 capitalize">{o.payment_method.replace('_', ' ')}</span>
                           </div>
                         </UberTd>
                         <UberTd>
                           <div className="flex flex-col">
-                            <span className="font-medium text-green-700">{formatMoney(o.financials.vendorNet, "NGN")}</span>
+                            <span className="font-medium text-green-700">{formatMoney(o.financials.vendorNet, o.currency || kpiCurrency)}</span>
                             <span className="text-[10px] text-neutral-500 uppercase">Less 15% Comm.</span>
                           </div>
                         </UberTd>
                         <UberTd>
                           <div className="flex flex-col">
-                            <span className="font-medium text-orange-600">{formatMoney(o.financials.riderPayout, "NGN")}</span>
+                            <span className="font-medium text-orange-600">{formatMoney(o.financials.riderPayout, o.currency || kpiCurrency)}</span>
                             <span className="text-[10px] text-neutral-500 uppercase">80% of Del. Fee</span>
                           </div>
                         </UberTd>
                         <UberTd>
                           <div className="flex flex-col">
-                            <span className="font-medium text-brand-core">{formatMoney(o.financials.platformNet, "NGN")}</span>
+                            <span className="font-medium text-brand-core">{formatMoney(o.financials.platformNet, o.currency || kpiCurrency)}</span>
                             <span className="text-[10px] text-neutral-500 uppercase">Comm. + 20% Fee</span>
                           </div>
                         </UberTd>

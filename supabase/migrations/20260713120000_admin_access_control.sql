@@ -133,7 +133,7 @@ BEGIN
 
   rec := to_jsonb(COALESCE(NEW, OLD));
   INSERT INTO public.admin_audit_log (user_id, action, table_name, record_id, details)
-  VALUES (uid, lower(TG_OP), TG_TABLE_NAME, COALESCE(rec->>'id', rec->>'user_id'), d);
+  VALUES (uid, lower(TG_OP), TG_TABLE_NAME, COALESCE(rec->>'id', rec->>'user_id', rec->>'country'), d);
 
   RETURN COALESCE(NEW, OLD);
 END;

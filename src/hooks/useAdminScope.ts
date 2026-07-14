@@ -1,7 +1,47 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AdminRegion = "all" | "uk" | "ng";
+
+const REGION_KEY = "naija-admin-region";
+export const REGION_EVENT = "naijaeats:admin-region-changed";
+
+/**
+ * The region currently selected in the AdminShell sidebar, plus everything a
+ * page needs to scope its data to that market. Every admin page should filter
+ * with `country`/`currency` and put `region` in its query keys so switching
+ * region refetches.
+ */
+export function useAdminRegion() {
+  const [region, setRegionState] = useState<AdminRegion>(() => {
+    if (typeof window === "undefined") return "all";
+    return (localStorage.getItem(REGION_KEY) as AdminRegion) ?? "all";
+  });
+
+  useEffect(() => {
+    const sync = () => setRegionState(((localStorage.getItem(REGION_KEY) as AdminRegion) ?? "all"));
+    window.addEventListener(REGION_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(REGION_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  const country = regionToCountry(region); // null = all regions
+  const currency = country === "UK" ? "GBP" : country === "NG" ? "NGN" : null;
+  const symbol = currency === "GBP" ? "£" : currency === "NGN" ? "₦" : "₦";
+  const countryLabel = country === "UK" ? "United Kingdom" : country === "NG" ? "Nigeria" : "All regions";
+  return { region, country, currency, symbol, countryLabel };
+}
+
+/** Money formatter that respects the selected admin region. When "all" is
+ * selected, pass each row's own currency so mixed markets stay truthful. */
+export function moneyFor(currency: string | null | undefined, amount: number | null | undefined) {
+  const sym = currency === "GBP" ? "£" : "₦";
+  return `${sym}${Number(amount || 0).toLocaleString()}`;
+}
 
 /** Region id used by the AdminShell selector → DB country code. */
 export function regionToCountry(region: AdminRegion): "NG" | "UK" | null {

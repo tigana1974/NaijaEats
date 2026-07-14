@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberKpi,
   CurrentTierCard,
@@ -37,19 +38,43 @@ export const Route = createFileRoute("/_authenticated/admin/dashboard")({
 });
 
 function AdminDashboard() {
+  const { region, country, currency: regionCurrency, countryLabel } = useAdminRegion();
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-dashboard-summary"],
+    queryKey: ["admin-dashboard-summary", region],
     staleTime: 30_000,
     queryFn: async () => {
+      // Scope every dataset to the selected market. Money tables carry a
+      // currency column that maps 1:1 to country (NGN ↔ NG, GBP ↔ UK).
+      let vendorsQ = supabase.from("vendors").select("id,status,name,country");
+      if (country) vendorsQ = vendorsQ.eq("country", country);
+      let ordersQ = supabase.from("orders").select("id,status,total,currency,created_at,vendor_id,customer_id");
+      if (regionCurrency) ordersQ = ordersQ.eq("currency", regionCurrency);
+      let docsQ = supabase.from("vendor_documents").select("id,status,vendors!inner(country)").eq("status", "pending");
+      if (country) docsQ = docsQ.eq("vendors.country", country);
+      let payoutsQ = supabase.from("payouts").select("id,status,amount,currency").eq("status", "requested");
+      if (regionCurrency) payoutsQ = payoutsQ.eq("currency", regionCurrency);
+
       const [vendorsRes, ordersRes, ridersRes, docsRes, payoutsRes] = await Promise.all([
-        supabase.from("vendors").select("id,status,name"),
-        supabase.from("orders").select("id,status,total,currency,created_at,vendor_id,customer_id"),
+        vendorsQ,
+        ordersQ,
         supabase.from("user_roles").select("user_id").eq("role", "rider"),
-        supabase.from("vendor_documents").select("id,status").eq("status", "pending"),
-        supabase.from("payouts").select("id,status,amount,currency").eq("status", "requested"),
+        docsQ,
+        payoutsQ,
       ]);
       const vendors = vendorsRes.data ?? [];
       const orders = ordersRes.data ?? [];
+
+      // Riders live in profiles; scope the count by home country.
+      let riderCount = (ridersRes.data ?? []).length;
+      const riderIds = (ridersRes.data ?? []).map((r: any) => r.user_id).filter(Boolean);
+      if (country && riderIds.length > 0) {
+        const { count } = await supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .in("id", riderIds)
+          .eq("country", country);
+        riderCount = count ?? 0;
+      }
       const now = new Date();
       const isToday = (d: string) => new Date(d).toDateString() === now.toDateString();
       const ordersToday = orders.filter((o: any) => isToday(o.created_at));
@@ -65,7 +90,7 @@ function AdminDashboard() {
         "on_the_way",
       ]);
       const liveOrders = orders.filter((o: any) => liveStatuses.has(o.status));
-      const currency = (ordersToday[0]?.currency as string) || "GBP";
+      const currency = regionCurrency ?? ((ordersToday[0]?.currency as string) || "NGN");
       const pendingPayouts = (payoutsRes.data ?? []).reduce(
         (s: number, p: any) => s + Number(p.amount ?? 0),
         0,
@@ -97,7 +122,7 @@ function AdminDashboard() {
         liveOrders,
         activeVendors: vendors.filter((v: any) => v.status === "approved").length,
         pendingVendors: vendors.filter((v: any) => v.status === "pending").length,
-        activeRiders: (ridersRes.data ?? []).length,
+        activeRiders: riderCount,
         pendingDocs: (docsRes.data ?? []).length,
         pendingPayoutsCount: (payoutsRes.data ?? []).length,
         pendingPayoutsAmount: pendingPayouts,
@@ -110,7 +135,7 @@ function AdminDashboard() {
     },
   });
 
-  const currency = data?.currency ?? "GBP";
+  const currency = data?.currency ?? regionCurrency ?? "NGN";
   const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
@@ -124,7 +149,7 @@ function AdminDashboard() {
               Today's summary
             </h1>
             <div className="mt-1 text-[13px] text-neutral-500">
-              Last updated {nowStr}
+              {countryLabel} · Last updated {nowStr}
             </div>
           </div>
           <div className="lg:min-w-[440px]">
@@ -266,7 +291,7 @@ function AdminDashboard() {
                           <Td>
                             <StatusBadge status={humanise(o.status)} />
                           </Td>
-                          <Td>{formatMoney(Number(o.total), o.currency || "GBP")}</Td>
+                          <Td>{formatMoney(Number(o.total), o.currency || currency)}</Td>
                           <Td className="text-neutral-500">
                             {new Date(o.created_at).toLocaleTimeString()}
                           </Td>

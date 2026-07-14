@@ -9,6 +9,7 @@ import {
   isRegionUnlocked,
   unlockRegion,
   regionToCountry,
+  REGION_EVENT,
   type AdminRegion,
 } from "@/hooks/useAdminScope";
 import { toast } from "sonner";
@@ -179,6 +180,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("naija-admin-region", region);
+    // Every admin page listens for this via useAdminRegion and refetches its
+    // data scoped to the newly selected country.
+    window.dispatchEvent(new Event(REGION_EVENT));
   }, [region]);
 
   // Managers only see the panel for a country they've unlocked this session.

@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -20,19 +21,22 @@ export const Route = createFileRoute("/_authenticated/admin/performance")({
 });
 
 function AdminPerformance() {
+  const { region, currency: regionCurrency, symbol } = useAdminRegion();
+  const perfCurrency = regionCurrency ?? "NGN";
   const [days, setDays] = useState(30);
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ["admin-performance-orders", days],
+    queryKey: ["admin-performance-orders", days, region],
     staleTime: 60_000,
     queryFn: async () => {
       const past = new Date();
       past.setDate(past.getDate() - days);
-      const { data, error } = await supabase
+      let q = supabase
         .from("orders")
-        .select("id, total, status, created_at, vendor_id")
+        .select("id, total, currency, status, created_at, vendor_id")
         .gte("created_at", past.toISOString());
-      
+      if (regionCurrency) q = q.eq("currency", regionCurrency);
+      const { data, error } = await q;
       if (error) throw error;
       return data || [];
     },
@@ -103,7 +107,7 @@ function AdminPerformance() {
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-8">
-          <UberKpi label="Gross Merchandise Value" value={isLoading ? "…" : formatMoney(kpis.gmv, "NGN")} Icon={TrendingUp} accent="green" />
+          <UberKpi label="Gross Merchandise Value" value={isLoading ? "…" : formatMoney(kpis.gmv, perfCurrency)} Icon={TrendingUp} accent="green" />
           <UberKpi label="Total Orders" value={isLoading ? "…" : kpis.count} Icon={Activity} />
           <UberKpi label="Completion Rate" value={isLoading ? "…" : `${kpis.completeRate.toFixed(1)}%`} Icon={CheckCircle2} accent="green" />
           <UberKpi label="Cancellation Rate" value={isLoading ? "…" : `${kpis.cancelRate.toFixed(1)}%`} Icon={XCircle} accent="red" />
@@ -130,9 +134,9 @@ function AdminPerformance() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                     <XAxis dataKey="date" tickFormatter={(v) => v.substring(5)} stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `₦${(v/1000)}k`} />
-                    <Tooltip 
-                      formatter={(value: number) => [formatMoney(value, "NGN"), "Revenue"]}
+                    <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${symbol}${(v/1000)}k`} />
+                    <Tooltip
+                      formatter={(value: number) => [formatMoney(value, perfCurrency), "Revenue"]}
                       labelFormatter={(label) => `Date: ${label}`}
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     />

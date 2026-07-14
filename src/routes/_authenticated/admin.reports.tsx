@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -55,16 +56,19 @@ const REPORT_TEMPLATES = [
 ];
 
 function AdminReports() {
+  const { region, currency: regionCurrency } = useAdminRegion();
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-reports-orders-30d"],
+    queryKey: ["admin-reports-orders-30d", region],
     staleTime: 60_000,
     queryFn: async () => {
       const since = new Date();
       since.setDate(since.getDate() - 30);
-      const { data, error } = await supabase
+      let q = supabase
         .from("orders")
         .select("id,status,total,currency,created_at")
         .gte("created_at", since.toISOString());
+      if (regionCurrency) q = q.eq("currency", regionCurrency);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -114,7 +118,7 @@ function AdminReports() {
       kpiOrders: orders.length,
       kpiAvg: orders.length ? total / orders.length : 0,
       kpiRefund: refunded,
-      currency: (orders[0]?.currency as string) || "GBP",
+      currency: regionCurrency ?? ((orders[0]?.currency as string) || "NGN"),
     };
   }, [data]);
 

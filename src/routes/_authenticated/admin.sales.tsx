@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -21,24 +22,27 @@ export const Route = createFileRoute("/_authenticated/admin/sales")({
 const COLORS = ['#1e40af', '#008751', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 function AdminSales() {
+  const { region, currency: regionCurrency } = useAdminRegion();
+  const salesCurrency = regionCurrency ?? "NGN";
   const [days, setDays] = useState(30);
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ["admin-sales-orders", days],
+    queryKey: ["admin-sales-orders", days, region],
     staleTime: 60_000,
     queryFn: async () => {
       const past = new Date();
       past.setDate(past.getDate() - days);
       // Fetch orders alongside vendor details
-      const { data, error } = await supabase
+      let q = supabase
         .from("orders")
         .select(`
-          id, total, created_at, status,
+          id, total, currency, created_at, status,
           vendors (type)
         `)
         .gte("created_at", past.toISOString())
         .in('status', ['delivered', 'accepted', 'preparing', 'ready', 'picked_up']);
-      
+      if (regionCurrency) q = q.eq("currency", regionCurrency);
+      const { data, error } = await q;
       if (error) throw error;
       return data || [];
     },
@@ -104,9 +108,9 @@ function AdminSales() {
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-8">
-          <UberKpi label="Restaurant Sales" value={isLoading ? "…" : formatMoney(kpis.rest, "NGN")} Icon={Store} accent="blue" />
-          <UberKpi label="Grocery Sales" value={isLoading ? "…" : formatMoney(kpis.groc, "NGN")} Icon={ShoppingBasket} accent="green" />
-          <UberKpi label="Chef Sales" value={isLoading ? "…" : formatMoney(kpis.chef, "NGN")} Icon={ChefHat} accent="orange" />
+          <UberKpi label="Restaurant Sales" value={isLoading ? "…" : formatMoney(kpis.rest, salesCurrency)} Icon={Store} accent="blue" />
+          <UberKpi label="Grocery Sales" value={isLoading ? "…" : formatMoney(kpis.groc, salesCurrency)} Icon={ShoppingBasket} accent="green" />
+          <UberKpi label="Chef Sales" value={isLoading ? "…" : formatMoney(kpis.chef, salesCurrency)} Icon={ChefHat} accent="orange" />
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
@@ -137,7 +141,7 @@ function AdminSales() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(val: number) => formatMoney(val, "NGN")} />
+                    <Tooltip formatter={(val: number) => formatMoney(val, salesCurrency)} />
                     <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </RechartsPieChart>
                 </ResponsiveContainer>
@@ -161,7 +165,7 @@ function AdminSales() {
                     <XAxis dataKey="hour" stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `₦${(v/1000)}k`} />
                     <Tooltip 
-                      formatter={(value: number) => [formatMoney(value, "NGN"), "Sales"]}
+                      formatter={(value: number) => [formatMoney(value, salesCurrency), "Sales"]}
                       cursor={{ fill: '#f5f5f5' }}
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     />

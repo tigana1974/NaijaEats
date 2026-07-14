@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -24,23 +25,26 @@ export const Route = createFileRoute("/_authenticated/admin/reviews")({
 
 function AdminReviews() {
   const queryClient = useQueryClient();
+  const { region, country } = useAdminRegion();
   const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-reviews-full"],
+    queryKey: ["admin-reviews-full", region],
     staleTime: 30_000,
     queryFn: async () => {
       // @ts-ignore - bypassing types since table was just created
       const { data, error } = await supabase
         .from("reviews")
-        .select("*, vendors(name), profiles(full_name, email)");
-      
+        .select("*, vendors(name, country), profiles(full_name)");
+
       if (error && error.code === '42P01') {
         // Table doesn't exist yet on remote, return empty array to not break UI
         return [];
       }
       if (error) throw error;
-      return (data || []).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return (data || [])
+        .filter((r: any) => !country || (r.vendors as any)?.country === country)
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     },
   });
 

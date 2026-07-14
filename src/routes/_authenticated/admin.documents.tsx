@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -25,28 +26,45 @@ export const Route = createFileRoute("/_authenticated/admin/documents")({
 
 function AdminDocuments() {
   const queryClient = useQueryClient();
+  const { region, country, countryLabel } = useAdminRegion();
   const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-documents-full"],
+    queryKey: ["admin-documents-full", region],
     staleTime: 30_000,
     queryFn: async () => {
       const [vendorDocsRes, riderDocsRes] = await Promise.all([
-        supabase.from("vendor_documents").select("*, vendors(name)"),
-        supabase.from("rider_documents").select("*, profiles(full_name, email)"),
+        supabase.from("vendor_documents").select("*, vendors(name, country)"),
+        supabase.from("rider_documents").select("*"),
       ]);
-      
-      const vDocs = (vendorDocsRes.data ?? []).map(d => ({
-        ...d,
-        user_type: "vendor",
-        user_name: (d.vendors as any)?.name || "Unknown Vendor",
-      }));
-      
-      const rDocs = (riderDocsRes.data ?? []).map(d => ({
-        ...d,
-        user_type: "rider",
-        user_name: (d.profiles as any)?.full_name || (d.profiles as any)?.email || "Unknown Rider",
-      }));
+
+      // Rider names/countries come from profiles, fetched by id (no direct
+      // FK between rider_documents and profiles for an embedded join).
+      const riderIds = [...new Set((riderDocsRes.data ?? []).map((d: any) => d.rider_id).filter(Boolean))];
+      let riderProfiles = new Map<string, any>();
+      if (riderIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, country")
+          .in("id", riderIds);
+        riderProfiles = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+      }
+
+      const vDocs = (vendorDocsRes.data ?? [])
+        .filter((d: any) => !country || (d.vendors as any)?.country === country)
+        .map(d => ({
+          ...d,
+          user_type: "vendor",
+          user_name: (d.vendors as any)?.name || "Unknown Vendor",
+        }));
+
+      const rDocs = (riderDocsRes.data ?? [])
+        .filter((d: any) => !country || riderProfiles.get(d.rider_id)?.country === country)
+        .map(d => ({
+          ...d,
+          user_type: "rider",
+          user_name: riderProfiles.get(d.rider_id)?.full_name || "Unknown Rider",
+        }));
 
       return [...vDocs, ...rDocs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     },
@@ -80,18 +98,28 @@ function AdminDocuments() {
   const kpis = useMemo(() => {
     return {
       total: list.length,
-      verified: list.filter(d => d.status === "approved").length,
+      verified: list.filter(d => d.status === "verified").length,
       pending: list.filter(d => d.status === "pending").length,
       rejected: list.filter(d => d.status === "rejected").length,
     };
   }, [list]);
+
+  const viewDocument = async (d: any) => {
+    const bucket = d.user_type === "vendor" ? "vendor-documents" : "rider-documents";
+    const { data: signed, error } = await supabase.storage.from(bucket).createSignedUrl(d.file_path, 60 * 5);
+    if (error || !signed?.signedUrl) {
+      toast.error(error?.message ?? "Could not open document");
+      return;
+    }
+    window.open(signed.signedUrl, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Compliance"
-          title="Documents"
+          title={`Documents — ${countryLabel}`}
           description="Verify vendor and rider documents (IDs, licenses, registrations)."
         />
 
@@ -158,19 +186,18 @@ function AdminDocuments() {
                     </UberTd>
                     <UberTd>
                       <div className="flex items-center gap-2">
-                        <a 
-                          href={supabase.storage.from(d.user_type === 'vendor' ? 'vendor_documents' : 'rider_documents').getPublicUrl(d.file_path).data.publicUrl}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => viewDocument(d)}
                           className="rounded p-1.5 hover:bg-neutral-100 text-neutral-600"
                           title="View Document"
                         >
                           <Eye className="h-4 w-4" />
-                        </a>
+                        </button>
                         {d.status === "pending" && (
                           <>
-                            <button 
-                              onClick={() => updateStatus.mutate({ id: d.id, type: d.user_type as "vendor" | "rider", status: "approved" })}
+                            <button
+                              onClick={() => updateStatus.mutate({ id: d.id, type: d.user_type as "vendor" | "rider", status: "verified" })}
                               className="rounded p-1.5 hover:bg-green-50 text-green-600 transition"
                               title="Approve"
                             >

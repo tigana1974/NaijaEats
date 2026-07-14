@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -24,20 +25,23 @@ export const Route = createFileRoute("/_authenticated/admin/banking")({
 
 function AdminBanking() {
   const queryClient = useQueryClient();
+  const { region, country, countryLabel } = useAdminRegion();
   const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-banking-full"],
+    queryKey: ["admin-banking-full", region],
     staleTime: 30_000,
     queryFn: async () => {
       // @ts-ignore - bypassing types since table was just created
       const { data, error } = await supabase
         .from("bank_accounts")
-        .select("*, profiles(full_name, email)");
-        
+        .select("*, profiles(full_name, country)");
+
       if (error && error.code === '42P01') return [];
       if (error) throw error;
-      return (data || []).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return (data || [])
+        .filter((b: any) => !country || (b.profiles as any)?.country === country)
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     },
   });
 
@@ -80,7 +84,7 @@ function AdminBanking() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Finance"
-          title="Banking & Payout Accounts"
+          title={`Banking & Payout Accounts — ${countryLabel}`}
           description="Verify vendor and rider bank accounts before processing payouts."
         />
 

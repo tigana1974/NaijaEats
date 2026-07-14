@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_authenticated/admin/customers")({
 });
 
 function AdminCustomers() {
+  const { region, country, currency: regionCurrency, countryLabel } = useAdminRegion();
   const [search, setSearch] = useState("");
   const [isCampaignOpen, setIsCampaignOpen] = useState(false);
 
@@ -52,19 +54,20 @@ function AdminCustomers() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-customers-full"],
+    queryKey: ["admin-customers-full", region],
     staleTime: 60_000,
     queryFn: async () => {
-      const [profilesRes, ordersRes] = await Promise.all([
-        supabase.from("profiles").select("id,full_name,email,phone,avatar_url,created_at").limit(500),
-        supabase.from("orders").select("customer_id,total,currency,created_at,status"),
-      ]);
+      let profilesQ = supabase.from("profiles").select("id,full_name,phone,avatar_url,created_at,country").limit(500);
+      if (country) profilesQ = profilesQ.eq("country", country);
+      let ordersQ = supabase.from("orders").select("customer_id,total,currency,created_at,status");
+      if (regionCurrency) ordersQ = ordersQ.eq("currency", regionCurrency);
+      const [profilesRes, ordersRes] = await Promise.all([profilesQ, ordersQ]);
       const profiles = profilesRes.data ?? [];
       const orders = ordersRes.data ?? [];
       const byCustomer = new Map<string, { count: number; spend: number; currency: string; last: string | null }>();
       for (const o of orders as any[]) {
         if (!o.customer_id) continue;
-        const cur = byCustomer.get(o.customer_id) ?? { count: 0, spend: 0, currency: "GBP", last: null };
+        const cur = byCustomer.get(o.customer_id) ?? { count: 0, spend: 0, currency: regionCurrency ?? "NGN", last: null };
         cur.count += 1;
         cur.spend += Number(o.total ?? 0);
         cur.currency = (o.currency as string) || cur.currency;
@@ -79,15 +82,15 @@ function AdminCustomers() {
     if (!data) return [];
     return (data.profiles as any[]).map((p) => ({
       ...p,
-      ...(data.byCustomer.get(p.id) ?? { count: 0, spend: 0, currency: "GBP", last: null }),
+      ...(data.byCustomer.get(p.id) ?? { count: 0, spend: 0, currency: regionCurrency ?? "NGN", last: null }),
     }));
-  }, [data]);
+  }, [data, regionCurrency]);
 
   const filtered = useMemo(() => {
     if (!search) return rows;
     const s = search.toLowerCase();
     return rows.filter((r: any) =>
-      [r.full_name, r.email, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
+      [r.full_name, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
     );
   }, [rows, search]);
 
@@ -107,7 +110,7 @@ function AdminCustomers() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Customers"
-          title="Customer list"
+          title={`Customer list — ${countryLabel}`}
           description="Everyone who has ordered on Naija Eats, plus their lifetime spend and status."
           actions={
             <button type="button" className={uberBtn.primary} onClick={() => setIsCampaignOpen(true)}>
@@ -158,7 +161,7 @@ function AdminCustomers() {
                     <UberTd>
                       <div className="flex items-center gap-2.5">
                         <div className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.95_0.05_145)] text-[var(--naija-green-dark)] text-xs font-medium">
-                          {initials(c.full_name || c.email)}
+                          {initials(c.full_name)}
                         </div>
                         <div>
                           <div className="font-medium text-[oklch(0.18_0.006_260)]">{c.full_name || "Unnamed"}</div>
@@ -167,8 +170,7 @@ function AdminCustomers() {
                       </div>
                     </UberTd>
                     <UberTd className="text-neutral-600">
-                      <div className="truncate">{c.email || "—"}</div>
-                      <div className="text-[12px] text-neutral-500">{c.phone || ""}</div>
+                      <div className="truncate">{c.phone || "—"}</div>
                     </UberTd>
                     <UberTd className="text-neutral-700">{c.count}</UberTd>
                     <UberTd className="font-medium">{formatMoney(c.spend, c.currency)}</UberTd>

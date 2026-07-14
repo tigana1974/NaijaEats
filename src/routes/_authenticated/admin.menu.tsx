@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -25,15 +26,18 @@ export const Route = createFileRoute("/_authenticated/admin/menu")({
 
 function AdminMenu() {
   const queryClient = useQueryClient();
+  const { region, country } = useAdminRegion();
   const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-menu-items-full"],
+    queryKey: ["admin-menu-items-full", region],
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("menu_items")
-        .select("*, vendors(name, type)");
+        .select("*, vendors!inner(name, type, country)");
+      if (country) q = q.eq("vendors.country", country);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },

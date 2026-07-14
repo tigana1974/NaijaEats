@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -37,6 +38,7 @@ type Tab = "all" | "requested" | "paid" | "failed";
 
 function AdminPayouts() {
   const qc = useQueryClient();
+  const { region, currency: regionCurrency, countryLabel } = useAdminRegion();
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [isBatchOpen, setIsBatchOpen] = useState(false);
@@ -57,14 +59,16 @@ function AdminPayouts() {
   });
 
   const { data: payouts, isLoading } = useQuery({
-    queryKey: ["admin-payouts-full"],
+    queryKey: ["admin-payouts-full", region],
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("payouts")
         .select("id,payee_id,payee_type,amount,currency,status,created_at,scheduled_for")
         .order("created_at", { ascending: false })
         .limit(200);
+      if (regionCurrency) q = q.eq("currency", regionCurrency);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as any[];
     },
@@ -92,7 +96,7 @@ function AdminPayouts() {
     const pending = list.filter((p: any) => p.status === "requested");
     const paid = list.filter((p: any) => p.status === "paid");
     const failed = list.filter((p: any) => p.status === "failed");
-    const currency = (list[0]?.currency as string) || "GBP";
+    const currency = regionCurrency ?? ((list[0]?.currency as string) || "NGN");
     return {
       currency,
       totalCount: list.length,
@@ -100,14 +104,14 @@ function AdminPayouts() {
       paidAmount: paid.reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0),
       failedCount: failed.length,
     };
-  }, [list]);
+  }, [list, regionCurrency]);
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Payments"
-          title="Payouts"
+          title={`Payouts — ${countryLabel}`}
           description="Vendor and rider payouts across Stripe (UK) and Paystack (Nigeria)."
           actions={
             <button type="button" className={uberBtn.primary} onClick={() => setIsBatchOpen(true)}>
@@ -171,7 +175,7 @@ function AdminPayouts() {
                       <div className="font-medium text-[oklch(0.18_0.006_260)] capitalize">{p.payee_type || "—"}</div>
                       <div className="font-mono text-[11px] text-neutral-500">#{String(p.payee_id ?? "").slice(0, 8)}</div>
                     </UberTd>
-                    <UberTd className="font-medium">{formatMoney(Number(p.amount ?? 0), p.currency || "GBP")}</UberTd>
+                    <UberTd className="font-medium">{formatMoney(Number(p.amount ?? 0), p.currency || stats.currency)}</UberTd>
                     <UberTd><UberStatus status={p.status} /></UberTd>
                     <UberTd className="text-neutral-500">
                       {p.scheduled_for ? new Date(p.scheduled_for).toLocaleDateString([], { day: "numeric", month: "short" }) : "—"}

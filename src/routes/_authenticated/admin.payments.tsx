@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -25,16 +26,19 @@ export const Route = createFileRoute("/_authenticated/admin/payments")({
 type Tab = "all" | "success" | "pending" | "failed" | "refunded";
 
 function AdminPayments() {
+  const { region, currency: regionCurrency, countryLabel } = useAdminRegion();
   const [tab, setTab] = useState<Tab>("all");
 
   const { data: payments, isLoading, refetch } = useQuery({
-    queryKey: ["admin-payments"],
+    queryKey: ["admin-payments", region],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("payments")
         .select("id, amount, currency, status, provider, created_at, provider_reference, order_id")
         .order("created_at", { ascending: false })
         .limit(100);
+      if (regionCurrency) q = q.eq("currency", regionCurrency);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -66,7 +70,7 @@ function AdminPayments() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Finances"
-          title="Payments"
+          title={`Payments — ${countryLabel}`}
           description="Track incoming customer payments via Paystack and Stripe."
           actions={
             <button type="button" className={uberBtn.secondary} onClick={() => refetch()}>
@@ -77,9 +81,9 @@ function AdminPayments() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <UberKpi label="Total Payments" value={isLoading ? "…" : list.length.toLocaleString()} />
-          <UberKpi label="Success Volume" value={isLoading ? "…" : formatMoney(stats.successVol, list[0]?.currency || "GBP")} />
+          <UberKpi label="Success Volume" value={isLoading ? "…" : formatMoney(stats.successVol, regionCurrency || list[0]?.currency || "NGN")} />
           <UberKpi label="Failed" value={isLoading ? "…" : stats.failedCount.toLocaleString()} />
-          <UberKpi label="Refund Volume" value={isLoading ? "…" : formatMoney(stats.refundVol, list[0]?.currency || "GBP")} />
+          <UberKpi label="Refund Volume" value={isLoading ? "…" : formatMoney(stats.refundVol, regionCurrency || list[0]?.currency || "NGN")} />
         </div>
 
         <div className="mt-8">

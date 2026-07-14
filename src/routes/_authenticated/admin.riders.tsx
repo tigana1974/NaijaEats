@@ -17,6 +17,7 @@ import {
 import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { REQUIRED_RIDER_DOCS } from "@/hooks/useRiderStatus";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/admin/riders")({
 });
 
 function AdminRiders() {
+  const { region, country, countryLabel } = useAdminRegion();
   const [search, setSearch] = useState("");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
@@ -51,17 +53,19 @@ function AdminRiders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-riders-full"],
+    queryKey: ["admin-riders-full", region],
     staleTime: 60_000,
     queryFn: async () => {
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "rider");
       const ids = (roles ?? []).map((r: any) => r.user_id).filter(Boolean);
       if (ids.length === 0) return { profiles: [], docs: [], activeRiderIds: new Set<string>() };
+      let profilesQ = supabase
+        .from("profiles")
+        .select("id,full_name,phone,avatar_url,created_at,country")
+        .in("id", ids);
+      if (country) profilesQ = profilesQ.eq("country", country);
       const [{ data: profiles }, { data: docs }, { data: activeDeliveries }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id,full_name,phone,avatar_url,created_at")
-          .in("id", ids),
+        profilesQ,
         supabase
           .from("rider_documents")
           .select("rider_id, doc_type, status")
@@ -99,7 +103,7 @@ function AdminRiders() {
   }, [list, data?.docs]);
 
   const awaitingCount = [...verificationByRider.values()].filter((v) => v === "pending").length;
-  const activeCount = data?.activeRiderIds?.size ?? 0;
+  const activeCount = list.filter((r: any) => data?.activeRiderIds?.has(r.id)).length;
 
   const filtered = useMemo(() => {
     if (!search) return list;
@@ -114,8 +118,8 @@ function AdminRiders() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Riders"
-          title="Rider roster"
-          description="Delivery partners across United Kingdom and Nigeria, plus their onboarding status."
+          title={`Rider roster — ${countryLabel}`}
+          description={country ? `Delivery partners in ${countryLabel}, plus their onboarding status.` : "Delivery partners across United Kingdom and Nigeria, plus their onboarding status."}
           actions={
             <button type="button" className={uberBtn.primary} onClick={() => setIsInviteOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Invite rider

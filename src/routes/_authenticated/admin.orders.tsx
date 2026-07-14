@@ -13,6 +13,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   UberPageTitle,
   UberKpi,
@@ -48,6 +49,7 @@ type Tab = "all" | "live" | "new" | "preparing" | "on_the_way" | "delivered" | "
 
 function AdminOrders() {
   const qc = useQueryClient();
+  const { region, currency: regionCurrency, countryLabel } = useAdminRegion();
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -103,14 +105,17 @@ function AdminOrders() {
   });
 
   const { data: orders, isLoading, refetch } = useQuery({
-    queryKey: ["admin-orders-full"],
+    queryKey: ["admin-orders-full", region],
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("orders")
         .select("id,status,total,currency,created_at,vendor_id,customer_id,payment_status,delivery_address,order_items(name,price,quantity,subtotal)")
         .order("created_at", { ascending: false })
         .limit(200);
+      // Orders' currency maps 1:1 to market (NGN ↔ Nigeria, GBP ↔ UK).
+      if (regionCurrency) q = q.eq("currency", regionCurrency);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -151,7 +156,7 @@ function AdminOrders() {
     const completed = list.filter((o: any) => ["delivered", "completed"].includes(o.status));
     const cancelled = list.filter((o: any) => ["cancelled", "refunded"].includes(o.status));
     const total = completed.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-    const currency = (list[0]?.currency as string) || "GBP";
+    const currency = regionCurrency ?? ((list[0]?.currency as string) || "NGN");
     return {
       currency,
       totalCount: list.length,
@@ -160,14 +165,14 @@ function AdminOrders() {
       grossSales: total,
       avgTicket: completed.length ? total / completed.length : 0,
     };
-  }, [list]);
+  }, [list, regionCurrency]);
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
         <UberPageTitle
           eyebrow="Orders"
-          title="Orders"
+          title={`Orders — ${countryLabel}`}
           description="Real-time view of every order across vendors, riders and payment channels."
           actions={
             <>
@@ -241,7 +246,7 @@ function AdminOrders() {
                       <UberTd className="font-mono text-xs text-neutral-700">#{o.id.slice(0, 8)}</UberTd>
                       <UberTd><UberStatus status={humanise(o.status)} /></UberTd>
                       <UberTd><UberStatus status={humanise(o.payment_status ?? "pending")} /></UberTd>
-                      <UberTd className="font-medium">{formatMoney(Number(o.total ?? 0), o.currency || "GBP")}</UberTd>
+                      <UberTd className="font-medium">{formatMoney(Number(o.total ?? 0), o.currency || stats.currency)}</UberTd>
                       <UberTd className="max-w-[220px] truncate text-neutral-600">
                         {formatAddress(o.delivery_address)}
                       </UberTd>
