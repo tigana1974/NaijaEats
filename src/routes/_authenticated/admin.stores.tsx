@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/admin/stores")({
   component: AdminStores,
 });
 
-type TypeTab = "all" | "restaurant" | "chef" | "grocery" | "caterer";
+type TypeTab = "all" | "restaurant" | "chef" | "grocery";
 
 function AdminStores() {
   const qc = useQueryClient();
@@ -94,7 +94,7 @@ function AdminStores() {
   const list = vendors ?? [];
 
   const counts = useMemo(() => {
-    const c: Record<TypeTab, number> = { all: list.length, restaurant: 0, chef: 0, grocery: 0, caterer: 0 };
+    const c: Record<TypeTab, number> = { all: list.length, restaurant: 0, chef: 0, grocery: 0 };
     for (const v of list) {
       const t = (v.type || "") as TypeTab;
       if (t in c) c[t]++;
@@ -126,9 +126,8 @@ function AdminStores() {
         <UberPageTitle
           eyebrow="Store"
           title={`Store list — ${countryLabel}`}
-          description={country ? `Restaurants, chefs, grocery shops and caterers in ${countryLabel}.` : "Restaurants, chefs, grocery shops and caterers across United Kingdom and Nigeria."}
-          actions={
-            <button type="button" className={uberBtn.primary} onClick={() => setIsOnboardOpen(true)}>
+          description={country ? `Restaurants, chefs, and grocery shops in ${countryLabel}.` : "Restaurants, chefs, and grocery shops across United Kingdom and Nigeria."}
+          actions={  <button type="button" className={uberBtn.primary} onClick={() => setIsOnboardOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Onboard vendor
             </button>
           }
@@ -150,7 +149,6 @@ function AdminStores() {
               { id: "restaurant", label: "Restaurants", count: counts.restaurant },
               { id: "chef", label: "Chefs", count: counts.chef },
               { id: "grocery", label: "Grocery", count: counts.grocery },
-              { id: "caterer", label: "Caterers", count: counts.caterer },
             ]}
           />
 
@@ -281,7 +279,6 @@ function AdminStores() {
                   <option value="restaurant">Restaurant</option>
                   <option value="chef">Chef</option>
                   <option value="grocery">Grocery Store</option>
-                  <option value="caterer">Caterer</option>
                 </select>
               </div>
               <div className="space-y-2">
