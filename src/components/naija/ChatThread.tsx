@@ -129,6 +129,14 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
   const [paidInvoices, setPaidInvoices] = useState<Set<string>>(() => loadPaidSet());
   const [pulseInvoiceId, setPulseInvoiceId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<any | null>(null);
+  // Tapping any invoice bubble opens it full-screen over a blurred chat.
+  const [viewInvoice, setViewInvoice] = useState<{
+    msgId: string;
+    amount: number;
+    note: string;
+    createdAt: string;
+    fromMe: boolean;
+  } | null>(null);
 
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", conversationId],
@@ -421,7 +429,14 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                         />
                       )}
                       {mineInvoice ? (
-                        <div className="bg-white/10 rounded-xl p-3 border border-white/20 min-w-[200px]">
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() =>
+                            setViewInvoice({ msgId: m.id, amount: mineInvoice.amount, note: mineInvoice.note, createdAt: m.created_at, fromMe: true })
+                          }
+                          className="bg-white/10 rounded-xl p-3 border border-white/20 min-w-[200px] cursor-pointer transition hover:bg-white/20 active:scale-[0.98]"
+                        >
                           <div className="flex items-center justify-between gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest opacity-90">
                             <span className="inline-flex items-center gap-1.5">
                               <PiReceiptDuotone className="h-4 w-4" /> Invoice sent
@@ -434,6 +449,7 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                           </div>
                           <div className="text-xl font-display font-bold tabular-nums">₦{mineInvoice.amount.toLocaleString()}</div>
                           <div className="text-sm opacity-90 mt-1 break-words">{mineInvoice.note}</div>
+                          <div className="mt-2 text-[10px] font-semibold uppercase tracking-wide opacity-70">Tap to view</div>
                         </div>
                       ) : m.body ? (
                         <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{m.body}</p>
@@ -497,15 +513,24 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                       />
                     )}
                     {invoice ? (
-                      <div className="bg-white/95 text-foreground rounded-2xl p-3.5 shadow-inner min-w-[220px]">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() =>
+                          setViewInvoice({ msgId: m.id, amount: invoice.amount, note: invoice.note, createdAt: m.created_at, fromMe: false })
+                        }
+                        className="bg-white/95 text-foreground rounded-2xl p-3.5 shadow-inner min-w-[220px] cursor-pointer transition hover:shadow-md active:scale-[0.98]"
+                      >
                         <div className="flex items-center justify-between gap-2 mb-2 text-[10px] font-bold uppercase tracking-widest">
                           <span className="inline-flex items-center gap-1.5 text-emerald-700">
                             <PiReceiptDuotone className="h-4 w-4" /> Invoice
                           </span>
-                          {isPaid && (
+                          {isPaid ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.5">
                               <Check className="h-3 w-3" strokeWidth={3} /> Paid
                             </span>
+                          ) : (
+                            <span className="text-muted-foreground normal-case tracking-normal font-semibold">Tap to view</span>
                           )}
                         </div>
                         <div className="font-display text-2xl font-extrabold tabular-nums leading-none">
@@ -514,7 +539,10 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
                         <div className="text-xs text-muted-foreground mt-1.5 break-words">{invoice.note}</div>
                         {!isVendor && (
                           <button
-                            onClick={() => handlePayInvoice(m.id, invoice.amount)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePayInvoice(m.id, invoice.amount);
+                            }}
                             disabled={isPaying || isPaid}
                             className={`mt-3 w-full rounded-xl font-bold py-2.5 text-sm shadow-sm inline-flex items-center justify-center gap-1.5 transition ${
                               isPaid
@@ -794,6 +822,154 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
           className="hidden"
         />
       </form>
+
+      {viewInvoice && (
+        <InvoiceModal
+          invoice={viewInvoice}
+          otherName={otherName ?? "Vendor"}
+          isVendor={Boolean(isVendor)}
+          paid={paidInvoices.has(viewInvoice.msgId)}
+          paying={payingInvoiceId === viewInvoice.msgId}
+          onPay={() => handlePayInvoice(viewInvoice.msgId, viewInvoice.amount)}
+          onClose={() => setViewInvoice(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Full-screen invoice view. The blurred backdrop keeps the chat visible but
+ * out of focus so the receipt owns the moment.
+ */
+function InvoiceModal({
+  invoice,
+  otherName,
+  isVendor,
+  paid,
+  paying,
+  onPay,
+  onClose,
+}: {
+  invoice: { msgId: string; amount: number; note: string; createdAt: string; fromMe: boolean };
+  otherName: string;
+  isVendor: boolean;
+  paid: boolean;
+  paying: boolean;
+  onPay: () => void;
+  onClose: () => void;
+}) {
+  const issued = new Date(invoice.createdAt);
+  const from = invoice.fromMe ? (isVendor ? "You" : "You") : otherName;
+  const to = invoice.fromMe ? otherName : "You";
+  const canPay = !isVendor && !invoice.fromMe && !paid;
+
+  return (
+    <div
+      className="fixed inset-0 z-[90] flex items-center justify-center p-5 bg-black/35 backdrop-blur-md animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm overflow-hidden rounded-[1.75rem] bg-white shadow-[0_32px_80px_-20px_rgba(0,0,0,0.45)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-200"
+      >
+        {/* Header band */}
+        <div className="relative bg-gradient-to-br from-emerald-600 to-emerald-700 px-6 pb-5 pt-6 text-white">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close invoice"
+            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white/15 transition hover:bg-white/25"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-100">
+            <PiReceiptDuotone className="h-5 w-5" /> Invoice
+          </div>
+          <div className="mt-2 font-mono text-sm text-emerald-100">
+            INV-{invoice.msgId.slice(0, 8).toUpperCase()}
+          </div>
+          <div className="mt-3 font-display text-4xl font-extrabold tabular-nums leading-none">
+            ₦{invoice.amount.toLocaleString()}
+          </div>
+          <div className="mt-3">
+            {paid ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold">
+                <Check className="h-3.5 w-3.5" strokeWidth={3} /> Paid
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/90 px-2.5 py-1 text-xs font-bold text-amber-950">
+                Awaiting payment
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Receipt body */}
+        <div className="px-6 py-5">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">From</div>
+              <div className="mt-0.5 font-semibold truncate">{from}</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Billed to</div>
+              <div className="mt-0.5 font-semibold truncate">{to}</div>
+            </div>
+            <div className="col-span-2">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Issued</div>
+              <div className="mt-0.5 font-semibold">
+                {issued.toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" })} ·{" "}
+                {issued.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </div>
+            </div>
+          </div>
+
+          <div className="my-4 border-t border-dashed border-zinc-200" />
+
+          <div className="flex items-start justify-between gap-4 text-sm">
+            <div className="min-w-0">
+              <div className="font-semibold break-words">{invoice.note}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">1 item</div>
+            </div>
+            <div className="shrink-0 font-semibold tabular-nums">₦{invoice.amount.toLocaleString()}</div>
+          </div>
+
+          <div className="my-4 border-t border-dashed border-zinc-200" />
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Total</span>
+            <span className="font-display text-2xl font-extrabold tabular-nums">
+              ₦{invoice.amount.toLocaleString()}
+            </span>
+          </div>
+
+          {canPay && (
+            <button
+              type="button"
+              onClick={onPay}
+              disabled={paying}
+              className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--brand-clay)]/30 transition hover:scale-[1.01] active:scale-95 disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+            >
+              {paying ? (
+                <>
+                  <span className="h-4 w-4 rounded-full border-2 border-white/60 border-t-transparent animate-spin" />
+                  Processing…
+                </>
+              ) : (
+                <>
+                  <PiCurrencyNgnDuotone className="h-4 w-4" /> Pay ₦{invoice.amount.toLocaleString()} from wallet
+                </>
+              )}
+            </button>
+          )}
+          {paid && (
+            <div className="mt-5 rounded-2xl bg-emerald-50 py-3 text-center text-sm font-bold text-emerald-700">
+              Settled from wallet — you're all set
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

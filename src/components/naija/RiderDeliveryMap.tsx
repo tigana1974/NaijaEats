@@ -118,7 +118,7 @@ export function RiderDeliveryMap({
         © OpenStreetMap
       </div>
       <div className="absolute right-2 top-2 z-[500] rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold shadow-md ring-1 ring-black/5">
-        {phase === "to_pickup" ? "Head to pickup" : "Head to drop-off"}
+        {phase === "to_pickup" ? "Head to pickup" : "Delivering to customer"}
       </div>
     </div>
   );

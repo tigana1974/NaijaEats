@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import L, { Icon as LeafletIcon, DivIcon } from "leaflet";
 import { supabase } from "@/integrations/supabase/client";
-import { geocodeAddress, fetchDrivingRoute, type LatLng } from "@/lib/geo";
+import { geocodeAddress, fetchDrivingRoute, haversineM, type LatLng } from "@/lib/geo";
 import { OrderTrackingMap } from "@/components/naija/OrderTracking";
 import "leaflet/dist/leaflet.css";
 
@@ -62,8 +62,23 @@ export function LiveOrderMap({
     queryFn: async () => {
       const { data } = await supabase
         .from("deliveries")
-        .select("id, status, rider_lat, rider_lng, rider_location_at")
+        .select("id, status, rider_id, rider_lat, rider_lng, rider_location_at")
         .eq("order_id", orderId)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+
+  // The driver's name makes the card personal ("Ade is on the way").
+  const { data: riderProfile } = useQuery({
+    queryKey: ["order-rider-profile", delivery?.rider_id],
+    enabled: Boolean(delivery?.rider_id),
+    staleTime: 10 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", delivery!.rider_id!)
         .maybeSingle();
       return data ?? null;
     },
@@ -139,16 +154,38 @@ export function LiveOrderMap({
       </MapContainer>
 
       {riderPos && (
-        <div className="absolute left-1/2 top-16 z-[500] -translate-x-1/2 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold shadow-md ring-1 ring-black/5 flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-          </span>
-          Live driver location{locationAge < 30_000 ? " · just now" : ` · ${Math.round(locationAge / 60_000) || 1} min ago`}
+        <div className="absolute left-1/2 top-16 z-[500] w-[min(92%,22rem)] -translate-x-1/2 rounded-2xl bg-white/95 p-3 shadow-xl ring-1 ring-black/5 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="relative shrink-0">
+              {riderProfile?.avatar_url ? (
+                <img src={riderProfile.avatar_url} alt="" className="h-11 w-11 rounded-full object-cover ring-2 ring-blue-500/30" />
+              ) : (
+                <div className="grid h-11 w-11 place-items-center rounded-full bg-blue-600 text-lg text-white shadow-md">🛵</div>
+              )}
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-60" />
+                <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-white bg-green-500" />
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-bold text-zinc-900">
+                {riderProfile?.full_name?.split(" ")[0] ?? "Your rider"}{" "}
+                {delivery?.status === "picked_up" ? "is on the way" : "is heading to the vendor"}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {formatKmAway(haversineM(riderPos, customer))} from you
+                {locationAge < 30_000 ? " · updated just now" : ` · ${Math.round(locationAge / 60_000) || 1} min ago`}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
+}
+
+function formatKmAway(m: number) {
+  return m < 950 ? `${Math.max(50, Math.round(m / 50) * 50)} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
 /** Re-frame the map as the driver moves so they never wander off-screen. */
