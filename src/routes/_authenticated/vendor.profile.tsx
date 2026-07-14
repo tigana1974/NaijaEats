@@ -254,9 +254,10 @@ function VendorProfilePage() {
         if (error) throw error;
         toast.success("Shop updated");
       } else {
-        const maxShops = vendorMeta?.plan === "premium" ? 5 : 1;
+        const plan = vendorMeta?.plan || "basic";
+        const maxShops = plan === "enterprise" ? Infinity : plan === "pro" ? 15 : plan === "premium" ? 5 : 1;
         if ((vendorMeta?.count || 0) >= maxShops) {
-          throw new Error(`You have reached the maximum of ${maxShops} shops on the ${vendorMeta?.plan} plan. Please upgrade to create more.`);
+          throw new Error(`You have reached the maximum of ${maxShops === Infinity ? "unlimited" : maxShops} shops on the ${plan} plan. Please upgrade to create more.`);
         }
         const { data: inserted, error } = await supabase.from("vendors").insert(payload).select().single();
         if (error) throw error;
