@@ -205,6 +205,7 @@ function MealPlannerPage() {
   ).length;
   const progress = daysWithFullMeals / 7;
 
+  const [confirming, setConfirming] = useState(false);
   const [paying, setPaying] = useState(false);
 
   const handlePay = async () => {
@@ -227,6 +228,7 @@ function MealPlannerPage() {
       });
       toast.success("Payment successful! Your meals are booked.");
       setPlan({});
+      setConfirming(false);
     } catch (e: any) {
       toast.error(e?.message || "Payment failed");
     } finally {
@@ -462,12 +464,18 @@ function MealPlannerPage() {
               </div>
             </div>
             <button
-              onClick={handlePay}
+              onClick={() => {
+                if (totalPrice <= 0) {
+                  toast.error("Add some meals first");
+                  return;
+                }
+                setConfirming(true);
+              }}
               disabled={paying}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-clay)] text-white px-8 py-3.5 text-[15px] font-bold shadow-lg shadow-[var(--brand-clay)]/30 hover:scale-105 active:scale-95 transition disabled:opacity-70 disabled:hover:scale-100"
             >
-              {paying ? "Processing..." : "Pay Now"}
-              {!paying && <ArrowRight className="h-4 w-4" />}
+              Pay Now
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         ) : (
@@ -503,7 +511,94 @@ function MealPlannerPage() {
           onClose={() => setPicker(null)}
         />
       )}
+      {confirming && (
+        <PaymentConfirmationModal
+          plan={plan}
+          totalPrice={totalPrice}
+          onConfirm={handlePay}
+          onCancel={() => setConfirming(false)}
+          paying={paying}
+        />
+      )}
     </RoleShell>
+  );
+}
+
+function PaymentConfirmationModal({
+  plan,
+  totalPrice,
+  onConfirm,
+  onCancel,
+  paying,
+}: {
+  plan: PlanState;
+  totalPrice: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+  paying: boolean;
+}) {
+  const items = Object.entries(plan).flatMap(([key, list]) =>
+    list.map((item) => {
+      // key is like "Sun Jul 12 2026::dinner"
+      const [datePart, mealPart] = key.split("::");
+      // convert datePart like "Sun Jul 12 2026" to "Sun, Jul 12"
+      const d = new Date(datePart);
+      const dayStr = isNaN(d.getTime())
+        ? datePart
+        : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+      const mealStr = mealPart ? mealPart.charAt(0).toUpperCase() + mealPart.slice(1) : "";
+      return { ...item, slot: `${dayStr} · ${mealStr}` };
+    })
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={paying ? undefined : onCancel} />
+      <div className="relative w-full sm:max-w-md max-h-[85dvh] bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-200">
+        <div className="p-5 border-b border-border bg-muted/30">
+          <h2 className="font-display text-xl font-bold text-foreground">Confirm your order</h2>
+          <p className="text-sm text-muted-foreground mt-1">Review your meals before paying</p>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">
+          <ul className="space-y-4">
+            {items.map((item, idx) => (
+              <li key={idx} className="flex items-start justify-between gap-3 text-sm">
+                <div>
+                  <div className="font-semibold text-foreground">{item.name}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{item.vendorName}</div>
+                  <div className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider text-[var(--brand-clay)] bg-[var(--brand-clay)]/10 px-1.5 py-0.5 rounded">
+                    {item.slot}
+                  </div>
+                </div>
+                <div className="font-bold text-foreground shrink-0 mt-0.5">
+                  {item.currency === "GBP" ? "£" : "₦"}{item.price.toLocaleString()}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 pt-4 border-t border-border flex items-center justify-between font-display text-lg font-bold">
+            <span>Total</span>
+            <span className="text-[var(--brand-clay)]">₦{totalPrice.toLocaleString()}</span>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 border-t border-border bg-white flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={paying}
+            className="flex-1 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-bold text-foreground hover:bg-muted transition disabled:opacity-70"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={paying}
+            className="flex-1 rounded-full bg-[var(--brand-clay)] px-4 py-2.5 text-sm font-bold text-white shadow-md hover:opacity-90 transition disabled:opacity-70 flex items-center justify-center gap-2"
+          >
+            {paying ? "Processing..." : "Confirm & Pay"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
