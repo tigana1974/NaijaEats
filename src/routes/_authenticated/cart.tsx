@@ -1,11 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Trash2, ShoppingCart, MapPin, StickyNote, Store, ShieldCheck, CreditCard, TicketPercent, Check, CalendarClock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, type Cart } from "@/hooks/useCart";
-import { initiatePayment } from "@/lib/api/payments.functions";
+import { loadWallet, addWalletTxn } from "@/lib/wallet";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { QuantityStepper } from "@/components/naija/customer-ui";
 import { toast } from "sonner";
@@ -30,7 +29,6 @@ const COUPONS: Record<string, Omit<AppliedCoupon, "code">> = {
 
 function CartPage() {
   const navigate = useNavigate();
-  const initiatePaymentFn = useServerFn(initiatePayment);
   const { carts, setQuantity, removeItem, clearVendorCart } = useCart();
 
   const [address, setAddress] = useState("");
@@ -162,6 +160,13 @@ function CartPage() {
         return;
       }
 
+      const w = loadWallet();
+      if (w.balance < grandTotal) {
+        toast.error("Insufficient wallet balance. Please top up your wallet.");
+        navigate({ to: "/wallet" });
+        return;
+      }
+
       // Create every order first — one row per vendor. Do them serially so a
       // partial failure doesn't leave orphan orders in flight.
       const orderIds: string[] = [];
@@ -182,18 +187,19 @@ function CartPage() {
       // Clear the local cart now that everything is placed on the server.
       for (const c of vendorCarts) clearVendorCart(c.vendorId);
 
-      // Kick off payment. If there's exactly one order we hand off to the
-      // provider immediately. If there are several we still start the first
-      // one and let the customer complete the rest from /orders where each
-      // pending order surfaces its own Pay button.
-      if (orderIds.length === 1) {
-        const { checkoutUrl } = await initiatePaymentFn({ data: { orderId: orderIds[0] } });
-        window.location.href = checkoutUrl;
-      } else {
-        toast.success(`${orderIds.length} orders placed — starting checkout`);
-        const { checkoutUrl } = await initiatePaymentFn({ data: { orderId: orderIds[0] } });
-        window.location.href = checkoutUrl;
+      // Deduct from wallet and mark all orders as paid
+      addWalletTxn({
+        type: "order",
+        title: orderIds.length === 1 ? `Order Payment` : `Multiple Orders Payment`,
+        amount: -grandTotal,
+      });
+
+      for (const orderId of orderIds) {
+        await supabase.rpc("mark_order_paid", { p_order_id: orderId });
       }
+
+      toast.success(`${orderIds.length} order${orderIds.length > 1 ? 's' : ''} paid from wallet`);
+      navigate({ to: "/orders" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place order");
       navigate({ to: "/orders" });

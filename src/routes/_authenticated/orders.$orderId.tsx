@@ -1,10 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, CreditCard, ChevronDown, ChevronUp, Bike, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { initiatePayment } from "@/lib/api/payments.functions";
+import { loadWallet, addWalletTxn } from "@/lib/wallet";
 import { OrderStatusTracker, statusHeadlineFor } from "@/components/naija/OrderTracking";
 import { LiveOrderMap } from "@/components/naija/LiveOrderMap";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ const fmt = (n: number, currency = "NGN") =>
 
 function OrderDetailPage() {
   const { orderId } = Route.useParams();
-  const initiatePaymentFn = useServerFn(initiatePayment);
+  const qc = useQueryClient();
   const [paying, setPaying] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -52,12 +52,29 @@ function OrderDetailPage() {
   }, [data?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const payNow = async () => {
+    if (!data) return;
+    const w = loadWallet();
+    if (w.balance < data.total) {
+      toast.error("Insufficient wallet balance. Please top up your wallet.");
+      return;
+    }
+
     setPaying(true);
     try {
-      const { checkoutUrl } = await initiatePaymentFn({ data: { orderId } });
-      window.location.href = checkoutUrl;
+      addWalletTxn({
+        type: "order",
+        title: "Order Payment",
+        amount: -data.total,
+      });
+
+      const { error } = await supabase.rpc("mark_order_paid", { p_order_id: orderId });
+      if (error) throw error;
+
+      toast.success("Paid successfully from wallet");
+      qc.invalidateQueries({ queryKey: ["order-detail", orderId] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not start payment");
+      toast.error(err instanceof Error ? err.message : "Could not complete payment");
+    } finally {
       setPaying(false);
     }
   };
