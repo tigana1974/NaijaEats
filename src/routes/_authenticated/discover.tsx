@@ -194,14 +194,11 @@ function DiscoverPage() {
                   <img
                     src={categoryPhotos[c.id]}
                     alt=""
-                    loading="lazy"
                     className="absolute inset-0 h-full w-full object-cover"
                     onError={(e) => {
-                      // Photo unavailable → fall back to the emoji tile
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
                   />
-                  <span className="text-[24px]">{c.emoji}</span>
                 </span>
                 <span className={`text-[11px] font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>
                   {c.label}
@@ -467,7 +464,7 @@ function VendorRail({
 
 /* ─── Uber Eats-style vendor card: image, name, fee · rating · time ─── */
 
-function UberVendorCard({ v, symbol }: { v: any; symbol: (c: string) => string }) {
+export function UberVendorCard({ v, symbol }: { v: any; symbol: (c: string) => string }) {
   const fee = Number(v.delivery_fee ?? 0);
   const feeLabel = fee === 0 ? "Free delivery" : `${symbol(v.currency)}${fee.toLocaleString()} delivery`;
   return (

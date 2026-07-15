@@ -1,23 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import { Leaf, Apple, Coffee, Milk } from "lucide-react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { RoleShell } from "@/components/naija/RoleShell";
-import { FoodCard, VendorCard } from "@/components/naija/customer-ui";
+import { UberVendorCard } from "./discover";
 import { useCountry, hasStoredCountry } from "@/hooks/useCountry";
 
 export const Route = createFileRoute("/_authenticated/groceries")({
   component: GroceriesPage,
 });
 
-const GROCERY_CATEGORIES = [
-  { id: "produce", label: "Produce", Icon: Leaf },
-  { id: "pantry", label: "Pantry", Icon: Apple },
-  { id: "beverages", label: "Drinks", Icon: Coffee },
-  { id: "dairy", label: "Dairy", Icon: Milk },
-];
+
 
 function GroceriesPage() {
   const { user } = Route.useRouteContext();
@@ -32,7 +26,7 @@ function GroceriesPage() {
     }
   }, [profile?.country]);
 
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
 
   const { data: vendors, isLoading: vendorsLoading } = useQuery({
     queryKey: ["groceries-vendors", country],
@@ -50,24 +44,10 @@ function GroceriesPage() {
     },
   });
 
-  const { data: items, isLoading: itemsLoading } = useQuery({
-    queryKey: ["groceries-items", country, activeCategory],
-    queryFn: async () => {
-      let q = supabase
-        .from("menu_items")
-        .select("id, name, price, image_url, is_available, is_featured, vendor:vendors!inner(id, slug, name, currency, country, status, type)")
-        .eq("is_available", true)
-        .order("is_featured", { ascending: false })
-        .limit(24);
-      
-      const { data, error } = await q;
-      if (error) throw error;
+  const topStores = (vendors ?? []).slice(0, 5);
+  const otherStores = (vendors ?? []).slice(5);
 
-      return (data ?? []).filter(
-        (it: any) => it.vendor?.country === country && it.vendor?.status === "approved" && it.vendor?.type === "grocery"
-      );
-    },
-  });
+  const symbol = (c: string) => (c === "GBP" ? "£" : "₦");
 
   return (
     <RoleShell
@@ -85,83 +65,39 @@ function GroceriesPage() {
       <div className="pt-3 w-full max-w-2xl lg:max-w-6xl mx-auto">
         <div className="space-y-8">
           <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight">Groceries</h1>
-          {/* Quick Categories */}
-          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-            {GROCERY_CATEGORIES.map((cat) => {
-              const Icon = cat.Icon;
-              const active = activeCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(active ? null : cat.id)}
-                  className={`flex shrink-0 items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
-                    active
-                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-600/25 -translate-y-0.5"
-                      : "bg-white ring-1 ring-zinc-200/80 text-zinc-600 shadow-sm hover:shadow-md hover:-translate-y-0.5"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" /> {cat.label}
-                </button>
-              );
-            })}
-          </div>
 
-          <section>
-            <SectionHeader title={activeCategory ? "Category Results" : "Fresh Daily"} />
-            {itemsLoading ? (
-              <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="aspect-[4/5] rounded-[1.75rem] bg-zinc-100 animate-pulse" />
-                ))}
-              </div>
-            ) : (items ?? []).length === 0 ? (
-              <EmptyState title="No items available right now" hint="Vendors will list groceries soon." />
-            ) : (
-              <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                {(items ?? []).map((it: any) => (
-                  <FoodCard
-                    key={it.id}
-                    vendorSlug={it.vendor.slug}
-                    itemId={it.id}
-                    name={it.name}
-                    imageUrl={it.image_url}
-                    priceLabel={`${it.vendor.currency === "GBP" ? "£" : "₦"}${Number(it.price).toLocaleString()}`}
-                    vendorName={it.vendor.name}
-                    badge={it.is_featured ? "Top" : undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
 
           <section>
             <SectionHeader title="Top Stores" />
             {vendorsLoading ? (
-              <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-4 flex gap-4 overflow-hidden">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="aspect-[16/10] rounded-[2rem] bg-zinc-100 animate-pulse" />
+                  <div key={i} className="shrink-0 w-[280px] aspect-[16/9] rounded-2xl bg-zinc-100 animate-pulse" />
                 ))}
               </div>
-            ) : (vendors ?? []).length === 0 ? (
+            ) : topStores.length === 0 ? (
               <EmptyState title="No stores yet" hint={`Check back soon as we expand in ${country === "NG" ? "Nigeria" : "the UK"}.`} />
             ) : (
-              <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {(vendors ?? []).map((v: any) => (
-                  <VendorCard
-                    key={v.id}
-                    slug={v.slug}
-                    name={v.name}
-                    coverUrl={v.cover_image_url}
-                    city={v.city}
-                    rating={v.rating}
-                    prepMinutes={v.prep_time_minutes}
-                    deliveryLabel={`Delivery ${v.currency === "GBP" ? "£" : "₦"}${Number(v.delivery_fee || 0).toLocaleString()}`}
-                    isFeatured={v.is_featured}
-                  />
+              <div className="-mx-4 sm:mx-0 px-4 sm:px-0 mt-4 flex gap-4 overflow-x-auto snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {topStores.map((v: any) => (
+                  <div key={v.id} className="snap-start shrink-0 w-[280px] sm:w-[320px]">
+                    <UberVendorCard v={v} symbol={symbol} />
+                  </div>
                 ))}
               </div>
             )}
           </section>
+
+          {otherStores.length > 0 && (
+            <section className="mt-8">
+              <SectionHeader title="More Stores" />
+              <div className="mt-4 grid gap-x-4 gap-y-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
+                {otherStores.map((v: any) => (
+                  <UberVendorCard key={v.id} v={v} symbol={symbol} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </RoleShell>
