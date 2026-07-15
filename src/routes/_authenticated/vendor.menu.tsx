@@ -210,6 +210,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
     unit: item?.unit ?? "",
     stock: item?.stock ?? 0,
     prep_time_minutes: item?.prep_time_minutes ?? 15,
+    meal_times: (item?.meal_times as string[] | null) ?? [],
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -266,9 +267,10 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
         image_url: form.image_url || null,
         is_available: form.is_available,
         ...(isGrocery ? { unit: form.unit || null, stock: form.stock } : {}),
-        ...((vendor.type === "restaurant" || isChef) ? { 
+        ...((vendor.type === "restaurant" || isChef) ? {
           spice_level: form.spice_level !== "" ? Number(form.spice_level) : null,
           prep_time_minutes: form.prep_time_minutes || null,
+          meal_times: form.meal_times,
         } : {}),
       };
       if (item) {
@@ -385,6 +387,46 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
                   onChange={(e) => setForm({ ...form, prep_time_minutes: Number(e.target.value) })}
                 />
               </div>
+            </div>
+          )}
+          {(vendor.type === "restaurant" || isChef) && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                Served at — powers the customer meal planner
+              </label>
+              <div className="flex gap-2">
+                {([
+                  { id: "breakfast", label: "🌅 Breakfast" },
+                  { id: "lunch", label: "☀️ Lunch" },
+                  { id: "dinner", label: "🌙 Dinner" },
+                ] as const).map((slot) => {
+                  const on = form.meal_times.includes(slot.id);
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          meal_times: on
+                            ? form.meal_times.filter((t) => t !== slot.id)
+                            : [...form.meal_times, slot.id],
+                        })
+                      }
+                      className={`flex-1 rounded-xl border px-2 py-2 text-xs font-semibold transition ${
+                        on
+                          ? "border-[var(--brand-clay)] bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]"
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {slot.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Leave all off to serve this dish at any time of day.
+              </p>
             </div>
           )}
           <label className="flex items-center gap-2 text-sm">

@@ -260,6 +260,57 @@ export type Database = {
         }
         Relationships: []
       }
+      chef_bookings: {
+        Row: {
+          chef_id: string
+          created_at: string
+          currency: string
+          customer_id: string
+          event_date: string
+          guests: number | null
+          hourly_rate: number
+          hours: number
+          id: string
+          note: string | null
+          start_time: string | null
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          chef_id: string
+          created_at?: string
+          currency: string
+          customer_id: string
+          event_date: string
+          guests?: number | null
+          hourly_rate: number
+          hours: number
+          id?: string
+          note?: string | null
+          start_time?: string | null
+          status?: string
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          chef_id?: string
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          event_date?: string
+          guests?: number | null
+          hourly_rate?: number
+          hours?: number
+          id?: string
+          note?: string | null
+          start_time?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       deliveries: {
         Row: {
           created_at: string
@@ -364,6 +415,7 @@ export type Database = {
           image_url: string | null
           is_available: boolean
           is_featured: boolean
+          meal_times: string[]
           name: string
           prep_time_minutes: number | null
           price: number
@@ -383,6 +435,7 @@ export type Database = {
           image_url?: string | null
           is_available?: boolean
           is_featured?: boolean
+          meal_times?: string[]
           name: string
           prep_time_minutes?: number | null
           price: number
@@ -402,6 +455,7 @@ export type Database = {
           image_url?: string | null
           is_available?: boolean
           is_featured?: boolean
+          meal_times?: string[]
           name?: string
           prep_time_minutes?: number | null
           price?: number
@@ -960,6 +1014,8 @@ export type Database = {
           currency: string
           delivery_fee: number | null
           description: string | null
+          event_services: string | null
+          hourly_rate: number | null
           id: string
           is_featured: boolean
           logo_url: string | null
@@ -986,6 +1042,8 @@ export type Database = {
           currency: string
           delivery_fee?: number | null
           description?: string | null
+          event_services?: string | null
+          hourly_rate?: number | null
           id?: string
           is_featured?: boolean
           logo_url?: string | null
@@ -1012,6 +1070,8 @@ export type Database = {
           currency?: string
           delivery_fee?: number | null
           description?: string | null
+          event_services?: string | null
+          hourly_rate?: number | null
           id?: string
           is_featured?: boolean
           logo_url?: string | null
@@ -1134,6 +1194,10 @@ export type Database = {
       }
       is_parent_admin: { Args: { _user_id: string }; Returns: boolean }
       is_rider_for_order: { Args: { _order_id: string }; Returns: boolean }
+      mark_order_paid: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       log_admin_event: {
         Args: {
           p_action: string

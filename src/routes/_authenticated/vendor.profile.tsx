@@ -24,6 +24,8 @@ type Form = {
   logo_url: string;
   offers_free_delivery: boolean;
   min_order: number;
+  hourly_rate: number;
+  event_services: string;
 };
 
 const defaultForm: Form = {
@@ -39,6 +41,8 @@ const defaultForm: Form = {
   logo_url: "",
   offers_free_delivery: false,
   min_order: 0,
+  hourly_rate: 0,
+  event_services: "",
 };
 
 const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
@@ -123,6 +127,8 @@ function VendorProfilePage() {
         logo_url: existing.logo_url ?? "",
         offers_free_delivery: existing.offers_free_delivery || false,
         min_order: existing.min_order || 0,
+        hourly_rate: Number(existing.hourly_rate) || 0,
+        event_services: existing.event_services ?? "",
       });
     } else {
       // Set type based on auth metadata if available
@@ -248,7 +254,14 @@ function VendorProfilePage() {
       if (!uid) throw new Error("Not signed in");
       const slug = form.slug.trim() || slugify(form.name);
       const currency = form.country === "UK" ? "GBP" : "NGN";
-      const payload = { ...form, slug, currency, owner_id: uid };
+      const payload = {
+        ...form,
+        slug,
+        currency,
+        owner_id: uid,
+        hourly_rate: form.hourly_rate > 0 ? form.hourly_rate : null,
+        event_services: form.event_services.trim() || null,
+      };
       if (existing) {
         const { error } = await supabase.from("vendors").update(payload).eq("id", existing.id);
         if (error) throw error;
@@ -394,6 +407,33 @@ function VendorProfilePage() {
               </Field>
             </div>
 
+            {isChef && (
+              <div className="rounded-2xl border border-[var(--brand-clay)]/25 bg-[oklch(0.98_0.01_25)] p-5">
+                <h3 className="font-display text-lg font-semibold">Event cooking</h3>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-4">
+                  Customers can book you for parties and occasions from the Book a Chef page. Set your
+                  per-hour rate — without it your kitchen won't appear there.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label={`Rate per hour (${form.country === "UK" ? "£" : "₦"})`}>
+                    <input
+                      type="number" min={0} step="any" placeholder="e.g. 15000" className="vinput"
+                      value={form.hourly_rate === 0 ? "" : form.hourly_rate}
+                      onChange={(e) => set("hourly_rate", Number(e.target.value))}
+                    />
+                  </Field>
+                  <Field label="What you offer" hint="shown on your booking card">
+                    <input
+                      className="vinput"
+                      placeholder="e.g. Live jollof station, small chops, owambe catering"
+                      value={form.event_services}
+                      onChange={(e) => set("event_services", e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={saving}
@@ -402,6 +442,10 @@ function VendorProfilePage() {
               {saving ? "Saving…" : existing ? "Save changes" : "Create shop"}
             </button>
           </form>
+        )}
+
+        {existing && isChef && (
+          <ChefBookingsSection vendorId={existing.id} currency={existing.currency} />
         )}
 
         {existing && (
@@ -475,6 +519,105 @@ function VendorProfilePage() {
         .vinput:focus { outline: 2px solid var(--brand-clay); outline-offset: 1px; }
       `}</style>
     </AppShell>
+  );
+}
+
+/** Incoming event bookings for a chef, with accept / decline actions. */
+function ChefBookingsSection({ vendorId, currency }: { vendorId: string; currency: string }) {
+  const qc = useQueryClient();
+  const symbol = currency === "GBP" ? "£" : "₦";
+
+  const { data: bookings, isLoading } = useQuery({
+    queryKey: ["chef-bookings", vendorId],
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("chef_bookings")
+        .select("*")
+        .eq("chef_id", vendorId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      const rows = data ?? [];
+      const customerIds = [...new Set(rows.map((b) => b.customer_id))];
+      let names = new Map<string, string>();
+      if (customerIds.length > 0) {
+        const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", customerIds);
+        names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || "Customer"]));
+      }
+      return rows.map((b) => ({ ...b, customerName: names.get(b.customer_id) ?? "Customer" }));
+    },
+  });
+
+  const respond = async (id: string, status: "accepted" | "declined") => {
+    const { error } = await supabase.from("chef_bookings").update({ status }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(status === "accepted" ? "Booking accepted — it's a date!" : "Booking declined");
+    qc.invalidateQueries({ queryKey: ["chef-bookings", vendorId] });
+  };
+
+  const statusCls: Record<string, string> = {
+    pending: "bg-amber-100 text-amber-900",
+    accepted: "bg-green-100 text-green-800",
+    declined: "bg-red-100 text-red-800",
+    completed: "bg-blue-100 text-blue-800",
+    cancelled: "bg-zinc-100 text-zinc-600",
+  };
+
+  return (
+    <div className="mt-10">
+      <h2 className="font-display text-xl sm:text-2xl font-semibold">Event bookings</h2>
+      <p className="text-muted-foreground mt-1 text-sm">
+        Requests from customers who want you to cook at their event.
+      </p>
+      <div className="mt-5 grid gap-3">
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {!isLoading && (bookings ?? []).length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No booking requests yet. Set your hourly rate above so customers can find you.
+          </div>
+        )}
+        {(bookings ?? []).map((b: any) => (
+          <div key={b.id} className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <div className="font-semibold">{b.customerName}</div>
+                <div className="text-sm text-muted-foreground mt-0.5">
+                  {new Date(b.event_date).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                  {b.start_time ? ` · from ${b.start_time}` : ""} · {Number(b.hours)} hr{Number(b.hours) > 1 ? "s" : ""}
+                  {b.guests ? ` · ~${b.guests} guests` : ""}
+                </div>
+                {b.note && <div className="text-sm mt-1.5 break-words">"{b.note}"</div>}
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-display text-lg font-bold">{symbol}{Number(b.total).toLocaleString()}</div>
+                <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${statusCls[b.status] ?? "bg-muted"}`}>
+                  {b.status}
+                </span>
+              </div>
+            </div>
+            {b.status === "pending" && (
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => respond(b.id, "accepted")}
+                  className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-semibold text-white"
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  onClick={() => respond(b.id, "declined")}
+                  className="flex-1 rounded-lg border border-border py-2 text-sm font-semibold hover:bg-muted"
+                >
+                  Decline
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

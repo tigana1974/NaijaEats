@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleShell } from "@/components/naija/RoleShell";
-import { ArrowRight, Calendar, ChevronRight, Sparkles, Search, X, Trash2, Utensils } from "lucide-react";
+import { ArrowRight, Calendar, ChevronRight, Sparkles, Search, X, Trash2, Utensils, Star, MapPin } from "lucide-react";
 import { IoFlame } from "react-icons/io5";
 import {
   PiCoffeeDuotone,
@@ -15,13 +15,70 @@ import {
   PiCheckCircleDuotone,
   PiPlusCircleDuotone,
   PiWalletDuotone,
+  PiChefHatDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
 import { loadWallet, addWalletTxn } from "@/lib/wallet";
+import { useCountry } from "@/hooks/useCountry";
 
 export const Route = createFileRoute("/_authenticated/book")({
-  component: MealPlannerPage,
+  component: BookPage,
 });
+
+type BookTab = "planner" | "chef";
+
+/**
+ * The Book page is two experiences in one: the weekly Meal Planner, and
+ * Book a Chef — hiring a chef by the hour for an event or occasion.
+ */
+function BookPage() {
+  const [tab, setTab] = useState<BookTab>("planner");
+
+  return (
+    <RoleShell
+      topBar={
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/25">
+            {tab === "planner" ? <Calendar className="h-5 w-5" /> : <PiChefHatDuotone className="h-5 w-5" />}
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--brand-clay)] font-extrabold">
+              {tab === "planner" ? "Meal planner" : "Book a chef"}
+            </div>
+            <div className="text-sm font-bold truncate text-zinc-900">
+              {tab === "planner" ? "Book your week" : "Chefs for your occasion"}
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-3 px-3 sm:px-4">
+        <div className="flex rounded-full bg-zinc-100 p-1 shadow-inner">
+          {(
+            [
+              { id: "planner", label: "Meal Planner", Icon: Calendar },
+              { id: "chef", label: "Book a Chef", Icon: PiChefHatDuotone },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`flex-1 inline-flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold transition-all duration-300 ${
+                tab === t.id
+                  ? "bg-white text-zinc-900 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.15)]"
+                  : "text-zinc-500 hover:text-zinc-800"
+              }`}
+            >
+              <t.Icon className="h-4 w-4" /> {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {tab === "planner" ? <MealPlannerSection /> : <BookChefSection />}
+    </RoleShell>
+  );
+}
 
 type MealId = "breakfast" | "lunch" | "dinner";
 
@@ -99,6 +156,7 @@ type VendorMenuItem = {
   price: number;
   currency: string;
   tags: string[] | null;
+  meal_times: string[];
   vendor: { name: string; slug: string; type: string | null };
   category_name: string | null;
 };
@@ -118,12 +176,14 @@ type PlanState = Record<string, PickedItem[]>;
 
 /**
  * Rank a menu item by how strongly it matches a meal type:
+ *   4 → the vendor explicitly assigned this meal time on the item
  *   3 → item tagged with the meal id
  *   2 → its category name contains the meal id (e.g. "Breakfast menu")
  *   1 → its name or description mentions the meal id
- *   0 → no textual link, but still shown as a fallback when nothing else matches
+ *   0 → no link; only shown when the vendor didn't assign any meal times
  */
 function scoreForMeal(item: VendorMenuItem, meal: MealId): number {
+  if (item.meal_times.includes(meal)) return 4;
   const tags = (item.tags ?? []).map((t) => t.toLowerCase());
   if (tags.includes(meal)) return 3;
   const cat = (item.category_name ?? "").toLowerCase();
@@ -131,6 +191,15 @@ function scoreForMeal(item: VendorMenuItem, meal: MealId): number {
   const blob = `${item.name} ${item.description ?? ""}`.toLowerCase();
   if (blob.includes(meal)) return 1;
   return 0;
+}
+
+/**
+ * The vendor's own meal-time assignment is authoritative: a dish tagged only
+ * "dinner" never appears in the Breakfast picker. Untagged dishes (legacy or
+ * "any time") stay visible everywhere.
+ */
+function servedAtMeal(item: VendorMenuItem, meal: MealId): boolean {
+  return item.meal_times.length === 0 || item.meal_times.includes(meal);
 }
 
 const STORAGE_KEY = "naijaeats.mealplan.v1";
@@ -172,7 +241,7 @@ function keyFor(d: Date, m: MealId) {
   return `${d.toDateString()}::${m}`;
 }
 
-function MealPlannerPage() {
+function MealPlannerSection() {
   const [weekOffset, setWeekOffset] = useState(() => {
     const now = new Date();
     const isSunday = now.getDay() === 0;
@@ -263,20 +332,8 @@ function MealPlannerPage() {
   };
 
   return (
-    <RoleShell
-      topBar={
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/25">
-            <Calendar className="h-5 w-5" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-wider text-[var(--brand-clay)] font-extrabold">Meal planner</div>
-            <div className="text-sm font-bold truncate text-zinc-900">Book your week</div>
-          </div>
-        </div>
-      }
-    >
-      <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-3 px-3 sm:px-4 pb-8">
+    <>
+      <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-5 px-3 sm:px-4 pb-8">
         <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight mb-5">Meal planner</h1>
         {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white shadow-[0_16px_40px_-20px_rgba(255,77,77,0.4)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
@@ -520,7 +577,7 @@ function MealPlannerPage() {
           paying={paying}
         />
       )}
-    </RoleShell>
+    </>
   );
 }
 
@@ -738,7 +795,7 @@ function MealPickerSheet({
       const { data, error } = await supabase
         .from("menu_items")
         .select(
-          "id, name, description, image_url, price, currency, tags, is_available, vendors!inner(name, slug, status, type), menu_categories(name)",
+          "id, name, description, image_url, price, currency, tags, meal_times, is_available, vendors!inner(name, slug, status, type), menu_categories(name)",
         )
         .eq("is_available", true)
         .eq("vendors.status", "approved")
@@ -753,6 +810,7 @@ function MealPickerSheet({
         price: Number(row.price),
         currency: row.currency,
         tags: row.tags,
+        meal_times: (row.meal_times as string[] | null) ?? [],
         vendor: {
           name: row.vendors?.name ?? "",
           slug: row.vendors?.slug ?? "",
@@ -764,14 +822,14 @@ function MealPickerSheet({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Show every available dish in every slot — Breakfast, Lunch and Dinner all
-  // pull from the full catalogue. Meal type only affects the *order*: items
-  // that match the current meal (via tag, category, name / description) float
-  // to the top so they're the first thing the user sees, but nothing is ever
-  // filtered out.
+  // Vendors assign meal times to each dish; the picker only shows dishes the
+  // vendor serves at this slot (untagged dishes count as "any time"). Within
+  // that, stronger matches float to the top.
   const ranked = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const withScore = items.map((it) => ({ item: it, score: scoreForMeal(it, meal.id) }));
+    const withScore = items
+      .filter((it) => servedAtMeal(it, meal.id))
+      .map((it) => ({ item: it, score: scoreForMeal(it, meal.id) }));
     const searched = q
       ? withScore.filter(({ item }) =>
           (item.name + " " + (item.description ?? "") + " " + item.vendor.name)
@@ -967,5 +1025,337 @@ function MealPickerSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ───────────────────────────── Book a Chef ───────────────────────────── */
+
+type EventChef = {
+  id: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  cover_image_url: string | null;
+  logo_url: string | null;
+  rating: number | null;
+  currency: string;
+  hourly_rate: number;
+  event_services: string | null;
+  tagline: string | null;
+};
+
+function BookChefSection() {
+  const [country] = useCountry();
+  const [booking, setBooking] = useState<EventChef | null>(null);
+
+  const { data: chefs = [], isLoading } = useQuery({
+    queryKey: ["event-chefs", country],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vendors")
+        .select("id, name, slug, city, cover_image_url, logo_url, rating, currency, hourly_rate, event_services, tagline")
+        .eq("type", "chef")
+        .eq("status", "approved")
+        .eq("country", country)
+        .not("hourly_rate", "is", null)
+        .order("rating", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((c: any) => ({ ...c, hourly_rate: Number(c.hourly_rate) })) as EventChef[];
+    },
+  });
+
+  return (
+    <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-5 px-3 sm:px-4 pb-8">
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white shadow-[0_16px_40px_-20px_rgba(255,77,77,0.4)] bg-[radial-gradient(120%_120%_at_100%_0%,oklch(0.85_0.17_90/0.4),transparent_55%),linear-gradient(150deg,#14100a,#2d2010_55%,#7c5210)]">
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[var(--brand-gold)]/20 blur-3xl" />
+        <div className="relative">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+            <PiChefHatDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Private chefs, by the hour
+          </div>
+          <h1 className="font-display text-xl sm:text-4xl font-bold tracking-tight mt-2 leading-[1.05]">
+            A chef for your party,<br />owambe, or quiet dinner.
+          </h1>
+          <p className="mt-2 text-xs sm:text-[15px] text-white/80 max-w-md leading-relaxed">
+            Pick a chef, choose your date and hours, and they cook right where the occasion is.
+          </p>
+        </div>
+      </div>
+
+      {/* Chef grid */}
+      <div className="mt-6">
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[16/10] rounded-3xl bg-zinc-100 animate-pulse" />
+            ))}
+          </div>
+        ) : chefs.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-border bg-card p-8 text-center">
+            <PiChefHatDuotone className="h-10 w-10 mx-auto text-zinc-300" />
+            <p className="mt-2 font-semibold text-zinc-700">No chefs are taking event bookings yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Chefs appear here once they publish an hourly rate. Check back soon.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {chefs.map((chef) => {
+              const symbol = chef.currency === "GBP" ? "£" : "₦";
+              return (
+                <div key={chef.id} className="group overflow-hidden rounded-3xl bg-white ring-1 ring-black/[0.05] shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] transition hover:shadow-[0_18px_44px_-18px_rgba(0,0,0,0.22)]">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100">
+                    {chef.cover_image_url ? (
+                      <img src={chef.cover_image_url} alt={chef.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    ) : (
+                      <div className="grid h-full w-full place-items-center text-zinc-300">
+                        <PiChefHatDuotone className="h-12 w-12" />
+                      </div>
+                    )}
+                    <div className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold shadow-md">
+                      {symbol}{chef.hourly_rate.toLocaleString()}<span className="text-zinc-500 font-semibold">/hr</span>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-display text-lg font-bold text-zinc-900 truncate">{chef.name}</h3>
+                      {chef.rating != null && (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-700 shrink-0">
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> {Number(chef.rating).toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1 text-xs text-zinc-500">
+                      {chef.city && (
+                        <>
+                          <MapPin className="h-3 w-3" /> {chef.city}
+                        </>
+                      )}
+                    </div>
+                    {(chef.event_services || chef.tagline) && (
+                      <p className="mt-2 text-xs text-zinc-600 line-clamp-2">{chef.event_services || chef.tagline}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setBooking(chef)}
+                      className="mt-3.5 w-full rounded-full bg-[var(--brand-clay)] py-2.5 text-sm font-bold text-white shadow-md shadow-[var(--brand-clay)]/25 transition hover:scale-[1.02] active:scale-95"
+                    >
+                      Book {chef.name.split(" ")[0]}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <MyChefBookings />
+
+      {booking && <ChefBookingModal chef={booking} onClose={() => setBooking(null)} />}
+    </div>
+  );
+}
+
+function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => void }) {
+  const qc = useQueryClient();
+  const symbol = chef.currency === "GBP" ? "£" : "₦";
+  const [eventDate, setEventDate] = useState("");
+  const [startTime, setStartTime] = useState("12:00");
+  const [hours, setHours] = useState(3);
+  const [guests, setGuests] = useState("");
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const total = Math.max(0, hours) * chef.hourly_rate;
+  const minDate = new Date().toISOString().split("T")[0];
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!eventDate) return void toast.error("Pick a date for your event");
+    if (hours <= 0) return void toast.error("How many hours do you need the chef?");
+    setSubmitting(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const { error } = await supabase.from("chef_bookings").insert({
+        customer_id: uid,
+        chef_id: chef.id,
+        event_date: eventDate,
+        start_time: startTime || null,
+        hours,
+        guests: guests ? Number(guests) : null,
+        note: note.trim() || null,
+        currency: chef.currency,
+        hourly_rate: chef.hourly_rate,
+        total,
+      });
+      if (error) throw error;
+      toast.success(`Request sent — ${chef.name} will confirm your booking`);
+      qc.invalidateQueries({ queryKey: ["my-chef-bookings"] });
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send booking");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <form
+        onSubmit={submit}
+        className="relative w-full sm:max-w-md max-h-[90dvh] overflow-y-auto bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom-4 duration-200"
+      >
+        <div className="p-5 border-b border-border flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
+            <PiChefHatDuotone className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="font-display text-lg font-bold truncate">Book {chef.name}</div>
+            <div className="text-xs text-muted-foreground">
+              {symbol}{chef.hourly_rate.toLocaleString()}/hour{chef.city ? ` · ${chef.city}` : ""}
+            </div>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full bg-muted hover:bg-zinc-200 transition shrink-0">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-xs font-bold text-muted-foreground mb-1 block">Event date</span>
+              <input type="date" required min={minDate} value={eventDate} onChange={(e) => setEventDate(e.target.value)}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold text-muted-foreground mb-1 block">Start time</span>
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-xs font-bold text-muted-foreground mb-1 block">Hours needed</span>
+              <input type="number" min={1} max={24} required value={hours || ""} onChange={(e) => setHours(Number(e.target.value))}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold text-muted-foreground mb-1 block">Guests (approx.)</span>
+              <input type="number" min={1} placeholder="e.g. 25" value={guests} onChange={(e) => setGuests(e.target.value)}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+            </label>
+          </div>
+          <label className="block">
+            <span className="text-xs font-bold text-muted-foreground mb-1 block">Tell the chef about your occasion</span>
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}
+              placeholder="e.g. Birthday party — we'd love a live jollof station and small chops"
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm resize-none" />
+          </label>
+
+          <div className="rounded-2xl bg-muted/50 p-4 flex items-center justify-between">
+            <div className="text-sm">
+              <div className="font-bold">Estimated total</div>
+              <div className="text-xs text-muted-foreground">
+                {hours || 0} hr{hours === 1 ? "" : "s"} × {symbol}{chef.hourly_rate.toLocaleString()}
+              </div>
+            </div>
+            <div className="font-display text-2xl font-extrabold tabular-nums">
+              {symbol}{total.toLocaleString()}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-full bg-[var(--brand-clay)] py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--brand-clay)]/30 transition hover:scale-[1.01] active:scale-95 disabled:opacity-60"
+          >
+            {submitting ? "Sending request…" : "Send booking request"}
+          </button>
+          <p className="text-[11px] text-center text-muted-foreground">
+            The chef confirms first — you'll only pay once your booking is accepted.
+          </p>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function MyChefBookings() {
+  const qc = useQueryClient();
+  const { data: bookings = [] } = useQuery({
+    queryKey: ["my-chef-bookings"],
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return [];
+      const { data, error } = await supabase
+        .from("chef_bookings")
+        .select("*, vendors:chef_id(name, logo_url)")
+        .eq("customer_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const cancel = async (id: string) => {
+    const { error } = await supabase.from("chef_bookings").update({ status: "cancelled" }).eq("id", id);
+    if (error) return void toast.error(error.message);
+    toast.success("Booking cancelled");
+    qc.invalidateQueries({ queryKey: ["my-chef-bookings"] });
+  };
+
+  if (bookings.length === 0) return null;
+
+  const statusCls: Record<string, string> = {
+    pending: "bg-amber-100 text-amber-900",
+    accepted: "bg-green-100 text-green-800",
+    declined: "bg-red-100 text-red-800",
+    completed: "bg-blue-100 text-blue-800",
+    cancelled: "bg-zinc-100 text-zinc-600",
+  };
+
+  return (
+    <section className="mt-8">
+      <h2 className="font-display text-lg font-bold text-zinc-900 mb-3">My chef bookings</h2>
+      <div className="space-y-3">
+        {bookings.map((b: any) => {
+          const symbol = b.currency === "GBP" ? "£" : "₦";
+          return (
+            <div key={b.id} className="rounded-2xl bg-white ring-1 ring-black/[0.05] p-4 flex items-center gap-3">
+              <span className="h-11 w-11 shrink-0 rounded-2xl overflow-hidden bg-muted grid place-items-center">
+                {b.vendors?.logo_url ? (
+                  <img src={b.vendors.logo_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <PiChefHatDuotone className="h-6 w-6 text-zinc-400" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold truncate">{b.vendors?.name ?? "Chef"}</div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(b.event_date).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" })}
+                  {b.start_time ? ` · ${b.start_time}` : ""} · {Number(b.hours)} hr{Number(b.hours) > 1 ? "s" : ""} · {symbol}{Number(b.total).toLocaleString()}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${statusCls[b.status] ?? "bg-muted"}`}>
+                  {b.status}
+                </span>
+                {b.status === "pending" && (
+                  <button type="button" onClick={() => cancel(b.id)} className="text-[11px] font-semibold text-zinc-400 hover:text-red-600 transition">
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
