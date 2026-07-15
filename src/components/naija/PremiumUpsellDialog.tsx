@@ -105,8 +105,8 @@ export function PremiumUpsellDialog() {
           </button>
 
           <div className="relative">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
-              <Sparkles className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Members-only offer
+            <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
+              Members-only offer
             </div>
             <h2 id="upsell-title" className="font-display text-xl sm:text-3xl font-bold tracking-tight mt-2 leading-[1.05]">
               Try Naija Eats Plus<br />free for 7 days
@@ -233,7 +233,7 @@ export function PremiumAccountBanner() {
           </span>
           <div className="flex-1">
             <div className="text-[10px] uppercase tracking-widest font-bold text-white/80">Premium member</div>
-            <div className="font-display text-lg font-bold">Naija One active 🎉</div>
+            <div className="font-display text-lg font-bold">Naija One active</div>
             <div className="text-xs text-white/80">Unlimited free delivery + 10% cashback</div>
           </div>
           <ArrowRight className="h-4 w-4 opacity-70" />
@@ -250,8 +250,8 @@ export function PremiumAccountBanner() {
       <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
       <div className="relative">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
-          <Sparkles className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Go Premium
+        <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
+          Go Premium
         </div>
         <h3 className="font-display text-xl font-bold mt-2 leading-tight">
           Naija One Experience

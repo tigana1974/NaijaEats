@@ -279,8 +279,8 @@ function AmountStep({
           <div className="mt-2 flex items-center justify-between text-[11px] text-white/70">
             <span>New balance {fmt(balance + amount + bonus)}</span>
             {bonus > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-gold)]/95 text-zinc-900 px-2 py-0.5 font-bold">
-                <Sparkles className="h-3 w-3" /> +{fmt(bonus)} bonus
+              <span className="inline-flex items-center rounded-full bg-[var(--brand-gold)]/95 text-zinc-900 px-2 py-0.5 font-bold">
+                +{fmt(bonus)} bonus
               </span>
             )}
           </div>
@@ -291,13 +291,10 @@ function AmountStep({
 
       {/* Bonus nudge */}
       <div className="mt-2 sm:mt-4 flex items-center gap-2 sm:gap-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-2 sm:p-3">
-        <span className="grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-xl bg-amber-100 text-amber-700">
-          <Sparkles className="h-4 w-4" />
-        </span>
         <div className="flex-1">
           <div className="text-xs font-bold text-amber-900">Top up ₦20,000+ and get 10% free</div>
           {amount >= 20000 ? (
-            <div className="text-[11px] text-emerald-600 font-bold">🎉 You unlocked {fmt(bonus)} bonus!</div>
+            <div className="text-[11px] text-emerald-600 font-bold">You unlocked {fmt(bonus)} bonus!</div>
           ) : (
             <div className="text-[11px] text-amber-800/80">Add {fmt(20000 - amount)} more to unlock</div>
           )}

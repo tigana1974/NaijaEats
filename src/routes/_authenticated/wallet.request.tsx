@@ -43,7 +43,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n);
 
 const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000, 50000];
-const REASON_CHIPS = ["Split bill", "Rent share", "Suya money", "Groceries", "Chop life 🎉"];
+const REASON_CHIPS = ["Split bill", "Rent share", "Suya money", "Groceries", "Chop life"];
 
 type Step = "form" | "share";
 

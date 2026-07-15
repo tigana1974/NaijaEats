@@ -396,9 +396,9 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
               </label>
               <div className="flex gap-2">
                 {([
-                  { id: "breakfast", label: "🌅 Breakfast" },
-                  { id: "lunch", label: "☀️ Lunch" },
-                  { id: "dinner", label: "🌙 Dinner" },
+                  { id: "breakfast", label: "Breakfast" },
+                  { id: "lunch", label: "Lunch" },
+                  { id: "dinner", label: "Dinner" },
                 ] as const).map((slot) => {
                   const on = form.meal_times.includes(slot.id);
                   return (

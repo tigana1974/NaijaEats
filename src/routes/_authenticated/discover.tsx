@@ -215,9 +215,9 @@ function DiscoverPage() {
         <div className="-mx-3 sm:-mx-5 px-3 sm:px-5 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {(
             [
-              { id: "top", label: "⭐ Highest rated" },
-              { id: "fast", label: "⏱ Under 30 min" },
-              { id: "freeDelivery", label: "🚴 Free delivery" },
+              { id: "top", label: "Highest rated" },
+              { id: "fast", label: "Under 30 min" },
+              { id: "freeDelivery", label: "Free delivery" },
             ] as { id: Exclude<QuickFilter, null>; label: string }[]
           ).map((f) => {
             const active = quickFilter === f.id;

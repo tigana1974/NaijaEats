@@ -342,8 +342,8 @@ function MealPlannerSection() {
 
           <div className="relative flex items-start justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
-                <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Chef-prepared
+              <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+                Chef-prepared
               </div>
               <h1 className="font-display text-xl sm:text-4xl font-bold tracking-tight mt-2 leading-[1.05]">
                 Plan the whole week.<br />Eat without thinking.
@@ -371,12 +371,9 @@ function MealPlannerSection() {
             </div>
             <div className="mt-2 flex items-center justify-between text-[11px] text-white/70 gap-2">
               <span className="truncate">
-                {daysWithFullMeals === 7 ? "🎉 Full week complete" : `${daysWithFullMeals}/7 days fully planned`}
+                {daysWithFullMeals === 7 ? "Full week complete" : `${daysWithFullMeals}/7 days fully planned`}
               </span>
-              <span className="inline-flex items-center gap-1 shrink-0">
-                <PiConfettiDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" />
-                Full week = 15% off
-              </span>
+              <span className="shrink-0">Full week = 15% off</span>
             </div>
           </div>
         </div>
@@ -446,8 +443,8 @@ function MealPlannerSection() {
                         <h2 className="text-base sm:text-lg font-extrabold text-zinc-900 tracking-tight flex items-center gap-2 flex-wrap">
                           <span className="truncate">{DAY_FULL[idx]}</span>
                           {isToday && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-700">
-                              <IoFlame className="h-3 w-3 text-amber-500" /> Today
+                            <span className="inline-flex items-center rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-700">
+                              Today
                             </span>
                           )}
                           {isPast && (
@@ -504,7 +501,7 @@ function MealPlannerSection() {
         </div>
 
         {/* Bottom prompt */}
-        {totalPrice > 0 ? (
+        {totalPrice > 0 && (
           <div className="mt-8 rounded-3xl border border-[var(--brand-clay)]/20 bg-white p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[0_8px_30px_-12px_rgba(217,75,58,0.2)]">
             <div className="flex items-start gap-4">
               <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
@@ -534,27 +531,6 @@ function MealPlannerSection() {
               Pay Now
               <ArrowRight className="h-4 w-4" />
             </button>
-          </div>
-        ) : (
-          <div className="mt-8 rounded-3xl border border-dashed border-border bg-card p-6 flex items-start gap-4">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
-              <PiCookingPotDuotone className="h-6 w-6" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display text-base sm:text-lg font-bold text-foreground">Need a hand planning?</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Tell us your dietary preferences and we'll auto-fill your week with rotating menus.
-              </p>
-              <Link
-                to="/xora"
-                search={{ intent: "meal-plan" }}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white px-4 py-2 text-sm font-bold shadow-md shadow-[var(--brand-clay)]/25 hover:shadow-lg transition"
-              >
-                <Sparkles className="h-4 w-4" />
-                Build my week with Xora
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
           </div>
         )}
       </div>
@@ -1070,8 +1046,8 @@ function BookChefSection() {
       <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white shadow-[0_16px_40px_-20px_rgba(255,77,77,0.4)] bg-[radial-gradient(120%_120%_at_100%_0%,oklch(0.85_0.17_90/0.4),transparent_55%),linear-gradient(150deg,#14100a,#2d2010_55%,#7c5210)]">
         <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[var(--brand-gold)]/20 blur-3xl" />
         <div className="relative">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
-            <PiChefHatDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Private chefs, by the hour
+          <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+            Private chefs, by the hour
           </div>
           <h1 className="font-display text-xl sm:text-4xl font-bold tracking-tight mt-2 leading-[1.05]">
             A chef for your party,<br />owambe, or quiet dinner.

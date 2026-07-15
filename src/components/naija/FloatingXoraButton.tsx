@@ -53,8 +53,8 @@ export function FloatingXoraButton() {
           </span>
         </span>
         <span className="flex flex-col leading-tight pr-1">
-          <span className="text-[9px] font-bold uppercase tracking-widest inline-flex items-center gap-1 text-[var(--brand-gold)]">
-            <Sparkles className="h-2.5 w-2.5" /> AI
+          <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--brand-gold)]">
+            AI
           </span>
           <span className="text-sm font-extrabold">Ask Xora</span>
         </span>

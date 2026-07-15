@@ -501,8 +501,8 @@ function ShopCard({
 
         {/* Featured */}
         {shop.is_featured && (
-          <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-[var(--brand-gold)] text-[#1a1108] px-2 py-1 text-[10px] font-bold uppercase shadow-lg">
-            <Sparkles className="h-3 w-3" /> Featured
+          <span className="absolute top-3 right-3 inline-flex items-center rounded-full bg-[var(--brand-gold)] text-[#1a1108] px-2 py-1 text-[10px] font-bold uppercase shadow-lg">
+            Featured
           </span>
         )}
 
@@ -801,8 +801,7 @@ function PlanChip({ plan }: { plan: string }) {
     pro: "bg-gradient-to-br from-purple-500 to-pink-500 text-white border-transparent shadow-lg shadow-purple-500/30",
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${styles[plan] ?? styles.basic}`}>
-      {(plan === "premium" || plan === "pro") && <Sparkles className="h-3.5 w-3.5" />}
+    <span className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-bold ${styles[plan] ?? styles.basic}`}>
       {planLabel(plan)}
     </span>
   );

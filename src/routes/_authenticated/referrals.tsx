@@ -119,8 +119,8 @@ function ReferralsPage() {
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.08)_50%,transparent_60%)]" />
 
           <div className="relative">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur px-2 py-1 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] font-semibold">
-              <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Refer & feast
+            <div className="inline-flex items-center rounded-full bg-white/10 backdrop-blur px-2.5 py-1 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] font-semibold">
+              Refer & feast
             </div>
             <h1 className="font-display text-2xl sm:text-5xl font-semibold tracking-tight mt-2 sm:mt-3 leading-[1.05]">
               Invite 5 friends.<br />Eat on us.
@@ -145,7 +145,7 @@ function ReferralsPage() {
                 />
               </div>
               <div className="mt-2 flex items-center justify-between text-xs text-white/70">
-                <span>{unlocked ? "🎉 Free feast unlocked!" : `${GOAL - stats.ordered} more to a free feast`}</span>
+                <span>{unlocked ? "Free feast unlocked!" : `${GOAL - stats.ordered} more to a free feast`}</span>
                 <span className="inline-flex items-center gap-1"><Gift className="h-3 w-3" /> {fmt(stats.reward)} earned</span>
               </div>
             </div>

@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { RoleShell } from "@/components/naija/RoleShell";
-import { useState } from "react";
-import { Bell, Package, MessageCircle, Gift, CheckCircle2, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useRef, useState } from "react";
+import { Bell, Package, MessageCircle, Gift, CheckCircle2, ChevronRight, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   component: NotificationsPage,
@@ -47,6 +47,29 @@ function NotificationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
     }
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("notifications").delete().eq("id", id);
+      if (error) throw error;
+    },
+    // Optimistic: the card disappears the moment the swipe completes.
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications", user.id] });
+      const prev = queryClient.getQueryData<any[]>(["notifications", user.id]);
+      queryClient.setQueryData<any[]>(["notifications", user.id], (old) =>
+        (old ?? []).filter((n) => n.id !== id),
+      );
+      return { prev };
+    },
+    onError: (err: any, _id, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["notifications", user.id], ctx.prev);
+      toast.error(err?.message || "Could not delete notification");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+    },
   });
 
   const markAllAsRead = () => markAllAsReadMut.mutate();
@@ -144,17 +167,29 @@ function NotificationsPage() {
           <div className="space-y-3">
             {notifications.map((notif) => {
               const { Icon, bg, ring } = getIconData(notif.type as NotificationType);
-              
+
               return (
-                <div 
-                  key={notif.id}
+                <SwipeToDelete key={notif.id} onDelete={() => deleteMut.mutate(notif.id)}>
+                <div
                   onClick={() => markAsRead(notif.id, notif.link)}
                   className={`group relative overflow-hidden rounded-[1.75rem] p-4 sm:p-5 transition-all duration-300 cursor-pointer ${
-                    notif.is_unread 
-                      ? "bg-orange-50/60 ring-1 ring-orange-200/50 shadow-sm hover:bg-orange-50/80" 
+                    notif.is_unread
+                      ? "bg-orange-50/60 ring-1 ring-orange-200/50 shadow-sm hover:bg-orange-50/80"
                       : "bg-white ring-1 ring-zinc-100 hover:ring-zinc-200 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.08)] hover:-translate-y-0.5"
                   }`}
                 >
+                  {/* Desktop delete (swipe is the mobile gesture) */}
+                  <button
+                    type="button"
+                    aria-label="Delete notification"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteMut.mutate(notif.id);
+                    }}
+                    className="absolute bottom-4 right-4 hidden sm:grid h-8 w-8 place-items-center rounded-full text-zinc-300 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                   {/* Unread Indicator Dot */}
                   {notif.is_unread && (
                     <div className="absolute top-5 right-5 h-2.5 w-2.5 rounded-full bg-[var(--brand-clay)] ring-4 ring-orange-50 animate-pulse" />
@@ -192,6 +227,7 @@ function NotificationsPage() {
                     </div>
                   </div>
                 </div>
+                </SwipeToDelete>
               );
             })}
           </div>
@@ -210,5 +246,84 @@ function NotificationsPage() {
 
       </div>
     </RoleShell>
+  );
+}
+
+/**
+ * Swipe the card left OR right past the threshold to delete it. A red
+ * "Delete" layer is revealed underneath as you drag; releasing early snaps
+ * back. Vertical scrolling is left untouched.
+ */
+function SwipeToDelete({ children, onDelete }: { children: React.ReactNode; onDelete: () => void }) {
+  const [offset, setOffset] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const dragging = useRef(false);
+
+  const THRESHOLD = 96;
+
+  const finish = (finalOffset: number) => {
+    dragging.current = false;
+    if (Math.abs(finalOffset) >= THRESHOLD) {
+      // Fly the card out in the swipe direction, then delete.
+      setLeaving(true);
+      setOffset(finalOffset > 0 ? window.innerWidth : -window.innerWidth);
+      if (navigator.vibrate) navigator.vibrate(40);
+      window.setTimeout(onDelete, 180);
+    } else {
+      setOffset(0);
+    }
+  };
+
+  const revealed = Math.min(1, Math.abs(offset) / THRESHOLD);
+
+  return (
+    <div className="relative">
+      {/* Delete layer behind the card */}
+      <div
+        className="absolute inset-0 flex items-center justify-between rounded-[1.75rem] bg-red-500 px-6 text-white"
+        style={{ opacity: offset === 0 ? 0 : 0.35 + revealed * 0.65 }}
+      >
+        <span className="inline-flex items-center gap-2 text-sm font-bold">
+          <Trash2 className="h-4 w-4" /> Delete
+        </span>
+        <span className="inline-flex items-center gap-2 text-sm font-bold">
+          Delete <Trash2 className="h-4 w-4" />
+        </span>
+      </div>
+      <div
+        className="relative touch-pan-y"
+        style={{
+          transform: `translateX(${offset}px)`,
+          transition: dragging.current ? "none" : "transform 0.18s ease-out",
+          opacity: leaving ? 0.4 : 1,
+        }}
+        onTouchStart={(e) => {
+          startX.current = e.touches[0].clientX;
+          startY.current = e.touches[0].clientY;
+          dragging.current = true;
+        }}
+        onTouchMove={(e) => {
+          if (!dragging.current) return;
+          const dx = e.touches[0].clientX - startX.current;
+          const dy = e.touches[0].clientY - startY.current;
+          if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 12) {
+            // Vertical scroll — abandon the swipe.
+            setOffset(0);
+            dragging.current = false;
+            return;
+          }
+          setOffset(dx);
+        }}
+        onTouchEnd={() => finish(offset)}
+        onTouchCancel={() => {
+          dragging.current = false;
+          setOffset(0);
+        }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }

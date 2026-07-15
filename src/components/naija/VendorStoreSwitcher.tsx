@@ -318,8 +318,8 @@ export function VendorStoreSwitcher({ userId, plan }: { userId?: string; plan?: 
                 onClick={() => setOpen(false)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-50 transition"
               >
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-400 text-white">
-                  <Sparkles className="h-4 w-4" />
+                <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-400 text-white text-base font-black">
+                  +
                 </span>
                 <span className="flex-1 text-left">Upgrade for more shops</span>
                 <ArrowRight className="h-4 w-4" />
@@ -348,8 +348,7 @@ function PlanBadge({ plan }: { plan: string }) {
   };
   const label = plan === "basic" ? "BASIC" : plan.slice(0, 3).toUpperCase();
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${styles[plan] ?? styles.basic}`}>
-      {plan === "premium" || plan === "pro" || plan === "enterprise" ? <Sparkles className="h-3 w-3" /> : null}
+    <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${styles[plan] ?? styles.basic}`}>
       {label}
     </span>
   );

@@ -134,8 +134,8 @@ function BuildMyWeekPage() {
         <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
           <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
           <div className="relative">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[10px] font-bold uppercase tracking-widest">
-              <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Smart week
+            <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
+              Smart week
             </div>
             <h1 className="font-display text-xl sm:text-3xl font-bold tracking-tight mt-2 leading-[1.05]">
               Tell us how you like to eat.

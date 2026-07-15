@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, Sparkles } from "lucide-react";
+import { ChevronLeft, MessagesSquare } from "lucide-react";
 import {
   IoHome, IoHomeOutline,
   IoBagHandle, IoBagHandleOutline,
@@ -174,7 +174,7 @@ function DesktopSidebar() {
               : "text-muted-foreground hover:bg-[var(--brand-clay)]/5 hover:text-[var(--brand-clay)]"
           }`}
         >
-          <Sparkles className="h-5 w-5 shrink-0 text-[var(--brand-clay)]" />
+          <MessagesSquare className="h-5 w-5 shrink-0 text-[var(--brand-clay)]" />
           Ask Xora
           <span className="ml-auto rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
             AI

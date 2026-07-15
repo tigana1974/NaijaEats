@@ -340,7 +340,7 @@ function MessageBubble({ msg, region }: { msg: ChatMsg; region: ReturnType<typeo
                 to={a.to as any}
                 className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-3 py-1 text-xs font-bold hover:bg-[var(--brand-clay)]/15 transition"
               >
-                <Sparkles className="h-3 w-3" /> {a.label}
+                {a.label}
               </Link>
             ))}
           </div>
@@ -375,8 +375,8 @@ function EmptyState({
   return (
     <div className="min-h-full flex flex-col items-center justify-center text-center px-2 py-8">
       <XoraAvatar size={72} />
-      <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)]/20 text-[oklch(0.5_0.14_75)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
-        <Sparkles className="h-3 w-3" /> Naija Eats AI
+      <div className="mt-4 inline-flex items-center rounded-full bg-[var(--brand-gold)]/20 text-[oklch(0.5_0.14_75)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+        Naija Eats AI
       </div>
       <h1 className="mt-3 font-display text-2xl sm:text-3xl font-bold tracking-tight">
         Hey, I'm Xora

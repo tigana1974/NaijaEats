@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/wallet/send")({
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(n);
 
-const QUICK_NOTES = ["Split bill 🍲", "Chop life 🎉", "Suya money 🌶️", "Thanks 🙏", "Rent share 🏠"];
+const QUICK_NOTES = ["Split bill", "Chop life", "Suya money", "Thanks", "Rent share"];
 
 type Step = "pick" | "amount" | "review" | "success";
 

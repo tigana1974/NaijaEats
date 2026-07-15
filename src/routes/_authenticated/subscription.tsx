@@ -281,8 +281,8 @@ function SubscriptionPage() {
 
           <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4 sm:gap-6">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/12 backdrop-blur px-2 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
-                <Sparkles className="h-3 w-3 text-[var(--brand-gold)]" /> Naija Eats premium
+              <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+                Naija Eats premium
               </div>
               <h1 className="font-display text-2xl sm:text-5xl font-bold tracking-tight mt-2 leading-[1.05]">
                 Free delivery.<br />5–10% cashback.<br />Chef VIP access.
@@ -560,8 +560,8 @@ function PlanCard({
       }`}
     >
       {featured && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[var(--brand-clay)] to-orange-500 text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-[var(--brand-clay)]/30 whitespace-nowrap">
-          <Sparkles className="h-3 w-3" /> Most popular
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full bg-gradient-to-r from-[var(--brand-clay)] to-orange-500 text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-[var(--brand-clay)]/30 whitespace-nowrap">
+          Most popular
         </span>
       )}
 
@@ -744,9 +744,8 @@ function ConfirmSheet({
         )}
 
         {isDowngrade && (
-          <div className="mt-4 flex items-start gap-2.5 rounded-2xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
-            <Sparkles className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>Downgrades take effect at the end of your current billing period.</span>
+          <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
+            Downgrades take effect at the end of your current billing period.
           </div>
         )}
 
