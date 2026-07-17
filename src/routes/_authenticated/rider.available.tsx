@@ -130,7 +130,7 @@ function AvailableJobs() {
           {activeDelivery && (
             <div className="rounded-2xl border border-[var(--brand-clay)]/30 bg-[oklch(0.97_0.02_25)] p-4 flex items-center gap-3">
               <Bike className="h-5 w-5 text-[var(--brand-clay)] shrink-0" />
-              <div className="text-sm flex-1">
+              <div className="text-sm flex-1 text-zinc-900">
                 <span className="font-semibold">You have a delivery in progress.</span>{" "}
                 Finish it before claiming another job.
               </div>
