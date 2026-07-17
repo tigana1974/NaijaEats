@@ -646,7 +646,7 @@ function PlanCard({
 
   return (
     <div
-      className={`relative rounded-[2rem] p-6 sm:p-7 transition-all duration-300 flex flex-col ${
+      className={`relative rounded-[2rem] p-6 sm:p-7 transition-all duration-300 flex flex-col text-zinc-900 ${
         featured
           ? "bg-gradient-to-br from-white via-white to-[oklch(0.98_0.02_25)] border-2 border-[var(--brand-clay)] shadow-[0_24px_60px_-24px_rgba(217,75,58,0.35)] scale-[1.02]"
           : `bg-gradient-to-br ${plan.gradient} border border-border`
@@ -673,7 +673,7 @@ function PlanCard({
         </span>
         <div>
           <div className="font-display text-xl font-bold">{plan.name}</div>
-          <div className="text-xs text-muted-foreground">{plan.tagline}</div>
+          <div className="text-xs text-black/60">{plan.tagline}</div>
         </div>
       </div>
 

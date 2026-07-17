@@ -229,7 +229,7 @@ function AccountPage() {
                 }`}>
                   <Icon className="h-5 w-5" />
                 </span>
-                <div className={`flex-1 text-left min-w-0 ${isPremium ? "text-zinc-900" : ""}`}>
+                <div className={`flex-1 text-left min-w-0 ${isPremium ? "text-black" : ""}`}>
                   <div className="text-sm font-medium flex items-center gap-1.5">
                     {label}
                     {isPremium && (
@@ -238,9 +238,9 @@ function AccountPage() {
                       </span>
                     )}
                   </div>
-                  {hint ? <div className="text-xs text-muted-foreground truncate">{hint}</div> : null}
+                  {hint ? <div className={`text-xs truncate ${isPremium ? "text-black/60" : "text-muted-foreground"}`}>{hint}</div> : null}
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <ChevronRight className={`h-4 w-4 ${isPremium ? "text-black/40" : "text-muted-foreground"}`} />
               </div>
             );
             return (

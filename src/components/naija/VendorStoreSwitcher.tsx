@@ -169,7 +169,7 @@ export function VendorStoreSwitcher({ userId, plan }: { userId?: string; plan?: 
                 <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">
                   Your shops
                 </div>
-                <div className="mt-0.5 font-display text-base font-bold text-foreground">
+                <div className="mt-0.5 font-display text-base font-bold text-black">
                   {shops.length} of {limit} · {planLabel(planKey)}
                 </div>
               </div>
@@ -179,12 +179,12 @@ export function VendorStoreSwitcher({ userId, plan }: { userId?: string; plan?: 
             {/* Search */}
             {shops.length >= 4 && (
               <div className="relative mt-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/60" />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search your shops"
-                  className="w-full h-9 rounded-full border border-border bg-white pl-8 pr-3 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/15 transition"
+                  className="w-full h-9 rounded-full border border-border bg-white text-black pl-8 pr-3 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/15 transition"
                 />
               </div>
             )}
