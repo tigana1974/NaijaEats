@@ -556,10 +556,29 @@ function ChefBookingsSection({ vendorId, currency }: { vendorId: string; currenc
     qc.invalidateQueries({ queryKey: ["chef-bookings", vendorId] });
   };
 
+  // Which booking is showing the counter-offer input, and the typed amount.
+  const [counteringId, setCounteringId] = useState<string | null>(null);
+  const [counterAmount, setCounterAmount] = useState("");
+
+  const sendCounter = async (id: string) => {
+    const amount = Number(counterAmount);
+    if (!amount || amount <= 0) return toast.error("Enter your counter-offer amount");
+    const { error } = await supabase
+      .from("chef_bookings")
+      .update({ status: "countered", counter_total: amount })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Counter-offer sent to the customer");
+    setCounteringId(null);
+    setCounterAmount("");
+    qc.invalidateQueries({ queryKey: ["chef-bookings", vendorId] });
+  };
+
   const statusCls: Record<string, string> = {
     pending: "bg-amber-100 text-amber-900",
     accepted: "bg-green-100 text-green-800",
     declined: "bg-red-100 text-red-800",
+    countered: "bg-purple-100 text-purple-800",
     completed: "bg-blue-100 text-blue-800",
     cancelled: "bg-zinc-100 text-zinc-600",
   };
@@ -588,6 +607,11 @@ function ChefBookingsSection({ vendorId, currency }: { vendorId: string; currenc
                   {b.guests ? ` · ~${b.guests} guests` : ""}
                 </div>
                 {b.note && <div className="text-sm mt-1.5 break-words">"{b.note}"</div>}
+                {b.offer_total != null && (
+                  <div className="mt-1.5 inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-800">
+                    Customer's offer — your rate would be {symbol}{(Number(b.hours) * Number(b.hourly_rate)).toLocaleString()}
+                  </div>
+                )}
               </div>
               <div className="text-right shrink-0">
                 <div className="font-display text-lg font-bold">{symbol}{Number(b.total).toLocaleString()}</div>
@@ -596,23 +620,64 @@ function ChefBookingsSection({ vendorId, currency }: { vendorId: string; currenc
                 </span>
               </div>
             </div>
-            {b.status === "pending" && (
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => respond(b.id, "accepted")}
-                  className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-semibold text-white"
-                >
-                  Accept
-                </button>
-                <button
-                  type="button"
-                  onClick={() => respond(b.id, "declined")}
-                  className="flex-1 rounded-lg border border-border py-2 text-sm font-semibold hover:bg-muted"
-                >
-                  Decline
-                </button>
+            {b.status === "countered" && b.counter_total != null && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                You countered with {symbol}{Number(b.counter_total).toLocaleString()} — waiting for the customer.
               </div>
+            )}
+            {b.status === "pending" && (
+              <>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => respond(b.id, "accepted")}
+                    className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-semibold text-white"
+                  >
+                    Accept
+                  </button>
+                  {b.offer_total != null && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCounteringId(counteringId === b.id ? null : b.id);
+                        setCounterAmount(String(Number(b.hours) * Number(b.hourly_rate)));
+                      }}
+                      className="flex-1 rounded-lg bg-purple-600 py-2 text-sm font-semibold text-white"
+                    >
+                      Counter
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => respond(b.id, "declined")}
+                    className="flex-1 rounded-lg border border-border py-2 text-sm font-semibold hover:bg-muted"
+                  >
+                    Decline
+                  </button>
+                </div>
+                {counteringId === b.id && (
+                  <div className="mt-2.5 flex gap-2">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{symbol}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={counterAmount}
+                        onChange={(e) => setCounterAmount(e.target.value)}
+                        placeholder="Your counter-offer"
+                        className="w-full h-10 rounded-lg border border-border bg-background pl-8 pr-3 text-sm"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => sendCounter(b.id)}
+                      className="rounded-lg bg-purple-600 px-4 text-sm font-semibold text-white"
+                    >
+                      Send
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         ))}

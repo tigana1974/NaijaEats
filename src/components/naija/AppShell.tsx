@@ -327,7 +327,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
 
       {/* Mobile bottom nav for customers only */}
       {role === "customer" && navItems.length > 0 && !hideBottomNav && (
-        <div className="md:hidden fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none">
+        <div data-bottom-nav className="md:hidden fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none">
           <nav className="pointer-events-auto mx-auto max-w-sm flex items-stretch bg-[#1a1a1a] rounded-full px-2 py-1.5 shadow-2xl will-change-transform [transform:translateZ(0)]">
             {navItems.map((n) => (
               <span key={n.to} className="flex-1 flex">{mobileNavItem(n.to, n.label, n.Icon)}</span>

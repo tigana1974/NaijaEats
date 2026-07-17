@@ -263,6 +263,7 @@ export type Database = {
       chef_bookings: {
         Row: {
           chef_id: string
+          counter_total: number | null
           created_at: string
           currency: string
           customer_id: string
@@ -272,6 +273,7 @@ export type Database = {
           hours: number
           id: string
           note: string | null
+          offer_total: number | null
           start_time: string | null
           status: string
           total: number
@@ -279,6 +281,7 @@ export type Database = {
         }
         Insert: {
           chef_id: string
+          counter_total?: number | null
           created_at?: string
           currency: string
           customer_id: string
@@ -288,6 +291,7 @@ export type Database = {
           hours: number
           id?: string
           note?: string | null
+          offer_total?: number | null
           start_time?: string | null
           status?: string
           total: number
@@ -295,6 +299,7 @@ export type Database = {
         }
         Update: {
           chef_id?: string
+          counter_total?: number | null
           created_at?: string
           currency?: string
           customer_id?: string
@@ -304,6 +309,7 @@ export type Database = {
           hours?: number
           id?: string
           note?: string | null
+          offer_total?: number | null
           start_time?: string | null
           status?: string
           total?: number

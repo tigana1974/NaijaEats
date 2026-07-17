@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { loadWallet, addWalletTxn } from "@/lib/wallet";
 import { useCountry } from "@/hooks/useCountry";
+import { useDrawerOpen } from "@/hooks/useDrawerOpen";
 
 export const Route = createFileRoute("/_authenticated/book")({
   component: BookPage,
@@ -570,6 +571,7 @@ function PaymentConfirmationModal({
   onCancel: () => void;
   paying: boolean;
 }) {
+  useDrawerOpen();
   const items = Object.entries(plan).flatMap(([key, list]) =>
     list.map((item) => {
       // key is like "Sun Jul 12 2026::dinner"
@@ -762,6 +764,7 @@ function MealPickerSheet({
   onAdd: (item: PickedItem) => void;
   onClose: () => void;
 }) {
+  useDrawerOpen();
   const [query, setQuery] = useState("");
 
   // Live catalogue — every available item from every approved vendor.
@@ -1134,6 +1137,7 @@ function BookChefSection() {
 }
 
 function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => void }) {
+  useDrawerOpen();
   const qc = useQueryClient();
   const symbol = chef.currency === "GBP" ? "£" : "₦";
   const [eventDate, setEventDate] = useState("");
@@ -1141,15 +1145,22 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
   const [hours, setHours] = useState(3);
   const [guests, setGuests] = useState("");
   const [note, setNote] = useState("");
+  // "rate" = pay the chef's advertised hourly rate; "offer" = bid your own
+  // total, which the chef can accept, decline, or counter.
+  const [priceMode, setPriceMode] = useState<"rate" | "offer">("rate");
+  const [offerAmount, setOfferAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const total = Math.max(0, hours) * chef.hourly_rate;
+  const rateTotal = Math.max(0, hours) * chef.hourly_rate;
+  const offerTotal = Number(offerAmount) || 0;
+  const total = priceMode === "offer" ? offerTotal : rateTotal;
   const minDate = new Date().toISOString().split("T")[0];
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventDate) return void toast.error("Pick a date for your event");
     if (hours <= 0) return void toast.error("How many hours do you need the chef?");
+    if (priceMode === "offer" && offerTotal <= 0) return void toast.error("Enter the amount you'd like to offer");
     setSubmitting(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -1166,9 +1177,14 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
         currency: chef.currency,
         hourly_rate: chef.hourly_rate,
         total,
+        offer_total: priceMode === "offer" ? offerTotal : null,
       });
       if (error) throw error;
-      toast.success(`Request sent — ${chef.name} will confirm your booking`);
+      toast.success(
+        priceMode === "offer"
+          ? `Offer sent — ${chef.name} can accept, decline, or counter`
+          : `Request sent — ${chef.name} will confirm your booking`,
+      );
       qc.invalidateQueries({ queryKey: ["my-chef-bookings"] });
       onClose();
     } catch (err) {
@@ -1232,11 +1248,56 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
               className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm resize-none" />
           </label>
 
+          {/* Pricing: chef's rate, or bid your own price */}
+          <div>
+            <div className="flex rounded-full bg-muted p-1">
+              {(
+                [
+                  { id: "rate", label: "Chef's rate" },
+                  { id: "offer", label: "Make an offer" },
+                ] as const
+              ).map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setPriceMode(m.id)}
+                  className={`flex-1 rounded-full py-2 text-xs font-bold transition ${
+                    priceMode === m.id ? "bg-white shadow-sm text-zinc-900" : "text-zinc-500"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            {priceMode === "offer" && (
+              <div className="mt-3">
+                <label className="block">
+                  <span className="text-xs font-bold text-muted-foreground mb-1 block">
+                    Your offer for the whole job ({symbol})
+                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder={`Chef's rate would be ${symbol}${rateTotal.toLocaleString()}`}
+                    value={offerAmount}
+                    onChange={(e) => setOfferAmount(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm"
+                  />
+                </label>
+                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                  {chef.name.split(" ")[0]} can accept your offer, decline it, or send you a counter-offer.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="rounded-2xl bg-muted/50 p-4 flex items-center justify-between">
             <div className="text-sm">
-              <div className="font-bold">Estimated total</div>
+              <div className="font-bold">{priceMode === "offer" ? "Your offer" : "Estimated total"}</div>
               <div className="text-xs text-muted-foreground">
-                {hours || 0} hr{hours === 1 ? "" : "s"} × {symbol}{chef.hourly_rate.toLocaleString()}
+                {priceMode === "offer"
+                  ? `Chef's rate: ${symbol}${rateTotal.toLocaleString()} for ${hours || 0} hr${hours === 1 ? "" : "s"}`
+                  : `${hours || 0} hr${hours === 1 ? "" : "s"} × ${symbol}${chef.hourly_rate.toLocaleString()}`}
               </div>
             </div>
             <div className="font-display text-2xl font-extrabold tabular-nums">
@@ -1249,7 +1310,7 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
             disabled={submitting}
             className="w-full rounded-full bg-[var(--brand-clay)] py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--brand-clay)]/30 transition hover:scale-[1.01] active:scale-95 disabled:opacity-60"
           >
-            {submitting ? "Sending request…" : "Send booking request"}
+            {submitting ? "Sending…" : priceMode === "offer" ? "Send offer" : "Send booking request"}
           </button>
           <p className="text-[11px] text-center text-muted-foreground">
             The chef confirms first — you'll only pay once your booking is accepted.
@@ -1286,12 +1347,23 @@ function MyChefBookings() {
     qc.invalidateQueries({ queryKey: ["my-chef-bookings"] });
   };
 
+  const acceptCounter = async (b: any) => {
+    const { error } = await supabase
+      .from("chef_bookings")
+      .update({ status: "accepted", total: b.counter_total })
+      .eq("id", b.id);
+    if (error) return void toast.error(error.message);
+    toast.success("Counter-offer accepted — booking confirmed");
+    qc.invalidateQueries({ queryKey: ["my-chef-bookings"] });
+  };
+
   if (bookings.length === 0) return null;
 
   const statusCls: Record<string, string> = {
     pending: "bg-amber-100 text-amber-900",
     accepted: "bg-green-100 text-green-800",
     declined: "bg-red-100 text-red-800",
+    countered: "bg-purple-100 text-purple-800",
     completed: "bg-blue-100 text-blue-800",
     cancelled: "bg-zinc-100 text-zinc-600",
   };
@@ -1303,31 +1375,61 @@ function MyChefBookings() {
         {bookings.map((b: any) => {
           const symbol = b.currency === "GBP" ? "£" : "₦";
           return (
-            <div key={b.id} className="rounded-2xl bg-white ring-1 ring-black/[0.05] p-4 flex items-center gap-3">
-              <span className="h-11 w-11 shrink-0 rounded-2xl overflow-hidden bg-muted grid place-items-center">
-                {b.vendors?.logo_url ? (
-                  <img src={b.vendors.logo_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <PiChefHatDuotone className="h-6 w-6 text-zinc-400" />
-                )}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold truncate">{b.vendors?.name ?? "Chef"}</div>
-                <div className="text-xs text-muted-foreground">
-                  {new Date(b.event_date).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" })}
-                  {b.start_time ? ` · ${b.start_time}` : ""} · {Number(b.hours)} hr{Number(b.hours) > 1 ? "s" : ""} · {symbol}{Number(b.total).toLocaleString()}
+            <div key={b.id} className="rounded-2xl bg-white ring-1 ring-black/[0.05] p-4">
+              <div className="flex items-center gap-3">
+                <span className="h-11 w-11 shrink-0 rounded-2xl overflow-hidden bg-muted grid place-items-center">
+                  {b.vendors?.logo_url ? (
+                    <img src={b.vendors.logo_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <PiChefHatDuotone className="h-6 w-6 text-zinc-400" />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold truncate">{b.vendors?.name ?? "Chef"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(b.event_date).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" })}
+                    {b.start_time ? ` · ${b.start_time}` : ""} · {Number(b.hours)} hr{Number(b.hours) > 1 ? "s" : ""} · {symbol}{Number(b.total).toLocaleString()}
+                    {b.offer_total != null && b.status === "pending" ? " (your offer)" : ""}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${statusCls[b.status] ?? "bg-muted"}`}>
+                    {b.status === "countered" ? "Counter-offer" : b.status}
+                  </span>
+                  {b.status === "pending" && (
+                    <button type="button" onClick={() => cancel(b.id)} className="text-[11px] font-semibold text-zinc-400 hover:text-red-600 transition">
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1.5 shrink-0">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${statusCls[b.status] ?? "bg-muted"}`}>
-                  {b.status}
-                </span>
-                {b.status === "pending" && (
-                  <button type="button" onClick={() => cancel(b.id)} className="text-[11px] font-semibold text-zinc-400 hover:text-red-600 transition">
-                    Cancel
-                  </button>
-                )}
-              </div>
+
+              {b.status === "countered" && b.counter_total != null && (
+                <div className="mt-3 rounded-xl bg-purple-50 p-3">
+                  <div className="text-sm">
+                    <span className="font-bold">{(b.vendors?.name ?? "The chef").split(" ")[0]} countered with {symbol}{Number(b.counter_total).toLocaleString()}</span>
+                    {b.offer_total != null && (
+                      <span className="text-xs text-muted-foreground"> — you offered {symbol}{Number(b.offer_total).toLocaleString()}</span>
+                    )}
+                  </div>
+                  <div className="mt-2.5 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => acceptCounter(b)}
+                      className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-bold text-white"
+                    >
+                      Accept {symbol}{Number(b.counter_total).toLocaleString()}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => cancel(b.id)}
+                      className="flex-1 rounded-lg border border-border py-2 text-sm font-bold hover:bg-muted"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

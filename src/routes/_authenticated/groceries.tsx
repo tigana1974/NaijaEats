@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { RoleShell } from "@/components/naija/RoleShell";
@@ -44,8 +45,16 @@ function GroceriesPage() {
     },
   });
 
-  const topStores = (vendors ?? []).slice(0, 5);
-  const otherStores = (vendors ?? []).slice(5);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const q = search.trim().toLowerCase();
+
+  const filtered = (vendors ?? []).filter(
+    (v: any) => !q || [v.name, v.city, v.tagline].filter(Boolean).some((s: string) => s.toLowerCase().includes(q)),
+  );
+  // While searching, skip the slider and show every match in the grid.
+  const topStores = q ? [] : filtered.slice(0, 5);
+  const otherStores = q ? filtered : filtered.slice(5);
 
   const symbol = (c: string) => (c === "GBP" ? "£" : "₦");
 
@@ -58,7 +67,22 @@ function GroceriesPage() {
               <div className="text-xl font-bold truncate text-zinc-900">Groceries</div>
             </div>
           </div>
-          <CountryToggle value={country} onChange={setCountry} />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Search grocery stores"
+              onClick={() => {
+                setSearchOpen((v) => !v);
+                if (searchOpen) setSearch("");
+              }}
+              className={`grid h-11 w-11 place-items-center rounded-full transition ${
+                searchOpen ? "bg-[var(--brand-clay)] text-white" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+              }`}
+            >
+              {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            </button>
+            <CountryToggle value={country} onChange={setCountry} />
+          </div>
         </div>
       }
     >
@@ -66,7 +90,30 @@ function GroceriesPage() {
         <div className="space-y-8">
           <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight">Groceries</h1>
 
+          {searchOpen && (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--brand-clay)]" />
+              <input
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search grocery stores…"
+                className="w-full rounded-full bg-white ring-1 ring-zinc-200 pl-10 pr-10 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] transition shadow-sm"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          )}
 
+          {(!q || topStores.length > 0) && (
           <section>
             <SectionHeader title="Top Stores" />
             {vendorsLoading ? (
@@ -87,10 +134,15 @@ function GroceriesPage() {
               </div>
             )}
           </section>
+          )}
+
+          {q && otherStores.length === 0 && (
+            <EmptyState title="No stores match your search" hint="Try a different name or clear the search." />
+          )}
 
           {otherStores.length > 0 && (
             <section className="mt-8">
-              <SectionHeader title="More Stores" />
+              <SectionHeader title={q ? "Search results" : "More Stores"} />
               <div className="mt-4 grid gap-x-4 gap-y-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
                 {otherStores.map((v: any) => (
                   <UberVendorCard key={v.id} v={v} symbol={symbol} />

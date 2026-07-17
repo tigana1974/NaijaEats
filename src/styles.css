@@ -411,3 +411,11 @@ html, body {
 .animate-marquee-ltr {
   animation: marquee-ltr 40s linear infinite;
 }
+
+/* Hide the floating bottom nav while any drawer/sheet is open (see useDrawerOpen) */
+body.drawer-open [data-bottom-nav] {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(120%);
+  transition: opacity 0.15s ease, transform 0.2s ease;
+}

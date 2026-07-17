@@ -13,6 +13,7 @@ import {
 } from "react-icons/pi";
 import { toast } from "sonner";
 import { loadWallet, addWalletTxn } from "@/lib/wallet";
+import { useDrawerOpen } from "@/hooks/useDrawerOpen";
 
 const PAID_KEY = "naijaeats.paidInvoices.v1";
 
@@ -859,6 +860,7 @@ function InvoiceModal({
   onPay: () => void;
   onClose: () => void;
 }) {
+  useDrawerOpen();
   const issued = new Date(invoice.createdAt);
   const from = invoice.fromMe ? (isVendor ? "You" : "You") : otherName;
   const to = invoice.fromMe ? otherName : "You";

@@ -35,6 +35,7 @@ import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authentic
 import { Route as ApiWebhooksStripeRouteImport } from './routes/api/webhooks/stripe'
 import { Route as ApiWebhooksPaystackRouteImport } from './routes/api/webhooks/paystack'
 import { Route as AuthenticatedWalletTopUpRouteImport } from './routes/_authenticated/wallet.top-up'
+import { Route as AuthenticatedWalletSplitRouteImport } from './routes/_authenticated/wallet.split'
 import { Route as AuthenticatedWalletSendRouteImport } from './routes/_authenticated/wallet.send'
 import { Route as AuthenticatedWalletRequestRouteImport } from './routes/_authenticated/wallet.request'
 import { Route as AuthenticatedVendorSubscriptionRouteImport } from './routes/_authenticated/vendor.subscription'
@@ -223,6 +224,12 @@ const AuthenticatedWalletTopUpRoute =
   AuthenticatedWalletTopUpRouteImport.update({
     id: '/wallet/top-up',
     path: '/wallet/top-up',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWalletSplitRoute =
+  AuthenticatedWalletSplitRouteImport.update({
+    id: '/wallet/split',
+    path: '/wallet/split',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedWalletSendRoute = AuthenticatedWalletSendRouteImport.update({
@@ -614,6 +621,7 @@ export interface FileRoutesByFullPath {
   '/vendor/subscription': typeof AuthenticatedVendorSubscriptionRoute
   '/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/wallet/send': typeof AuthenticatedWalletSendRoute
+  '/wallet/split': typeof AuthenticatedWalletSplitRoute
   '/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
@@ -695,6 +703,7 @@ export interface FileRoutesByTo {
   '/vendor/subscription': typeof AuthenticatedVendorSubscriptionRoute
   '/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/wallet/send': typeof AuthenticatedWalletSendRoute
+  '/wallet/split': typeof AuthenticatedWalletSplitRoute
   '/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
@@ -778,6 +787,7 @@ export interface FileRoutesById {
   '/_authenticated/vendor/subscription': typeof AuthenticatedVendorSubscriptionRoute
   '/_authenticated/wallet/request': typeof AuthenticatedWalletRequestRoute
   '/_authenticated/wallet/send': typeof AuthenticatedWalletSendRoute
+  '/_authenticated/wallet/split': typeof AuthenticatedWalletSplitRoute
   '/_authenticated/wallet/top-up': typeof AuthenticatedWalletTopUpRoute
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
@@ -861,6 +871,7 @@ export interface FileRouteTypes {
     | '/vendor/subscription'
     | '/wallet/request'
     | '/wallet/send'
+    | '/wallet/split'
     | '/wallet/top-up'
     | '/api/webhooks/paystack'
     | '/api/webhooks/stripe'
@@ -942,6 +953,7 @@ export interface FileRouteTypes {
     | '/vendor/subscription'
     | '/wallet/request'
     | '/wallet/send'
+    | '/wallet/split'
     | '/wallet/top-up'
     | '/api/webhooks/paystack'
     | '/api/webhooks/stripe'
@@ -1024,6 +1036,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendor/subscription'
     | '/_authenticated/wallet/request'
     | '/_authenticated/wallet/send'
+    | '/_authenticated/wallet/split'
     | '/_authenticated/wallet/top-up'
     | '/api/webhooks/paystack'
     | '/api/webhooks/stripe'
@@ -1226,6 +1239,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet/top-up'
       fullPath: '/wallet/top-up'
       preLoaderRoute: typeof AuthenticatedWalletTopUpRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wallet/split': {
+      id: '/_authenticated/wallet/split'
+      path: '/wallet/split'
+      fullPath: '/wallet/split'
+      preLoaderRoute: typeof AuthenticatedWalletSplitRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wallet/send': {
@@ -1697,6 +1717,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendorSubscriptionRoute: typeof AuthenticatedVendorSubscriptionRoute
   AuthenticatedWalletRequestRoute: typeof AuthenticatedWalletRequestRoute
   AuthenticatedWalletSendRoute: typeof AuthenticatedWalletSendRoute
+  AuthenticatedWalletSplitRoute: typeof AuthenticatedWalletSplitRoute
   AuthenticatedWalletTopUpRoute: typeof AuthenticatedWalletTopUpRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedWalletIndexRoute: typeof AuthenticatedWalletIndexRoute
@@ -1772,6 +1793,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVendorSubscriptionRoute: AuthenticatedVendorSubscriptionRoute,
   AuthenticatedWalletRequestRoute: AuthenticatedWalletRequestRoute,
   AuthenticatedWalletSendRoute: AuthenticatedWalletSendRoute,
+  AuthenticatedWalletSplitRoute: AuthenticatedWalletSplitRoute,
   AuthenticatedWalletTopUpRoute: AuthenticatedWalletTopUpRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedWalletIndexRoute: AuthenticatedWalletIndexRoute,
