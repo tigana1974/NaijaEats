@@ -9,6 +9,7 @@ import {
   ArrowDownLeft,
   Plus,
   Gift,
+  Users,
   Sparkles,
   Receipt,
   Search,
@@ -204,13 +205,13 @@ function WalletPage() {
               <span className="text-xs font-semibold">Request</span>
             </Link>
             <Link
-              to="/referrals"
+              to="/wallet/split"
               className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white/10 text-white border border-white/10 backdrop-blur hover:bg-white/15 transition-all duration-200"
             >
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 group-hover:scale-105 transition-transform duration-200">
-                <Gift className="h-4 w-4" />
+                <Users className="h-4 w-4" />
               </span>
-              <span className="text-xs font-semibold">Refer</span>
+              <span className="text-xs font-semibold">Split bill</span>
             </Link>
           </div>
         </div>
@@ -325,7 +326,7 @@ function PerkCard({
         </span>
         <div className="text-sm font-semibold">{title}</div>
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-foreground/70">{body}</p>
+      <p className="mt-3 text-xs leading-relaxed text-black/70">{body}</p>
     </Link>
   );
 }

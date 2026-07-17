@@ -41,8 +41,6 @@ function loadCode(): string {
 
 function ReferralsPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
   const [code, setCode] = useState("JOLLOF24");
 
   useEffect(() => {
@@ -67,19 +65,6 @@ function ReferralsPage() {
   const progress = Math.min(stats.ordered / GOAL, 1);
   const unlocked = stats.ordered >= GOAL;
 
-  const invite = () => {
-    if (!name.trim() || !contact.trim()) return toast.error("Add a name and contact");
-    const r: Referral = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      contact: contact.trim(),
-      status: "invited",
-      invitedAt: new Date().toISOString(),
-    };
-    persist([r, ...referrals]);
-    setName(""); setContact("");
-    toast.success(`Invite sent to ${r.name}`);
-  };
 
   // Demo helpers so the page feels alive
   const advance = (id: string) => {
@@ -195,26 +180,7 @@ function ReferralsPage() {
           </div>
         </div>
 
-        {/* Invite by contact */}
-        <div className="mt-8 rounded-3xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-display text-lg font-semibold">Invite directly</h3>
-              <p className="text-xs text-muted-foreground">We'll text or email them your code.</p>
-            </div>
-            <div className="hidden sm:flex gap-1.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted"><MessageCircle className="h-4 w-4" /></span>
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted"><Mail className="h-4 w-4" /></span>
-            </div>
-          </div>
-          <div className="mt-4 grid sm:grid-cols-[1fr_1fr_auto] gap-2">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Friend's name" className="h-11 rounded-2xl" />
-            <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Phone or email" className="h-11 rounded-2xl" />
-            <Button onClick={invite} className="h-11 rounded-2xl bg-foreground text-background hover:bg-foreground/90">
-              <Plus className="h-4 w-4" /> Invite
-            </Button>
-          </div>
-        </div>
+
 
         {/* Activity */}
         <div className="mt-8">
