@@ -229,7 +229,7 @@ function AccountPage() {
                 }`}>
                   <Icon className="h-5 w-5" />
                 </span>
-                <div className="flex-1 text-left min-w-0">
+                <div className={`flex-1 text-left min-w-0 ${isPremium ? "text-zinc-900" : ""}`}>
                   <div className="text-sm font-medium flex items-center gap-1.5">
                     {label}
                     {isPremium && (
