@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/search")({
 
 const POPULAR_SEARCHES = ["Jollof Rice", "Suya", "Plantain", "Shawarma", "Burger"];
 const ITEM_SEARCH_SELECT =
-  "id, name, description, tags, price, image_url, is_available, is_featured, category:menu_categories(name), vendor:vendors!inner(id, slug, name, city, type, currency, country, status)";
+  "id, name, description, tags, price, image_url, is_available, is_featured, food_type:global_food_types(name), category:menu_categories(name), vendor:vendors!inner(id, slug, name, city, type, currency, country, status)";
 
 type SearchVendor = {
   id: string;
@@ -41,6 +41,7 @@ type SearchItem = {
   price: number;
   image_url: string | null;
   is_featured: boolean;
+  food_type: { name: string | null } | null;
   category: { name: string | null } | null;
   vendor: {
     id: string;
@@ -75,6 +76,7 @@ function itemMatchesSearch(item: SearchItem, searchTerm: string) {
     [
       item.name,
       item.description,
+      item.food_type?.name,
       item.category?.name,
       item.vendor?.name,
       item.vendor?.city,

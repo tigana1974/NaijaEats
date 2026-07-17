@@ -317,6 +317,33 @@ export type Database = {
         }
         Relationships: []
       }
+      global_food_types: {
+        Row: {
+          id: string
+          name: string
+          emoji: string | null
+          image_url: string | null
+          is_approved: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          emoji?: string | null
+          image_url?: string | null
+          is_approved?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          emoji?: string | null
+          image_url?: string | null
+          is_approved?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       deliveries: {
         Row: {
           created_at: string
@@ -414,6 +441,7 @@ export type Database = {
       menu_items: {
         Row: {
           category_id: string | null
+          food_type_id: string | null
           created_at: string
           currency: string
           description: string | null
@@ -434,6 +462,7 @@ export type Database = {
         }
         Insert: {
           category_id?: string | null
+          food_type_id?: string | null
           created_at?: string
           currency: string
           description?: string | null
@@ -454,6 +483,7 @@ export type Database = {
         }
         Update: {
           category_id?: string | null
+          food_type_id?: string | null
           created_at?: string
           currency?: string
           description?: string | null
@@ -478,6 +508,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_food_type_id_fkey"
+            columns: ["food_type_id"]
+            isOneToOne: false
+            referencedRelation: "global_food_types"
             referencedColumns: ["id"]
           },
           {

@@ -34,29 +34,6 @@ export const Route = createFileRoute("/_authenticated/discover")({
 
 type VendorType = "restaurant" | "grocery" | "chef";
 
-/** Emoji category rail — mirrors the Uber Eats icon row. "kind" filters vendor
- * type; "keyword" filters dishes client-side by name/description match. */
-const CATEGORIES: {
-  id: string;
-  label: string;
-  emoji: string;
-  kind?: VendorType;
-  keyword?: string;
-}[] = [
-  { id: "all", label: "All", emoji: "🍽️" },
-  { id: "jollof", label: "Jollof", emoji: "🍚", keyword: "jollof" },
-  { id: "suya", label: "Suya", emoji: "🍢", keyword: "suya" },
-  { id: "soups", label: "Soups", emoji: "🍲", keyword: "soup" },
-  { id: "swallow", label: "Swallow", emoji: "🥘", keyword: "pounded" },
-  { id: "rice", label: "Rice", emoji: "🍛", keyword: "rice" },
-  { id: "grills", label: "Grills", emoji: "🍗", keyword: "grill" },
-  { id: "snacks", label: "Snacks", emoji: "🍩", keyword: "puff" },
-  { id: "drinks", label: "Drinks", emoji: "🧋", keyword: "drink" },
-  { id: "grocery", label: "Grocery", emoji: "🥬", kind: "grocery" },
-  { id: "chefs", label: "Chefs", emoji: "👨🏾‍🍳", kind: "chef" },
-  { id: "restaurants", label: "Restaurants", emoji: "🏪", kind: "restaurant" },
-];
-
 type QuickFilter = "top" | "fast" | "freeDelivery" | null;
 
 function DiscoverPage() {
@@ -75,9 +52,34 @@ function DiscoverPage() {
   const [category, setCategory] = useState("all");
   const [quickFilter, setQuickFilter] = useState<QuickFilter>(null);
 
+  const { data: foodTypes } = useQuery({
+    queryKey: ["global_food_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("global_food_types").select("*").eq("is_approved", true).order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const CATEGORIES = useMemo(() => {
+    const base = [{ id: "all", label: "All", emoji: "🍽️" }];
+    const dynamic = (foodTypes ?? []).map(ft => ({
+      id: ft.id,
+      label: ft.name,
+      emoji: ft.emoji || "🍲",
+      isFoodType: true,
+    }));
+    const vendors: any[] = [
+      { id: "grocery", label: "Grocery", emoji: "🥬", kind: "grocery" },
+      { id: "chefs", label: "Chefs", emoji: "👨🏾‍🍳", kind: "chef" },
+      { id: "restaurants", label: "Restaurants", emoji: "🏪", kind: "restaurant" },
+    ];
+    return [...base, ...dynamic, ...vendors];
+  }, [foodTypes]);
+
   const activeCategory = CATEGORIES.find((c) => c.id === category) ?? CATEGORIES[0];
   const typeFilter = activeCategory.kind ?? null;
-  const keyword = activeCategory.keyword ?? null;
+  const isFoodType = activeCategory.isFoodType ?? false;
 
   // Vendors — approved only, filtered by country + optional type.
   const { data: vendors, isLoading: vendorsLoading } = useQuery({
@@ -99,16 +101,23 @@ function DiscoverPage() {
 
   // Cross-vendor dishes for the food grid.
   const { data: featuredItems, isLoading: itemsLoading } = useQuery({
-    queryKey: ["discover-featured-items", country],
+    queryKey: ["discover-featured-items", country, isFoodType ? activeCategory.id : null],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("menu_items")
         .select(
-          "id, name, price, image_url, is_available, is_featured, description, vendor:vendors!inner(id, slug, name, currency, country, status, delivery_fee, min_order)",
+          "id, name, price, image_url, is_available, is_featured, description, food_type_id, vendor:vendors!inner(id, slug, name, currency, country, status, delivery_fee, min_order)",
         )
         .eq("is_available", true)
-        .order("is_featured", { ascending: false })
-        .limit(32);
+        .order("is_featured", { ascending: false });
+
+      if (isFoodType) {
+        q = q.eq("food_type_id", activeCategory.id);
+      } else {
+        q = q.limit(32);
+      }
+      
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []).filter(
         (it: any) => it.vendor?.country === country && it.vendor?.status === "approved",
@@ -128,14 +137,8 @@ function DiscoverPage() {
 
   const filteredItems = useMemo(() => {
     let list = featuredItems ?? [];
-    if (keyword) {
-      const k = keyword.toLowerCase();
-      list = list.filter((it: any) =>
-        `${it.name} ${it.description ?? ""}`.toLowerCase().includes(k),
-      );
-    }
     return list;
-  }, [featuredItems, keyword]);
+  }, [featuredItems]);
 
   const featuredVendors = useMemo(
     () => filteredVendors.filter((v: any) => v.is_featured).concat(filteredVendors.filter((v: any) => !v.is_featured)).slice(0, 8),
@@ -248,18 +251,18 @@ function DiscoverPage() {
           country={country}
         />
 
-        {/* ─── 6 · Popular food grid ─── */}
-        <section>
-          <RailHeader title={keyword ? `${activeCategory.label} near you` : "Popular near you"} />
+          {/* ─── 6 · Category / Items Grid ─── */}
+          <RailHeader title={isFoodType ? `${activeCategory.label} near you` : "Popular near you"} />
           {itemsLoading ? (
-            <div className="mt-3 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="aspect-[4/5] rounded-[1.75rem] bg-muted animate-pulse" />
-              ))}
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Skeleton className="h-[280px] w-full rounded-3xl" />
+              <Skeleton className="h-[280px] w-full rounded-3xl" />
+              <Skeleton className="h-[280px] w-full rounded-3xl" />
             </div>
           ) : filteredItems.length === 0 ? (
             <EmptyState
-              title={keyword ? `No ${activeCategory.label.toLowerCase()} dishes right now` : "No items available right now"}
+              icon={IoStar}
+              title={isFoodType ? `No ${activeCategory.label.toLowerCase()} dishes right now` : "No items available right now"}
               hint="Try another category, or check back soon."
             />
           ) : (
@@ -299,36 +302,38 @@ function DiscoverPage() {
           )}
         </section>
 
-        {/* ─── 7 · All vendors ─── */}
-        <section>
-          <RailHeader
-            title={
-              typeFilter
-                ? activeCategory.label
-                : quickFilter
-                  ? "Matching vendors"
-                  : "All restaurants & stores"
-            }
-          />
-          {vendorsLoading ? (
-            <div className="mt-3 grid gap-x-4 gap-y-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="aspect-[16/10] rounded-2xl bg-muted animate-pulse" />
-              ))}
-            </div>
-          ) : filteredVendors.length === 0 ? (
-            <EmptyState
-              title="No vendors match"
-              hint={`Clear the filters, or check back soon as Naija Eats expands in ${country === "NG" ? "Nigeria" : "the UK"}.`}
+        {/* ─── 7 · All vendors Grid ─── */}
+        {!isFoodType && (
+          <section className="mt-12 mb-20">
+            <RailHeader
+              title={
+                typeFilter
+                  ? activeCategory.label
+                  : quickFilter
+                    ? "Matching vendors"
+                    : "All restaurants & stores"
+              }
             />
-          ) : (
-            <div className="mt-3 grid gap-x-4 gap-y-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredVendors.map((v: any) => (
-                <UberVendorCard key={v.id} v={v} symbol={symbol} />
-              ))}
-            </div>
-          )}
-        </section>
+            {vendorsLoading ? (
+              <div className="mt-3 grid gap-x-4 gap-y-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="aspect-[16/10] rounded-2xl bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : filteredVendors.length === 0 ? (
+              <EmptyState
+                title="No vendors match"
+                hint={`Clear the filters, or check back soon as Naija Eats expands in ${country === "NG" ? "Nigeria" : "the UK"}.`}
+              />
+            ) : (
+              <div className="mt-3 grid gap-x-4 gap-y-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredVendors.map((v: any) => (
+                  <UberVendorCard key={v.id} v={v} symbol={symbol} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </CustomerShell>
   );

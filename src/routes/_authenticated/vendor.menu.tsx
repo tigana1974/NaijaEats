@@ -204,6 +204,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
     description: item?.description ?? "",
     price: Number(item?.price ?? 0),
     category_id: item?.category_id ?? "",
+    food_type_id: item?.food_type_id ?? "",
     image_url: item?.image_url ?? "",
     is_available: item?.is_available ?? true,
     spice_level: item?.spice_level ?? "",
@@ -214,8 +215,31 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const symbol = vendor.currency === "GBP" ? "£" : "₦";
+
+  const { data: globalFoodTypes } = useQuery({
+    queryKey: ["global_food_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("global_food_types").select("*").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handleAddCustomFoodType = async () => {
+    const name = prompt("Enter new food type (e.g. Pasta, Shawarma):");
+    if (!name?.trim()) return;
+    const { data, error } = await supabase.from("global_food_types").insert({ name: name.trim() }).select().single();
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Added " + name);
+    qc.invalidateQueries({ queryKey: ["global_food_types"] });
+    setForm((f) => ({ ...f, food_type_id: data.id }));
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -264,6 +288,7 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
         description: form.description || null,
         price: form.price,
         category_id: form.category_id || null,
+        food_type_id: form.food_type_id || null,
         image_url: form.image_url || null,
         is_available: form.is_available,
         ...(isGrocery ? { unit: form.unit || null, stock: form.stock } : {}),
@@ -337,9 +362,20 @@ function ItemModal({ vendor, categories, item, onClose, onSaved }: { vendor: any
               <input required type="number" min={0} step="0.01" placeholder="0" value={form.price === 0 ? "" : form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="vinput !pl-8" />
             </div>
             <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="vinput">
-              <option value="">No category</option>
+              <option value="">No Menu Section</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="flex gap-2">
+              <select value={form.food_type_id} onChange={(e) => setForm({ ...form, food_type_id: e.target.value })} className="vinput flex-1">
+                <option value="">Select Global Food Type</option>
+                {globalFoodTypes?.map((ft) => <option key={ft.id} value={ft.id}>{ft.emoji ? `${ft.emoji} ` : ""}{ft.name}</option>)}
+              </select>
+              <button type="button" onClick={handleAddCustomFoodType} className="shrink-0 px-3 py-2 bg-muted rounded-xl text-xs font-bold hover:bg-muted/80 transition">
+                + Custom
+              </button>
+            </div>
           </div>
           {/* Type-specific fields */}
           {isGrocery && (
