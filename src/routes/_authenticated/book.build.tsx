@@ -368,8 +368,8 @@ function GoalCard({
         <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-bold text-foreground truncate">{label}</div>
-        <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+        <div className="text-sm font-bold text-black truncate">{label}</div>
+        <div className="text-[11px] text-black/60 truncate">{desc}</div>
       </div>
       {active && (
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[var(--brand-clay)] text-white">

@@ -383,7 +383,7 @@ function MealPlannerSection() {
         <div className="mt-6 flex items-center justify-between gap-3">
           <button
             onClick={() => setWeekOffset((v) => v - 1)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 hover:bg-zinc-50 transition"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 hover:bg-zinc-50 transition text-zinc-900"
             aria-label="Previous week"
           >
             <ChevronRight className="h-4 w-4 rotate-180" />
@@ -394,7 +394,7 @@ function MealPlannerSection() {
           </div>
           <button
             onClick={() => setWeekOffset((v) => v + 1)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 hover:bg-zinc-50 transition"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 hover:bg-zinc-50 transition text-zinc-900"
             aria-label="Next week"
           >
             <ChevronRight className="h-4 w-4" />
@@ -432,7 +432,7 @@ function MealPlannerSection() {
                         className={`flex h-12 w-12 sm:h-14 sm:w-14 flex-col items-center justify-center rounded-2xl font-display font-extrabold leading-none shrink-0 ${
                           isToday
                             ? "bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/30"
-                            : "bg-zinc-100 text-zinc-700"
+                            : "bg-zinc-100 text-black/80"
                         }`}
                       >
                         <span className="text-[9px] uppercase tracking-widest opacity-80 mb-0.5">
@@ -441,7 +441,7 @@ function MealPlannerSection() {
                         <span className="text-lg">{date.getDate()}</span>
                       </div>
                       <div className="min-w-0">
-                        <h2 className="text-base sm:text-lg font-extrabold text-zinc-900 tracking-tight flex items-center gap-2 flex-wrap">
+                        <h2 className="text-base sm:text-lg font-extrabold text-black tracking-tight flex items-center gap-2 flex-wrap">
                           <span className="truncate">{DAY_FULL[idx]}</span>
                           {isToday && (
                             <span className="inline-flex items-center rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-700">
@@ -454,7 +454,7 @@ function MealPlannerSection() {
                             </span>
                           )}
                         </h2>
-                        <p className="text-[11px] text-zinc-500 font-semibold mt-0.5">
+                        <p className="text-[11px] text-black/60 font-semibold mt-0.5">
                           {date.toLocaleDateString(undefined, { month: "long", day: "numeric" })}
                         </p>
                       </div>
@@ -463,8 +463,8 @@ function MealPlannerSection() {
                   </div>
 
                   {mealsForDay.length === 0 ? (
-                    <div className="mt-5 rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-center">
-                      <p className="text-xs text-muted-foreground font-semibold">
+                    <div className="mt-5 rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-4 text-center">
+                      <p className="text-xs text-zinc-500 font-semibold">
                         All meal windows for today have passed — book for tomorrow.
                       </p>
                     </div>
@@ -491,7 +491,7 @@ function MealPlannerSection() {
                     </div>
                   )}
                   {hiddenTodayMealCount > 0 && mealsForDay.length > 0 && (
-                    <p className="mt-3 text-[11px] text-muted-foreground font-semibold text-center">
+                    <p className="mt-3 text-[11px] text-zinc-500 font-semibold text-center">
                       {hiddenTodayMealCount} meal window{hiddenTodayMealCount > 1 ? "s" : ""} for today already closed
                     </p>
                   )}
@@ -686,12 +686,12 @@ function MealSlot({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-sm text-zinc-900">{meal.label}</span>
+            <span className="font-bold text-sm text-black">{meal.label}</span>
             <span className={`text-[9px] font-bold uppercase tracking-widest rounded-full px-1.5 py-0.5 ${meal.chipTone}`}>
               {meal.time}
             </span>
           </div>
-          <div className="text-[11px] text-zinc-500 mt-0.5 truncate">
+          <div className="text-[11px] text-black/60 mt-0.5 truncate">
             {hasItems ? `${items.length} item${items.length === 1 ? "" : "s"}` : meal.suggestion}
           </div>
         </div>
@@ -726,8 +726,8 @@ function MealSlot({
                 )}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-zinc-900 truncate">{it.name}</div>
-                <div className="text-[10px] text-zinc-500 truncate">
+                <div className="text-sm font-bold text-black truncate">{it.name}</div>
+                <div className="text-[10px] text-black/60 truncate">
                   {it.vendorName ? `${it.vendorName} · ` : ""}
                   <span className="tabular-nums">{symbol}{it.price.toLocaleString()}</span>
                 </div>
