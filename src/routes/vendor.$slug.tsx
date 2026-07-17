@@ -3,15 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   IoStar, IoTime, IoLocation, IoChevronBack, IoChatbubbleEllipses,
-  IoCartOutline, IoFlame, IoAdd, IoHeartOutline, IoShareOutline,
+  IoCartOutline, IoFlame, IoAdd, IoHeart, IoHeartOutline, IoShareOutline,
   IoLeafOutline, IoSearch,
 } from "react-icons/io5";
 import {
   PiCheckCircleDuotone, PiMedalDuotone, PiCookingPotDuotone,
   PiStorefrontDuotone, PiTruckDuotone, PiSealCheckDuotone,
 } from "react-icons/pi";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
+import { isFavorite, toggleFavorite } from "@/lib/favorites";
 
 export const Route = createFileRoute("/vendor/$slug")({
   head: ({ params }) => ({
@@ -116,31 +118,55 @@ function VendorSkeleton() {
   );
 }
 
-function TopIconButton({ to, ariaLabel, children, tone = "glass" }: { to?: string; ariaLabel: string; children: React.ReactNode; tone?: "glass" | "light" }) {
+function TopIconButton({ to, ariaLabel, onClick, children, tone = "glass" }: { to?: string; ariaLabel: string; onClick?: () => void; children: React.ReactNode; tone?: "glass" | "light" }) {
   const base =
     tone === "glass"
       ? "bg-black/25 backdrop-blur-md text-white hover:bg-black/40 ring-1 ring-white/15"
       : "bg-white/95 text-zinc-800 hover:bg-white shadow-sm ring-1 ring-black/5";
   const Cmp: any = to ? Link : "button";
   return (
-    <Cmp to={to} aria-label={ariaLabel} className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition ${base}`}>
+    <Cmp to={to} onClick={onClick} aria-label={ariaLabel} className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition ${base}`}>
       {children}
     </Cmp>
   );
 }
 
-function TopBar({ backTo, itemCount, tone = "glass" }: { backTo: string; itemCount: number; tone?: "glass" | "light" }) {
+function TopBar({ backTo, itemCount, vendor, tone = "glass" }: { backTo: string; itemCount: number; vendor?: any; tone?: "glass" | "light" }) {
+  const [saved, setSaved] = useState(() => (vendor ? isFavorite(vendor.id) : false));
+
+  const share = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const title = vendor?.name ? `${vendor.name} on Naija Eats` : "Naija Eats";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard");
+      }
+    } catch {
+      /* user dismissed the share sheet */
+    }
+  };
+
+  const save = () => {
+    if (!vendor) return;
+    const nowSaved = toggleFavorite(vendor.id);
+    setSaved(nowSaved);
+    toast.success(nowSaved ? `${vendor.name} saved to your favourites` : `${vendor.name} removed from favourites`);
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4 flex items-center justify-between">
       <TopIconButton to={backTo} ariaLabel="Back" tone={tone}>
         <IoChevronBack className="h-6 w-6" />
       </TopIconButton>
       <div className="flex items-center gap-2">
-        <TopIconButton ariaLabel="Share" tone={tone}>
+        <TopIconButton ariaLabel="Share" tone={tone} onClick={share}>
           <IoShareOutline className="h-5 w-5" />
         </TopIconButton>
-        <TopIconButton ariaLabel="Save" tone={tone}>
-          <IoHeartOutline className="h-5 w-5" />
+        <TopIconButton ariaLabel={saved ? "Remove from favourites" : "Save to favourites"} tone={tone} onClick={save}>
+          {saved ? <IoHeart className="h-5 w-5 text-[var(--brand-clay)]" /> : <IoHeartOutline className="h-5 w-5" />}
         </TopIconButton>
         <div className="relative">
           <TopIconButton to="/cart" ariaLabel="Cart" tone={tone}>
@@ -174,7 +200,7 @@ function RestaurantLayout({ vendor, grouped, cartIsForThisVendor, itemCount, sub
         <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_100%,rgba(0,0,0,0.7),transparent_65%)]" />
 
         <div className="absolute top-0 inset-x-0 z-20">
-          <TopBar backTo="/discover" itemCount={itemCount} />
+          <TopBar backTo="/discover" itemCount={itemCount} vendor={vendor} />
         </div>
 
         {/* Vendor Identity - Floating */}
@@ -244,6 +270,20 @@ function RestaurantLayout({ vendor, grouped, cartIsForThisVendor, itemCount, sub
 /* ────────────────────────  GROCERY  ──────────────────────── */
 
 function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, subtotal, fmt }: any) {
+  const [productQuery, setProductQuery] = useState("");
+  const pq = productQuery.trim().toLowerCase();
+  // Filter every category's products by the store search box.
+  const visibleGroups = pq
+    ? grouped
+        .map(({ category, items }: any) => ({
+          category,
+          items: items.filter((i: any) =>
+            [i.name, i.description].filter(Boolean).some((s: string) => s.toLowerCase().includes(pq)),
+          ),
+        }))
+        .filter(({ items }: any) => items.length > 0)
+    : grouped;
+
   return (
     <div className="min-h-dvh bg-[oklch(0.985_0.005_150)] pb-32">
       {/* Fresh green hero */}
@@ -253,7 +293,7 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
         <div className="pointer-events-none absolute inset-0 opacity-20 mix-blend-overlay bg-[radial-gradient(2px_2px_at_20%_30%,white,transparent_50%),radial-gradient(2px_2px_at_80%_60%,white,transparent_50%),radial-gradient(2px_2px_at_40%_80%,white,transparent_50%)]" />
 
         <div className="relative">
-          <TopBar backTo="/groceries" itemCount={itemCount} />
+          <TopBar backTo="/groceries" itemCount={itemCount} vendor={vendor} />
         </div>
 
         <div className="relative mx-auto max-w-5xl px-4 sm:px-6 mt-4">
@@ -282,6 +322,8 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
           <div className="mt-6 relative">
             <IoSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
             <input
+              value={productQuery}
+              onChange={(e) => setProductQuery(e.target.value)}
               placeholder="Search yam, rice, palm oil…"
               className="w-full h-13 rounded-2xl bg-white text-zinc-900 pl-11 pr-4 py-3.5 text-sm placeholder:text-zinc-400 shadow-xl outline-none focus:ring-2 focus:ring-lime-400"
             />
@@ -302,7 +344,7 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
       {/* Category chips */}
       <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-8">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {grouped.map(({ category }: any, i: number) => (
+          {visibleGroups.map(({ category }: any, i: number) => (
             <a
               key={category.id}
               href={`#category-${category.id}`}
@@ -322,7 +364,12 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
         </div>
       </div>
 
-      <GroceryMenuSection grouped={grouped} vendor={vendor} />
+      {pq && visibleGroups.length === 0 && (
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-10 text-center text-sm text-zinc-500">
+          Nothing matches "{productQuery}" in this store.
+        </div>
+      )}
+      <GroceryMenuSection grouped={visibleGroups} vendor={vendor} />
       <CartBar cartIsForThisVendor={cartIsForThisVendor} itemCount={itemCount} subtotal={subtotal} fmt={fmt} tone="green" />
     </div>
   );
@@ -345,7 +392,7 @@ function ChefProfileLayout({ vendor, grouped, cartIsForThisVendor, itemCount, su
         </div>
 
         <div className="relative z-10">
-          <TopBar backTo="/discover" itemCount={itemCount} />
+          <TopBar backTo="/discover" itemCount={itemCount} vendor={vendor} />
         </div>
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 pt-24 sm:pt-32">
@@ -540,14 +587,9 @@ function MenuSection({ grouped, vendor }: any) {
                   {items.map((item: any) => (
                     <HorizontalFoodCard
                       key={item.id}
-                      vendorSlug={vendor.slug}
-                      itemId={item.id}
-                      name={item.name}
-                      imageUrl={item.image_url}
+                      vendor={vendor}
+                      item={item}
                       priceLabel={fmtPrice(item.price)}
-                      description={item.description}
-                      badge={item.is_featured ? "Top" : undefined}
-                      isAvailable={item.is_available}
                     />
                   ))}
                 </div>
@@ -568,7 +610,7 @@ function MenuSection({ grouped, vendor }: any) {
                 ? (newItems.length > 0 ? newItems : newFallback)
                 : trendingItems
             }
-            vendorSlug={vendor.slug}
+            vendor={vendor}
             fmtPrice={fmtPrice}
             emptyMsg={
               tab === "new"
@@ -598,12 +640,9 @@ function GroceryMenuSection({ grouped, vendor }: any) {
               {items.map((item: any) => (
                 <GroceryCard
                   key={item.id}
-                  vendorSlug={vendor.slug}
-                  itemId={item.id}
-                  name={item.name}
-                  imageUrl={item.image_url}
+                  vendor={vendor}
+                  item={item}
                   priceLabel={`${vendor.currency === "GBP" ? "£" : "₦"}${Number(item.price).toLocaleString()}`}
-                  isAvailable={item.is_available}
                 />
               ))}
             </div>
@@ -625,7 +664,7 @@ function FilteredList({
   title: string;
   subtitle: string;
   items: any[];
-  vendorSlug: string;
+  vendor: any;
   fmtPrice: (n: number) => string;
   emptyMsg: string;
 }) {
@@ -651,14 +690,9 @@ function FilteredList({
           {items.map((item: any) => (
             <HorizontalFoodCard
               key={item.id}
-              vendorSlug={vendorSlug}
-              itemId={item.id}
-              name={item.name}
-              imageUrl={item.image_url}
+              vendor={vendor}
+              item={item}
               priceLabel={fmtPrice(item.price)}
-              description={item.description}
-              badge={item.is_featured ? "Top" : undefined}
-              isAvailable={item.is_available}
             />
           ))}
         </div>
@@ -696,7 +730,28 @@ function CartBar({ cartIsForThisVendor, itemCount, subtotal, fmt, tone = "clay" 
   );
 }
 
-function HorizontalFoodCard({ vendorSlug, itemId, name, imageUrl, priceLabel, description, badge, isAvailable }: any) {
+function HorizontalFoodCard({ vendor, item, priceLabel }: any) {
+  const { addItem } = useCart();
+  const isAvailable = item.is_available;
+  const badge = item.is_featured ? "Top" : undefined;
+
+  const quickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(
+      {
+        id: vendor.id,
+        name: vendor.name,
+        slug: vendor.slug,
+        currency: vendor.currency,
+        deliveryFee: Number(vendor.delivery_fee || 0),
+        minOrder: Number(vendor.min_order || 0),
+      },
+      { menuItemId: item.id, name: item.name, price: Number(item.price), imageUrl: item.image_url },
+    );
+    toast.success(`${item.name} added to basket`);
+  };
+
   const content = (
     <div
       className={`relative flex gap-5 p-4 rounded-[1.75rem] bg-white shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.04] transition-all duration-500 group ${
@@ -713,10 +768,10 @@ function HorizontalFoodCard({ vendorSlug, itemId, name, imageUrl, priceLabel, de
           </span>
         )}
         <h4 className="font-bold text-zinc-900 text-[17px] leading-tight line-clamp-2 tracking-tight group-hover:text-[var(--brand-clay)] transition-colors duration-300">
-          {name}
+          {item.name}
         </h4>
-        {description && (
-          <p className="mt-2 text-sm text-zinc-500 line-clamp-2 flex-1 leading-relaxed">{description}</p>
+        {item.description && (
+          <p className="mt-2 text-sm text-zinc-500 line-clamp-2 flex-1 leading-relaxed">{item.description}</p>
         )}
         <div className="mt-3.5 flex flex-wrap items-center gap-2 justify-between">
           <div className="font-display font-extrabold text-lg text-zinc-900 tracking-tight">{priceLabel}</div>
@@ -728,32 +783,58 @@ function HorizontalFoodCard({ vendorSlug, itemId, name, imageUrl, priceLabel, de
         </div>
       </div>
       <div className="relative h-[128px] w-[128px] shrink-0 rounded-2xl overflow-hidden bg-zinc-100 shadow-[0_6px_18px_-6px_rgba(0,0,0,0.15)] ring-1 ring-black/[0.05]">
-        {imageUrl ? (
+        {item.image_url ? (
           <img
-            src={imageUrl}
-            alt={name}
+            src={item.image_url}
+            alt={item.name}
             className={`h-full w-full object-cover transition-transform duration-700 ease-out ${isAvailable ? "group-hover:scale-110" : ""}`}
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-orange-100 via-amber-50 to-rose-100" />
         )}
         {isAvailable && (
-          <div className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg shadow-black/15 text-[var(--brand-clay)] scale-90 group-hover:scale-100 transition-all duration-300">
+          <button
+            aria-label={`Add ${item.name} to basket`}
+            onClick={quickAdd}
+            className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg shadow-black/15 text-[var(--brand-clay)] scale-90 group-hover:scale-100 active:scale-90 transition-all duration-300"
+          >
             <IoAdd className="h-5 w-5" strokeWidth={3} />
-          </div>
+          </button>
         )}
       </div>
     </div>
   );
   if (!isAvailable) return content;
   return (
-    <Link to="/vendor/$slug/item/$itemId" params={{ slug: vendorSlug, itemId }} className="block">
+    <Link to="/vendor/$slug/item/$itemId" params={{ slug: vendor.slug, itemId: item.id }} className="block">
       {content}
     </Link>
   );
 }
 
-function GroceryCard({ vendorSlug, itemId, name, imageUrl, priceLabel, isAvailable }: any) {
+function GroceryCard({ vendor, item, priceLabel }: any) {
+  const { addItem } = useCart();
+  const isAvailable = item.is_available;
+
+  // + adds straight to the basket; tapping anywhere else on the card opens
+  // the product details page.
+  const quickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(
+      {
+        id: vendor.id,
+        name: vendor.name,
+        slug: vendor.slug,
+        currency: vendor.currency,
+        deliveryFee: Number(vendor.delivery_fee || 0),
+        minOrder: Number(vendor.min_order || 0),
+      },
+      { menuItemId: item.id, name: item.name, price: Number(item.price), imageUrl: item.image_url },
+    );
+    toast.success(`${item.name} added to basket`);
+  };
+
   const content = (
     <div
       className={`group relative rounded-2xl bg-white ring-1 ring-black/[0.04] shadow-[0_2px_10px_-2px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-300 ${
@@ -761,8 +842,8 @@ function GroceryCard({ vendorSlug, itemId, name, imageUrl, priceLabel, isAvailab
       }`}
     >
       <div className="relative aspect-square bg-emerald-50 overflow-hidden">
-        {imageUrl ? (
-          <img src={imageUrl} alt={name} className={`h-full w-full object-cover transition-transform duration-500 ${isAvailable ? "group-hover:scale-110" : ""}`} />
+        {item.image_url ? (
+          <img src={item.image_url} alt={item.name} className={`h-full w-full object-cover transition-transform duration-500 ${isAvailable ? "group-hover:scale-110" : ""}`} />
         ) : (
           <div className="h-full w-full grid place-items-center text-emerald-300">
             <IoLeafOutline className="h-10 w-10" />
@@ -770,8 +851,9 @@ function GroceryCard({ vendorSlug, itemId, name, imageUrl, priceLabel, isAvailab
         )}
         {isAvailable && (
           <button
-            aria-label="Add"
-            className="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-700 transition"
+            aria-label={`Add ${item.name} to basket`}
+            onClick={quickAdd}
+            className="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-500/40 hover:bg-emerald-700 active:scale-90 transition"
           >
             <IoAdd className="h-5 w-5" strokeWidth={3} />
           </button>
@@ -783,7 +865,7 @@ function GroceryCard({ vendorSlug, itemId, name, imageUrl, priceLabel, isAvailab
         )}
       </div>
       <div className="p-3">
-        <h4 className="text-sm font-bold text-zinc-900 leading-tight line-clamp-2">{name}</h4>
+        <h4 className="text-sm font-bold text-zinc-900 leading-tight line-clamp-2">{item.name}</h4>
         <div className="mt-2 flex items-center gap-1.5">
           <span className="font-display text-base font-extrabold text-zinc-900">{priceLabel}</span>
         </div>
@@ -792,7 +874,7 @@ function GroceryCard({ vendorSlug, itemId, name, imageUrl, priceLabel, isAvailab
   );
   if (!isAvailable) return content;
   return (
-    <Link to="/vendor/$slug/item/$itemId" params={{ slug: vendorSlug, itemId }} className="block">
+    <Link to="/vendor/$slug/item/$itemId" params={{ slug: vendor.slug, itemId: item.id }} className="block">
       {content}
     </Link>
   );
