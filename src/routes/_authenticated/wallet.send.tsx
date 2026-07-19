@@ -19,7 +19,6 @@ import { PiWalletDuotone, PiUserCircleDuotone, PiPaperPlaneTiltDuotone, PiLightn
 import { AtSign } from "lucide-react";
 import { toast } from "sonner";
 import {
-  addWalletTxn,
   loadWallet,
   loadContacts,
   upsertContact,
@@ -114,13 +113,9 @@ function SendPage() {
           senderUsername: myUsername,
         });
       } else {
-        // Legacy local-only contact — debit-only, no counterparty exists.
-        addWalletTxn({
-          type: "send",
-          title: `Sent to ${recipient.name}`,
-          note: note || undefined,
-          amount: -amount,
-        });
+        // Local-only contact — there is no Naija Eats account to credit.
+        toast.error(`${recipient.name} isn't on Naija Eats yet — search their @username to send money.`);
+        return;
       }
       setStep("success");
     } catch (e: any) {

@@ -49,6 +49,7 @@ import { Route as AuthenticatedRiderEarningsRouteImport } from './routes/_authen
 import { Route as AuthenticatedRiderDocumentsRouteImport } from './routes/_authenticated/rider.documents'
 import { Route as AuthenticatedRiderDashboardRouteImport } from './routes/_authenticated/rider.dashboard'
 import { Route as AuthenticatedRiderAvailableRouteImport } from './routes/_authenticated/rider.available'
+import { Route as AuthenticatedPayCodeRouteImport } from './routes/_authenticated/pay.$code'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedChatsVendorIdRouteImport } from './routes/_authenticated/chats.$vendorId'
 import { Route as AuthenticatedBookBuildRouteImport } from './routes/_authenticated/book.build'
@@ -308,6 +309,11 @@ const AuthenticatedRiderAvailableRoute =
     path: '/rider/available',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPayCodeRoute = AuthenticatedPayCodeRouteImport.update({
+  id: '/pay/$code',
+  path: '/pay/$code',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOrdersOrderIdRoute =
   AuthenticatedOrdersOrderIdRouteImport.update({
     id: '/$orderId',
@@ -608,6 +614,7 @@ export interface FileRoutesByFullPath {
   '/book/build': typeof AuthenticatedBookBuildRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/pay/$code': typeof AuthenticatedPayCodeRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
   '/rider/dashboard': typeof AuthenticatedRiderDashboardRoute
   '/rider/documents': typeof AuthenticatedRiderDocumentsRoute
@@ -690,6 +697,7 @@ export interface FileRoutesByTo {
   '/book/build': typeof AuthenticatedBookBuildRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/pay/$code': typeof AuthenticatedPayCodeRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
   '/rider/dashboard': typeof AuthenticatedRiderDashboardRoute
   '/rider/documents': typeof AuthenticatedRiderDocumentsRoute
@@ -774,6 +782,7 @@ export interface FileRoutesById {
   '/_authenticated/book/build': typeof AuthenticatedBookBuildRoute
   '/_authenticated/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/_authenticated/pay/$code': typeof AuthenticatedPayCodeRoute
   '/_authenticated/rider/available': typeof AuthenticatedRiderAvailableRoute
   '/_authenticated/rider/dashboard': typeof AuthenticatedRiderDashboardRoute
   '/_authenticated/rider/documents': typeof AuthenticatedRiderDocumentsRoute
@@ -858,6 +867,7 @@ export interface FileRouteTypes {
     | '/book/build'
     | '/chats/$vendorId'
     | '/orders/$orderId'
+    | '/pay/$code'
     | '/rider/available'
     | '/rider/dashboard'
     | '/rider/documents'
@@ -940,6 +950,7 @@ export interface FileRouteTypes {
     | '/book/build'
     | '/chats/$vendorId'
     | '/orders/$orderId'
+    | '/pay/$code'
     | '/rider/available'
     | '/rider/dashboard'
     | '/rider/documents'
@@ -1023,6 +1034,7 @@ export interface FileRouteTypes {
     | '/_authenticated/book/build'
     | '/_authenticated/chats/$vendorId'
     | '/_authenticated/orders/$orderId'
+    | '/_authenticated/pay/$code'
     | '/_authenticated/rider/available'
     | '/_authenticated/rider/dashboard'
     | '/_authenticated/rider/documents'
@@ -1337,6 +1349,13 @@ declare module '@tanstack/react-router' {
       path: '/rider/available'
       fullPath: '/rider/available'
       preLoaderRoute: typeof AuthenticatedRiderAvailableRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pay/$code': {
+      id: '/_authenticated/pay/$code'
+      path: '/pay/$code'
+      fullPath: '/pay/$code'
+      preLoaderRoute: typeof AuthenticatedPayCodeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/orders/$orderId': {
@@ -1704,6 +1723,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminWebshopRoute: typeof AuthenticatedAdminWebshopRoute
   AuthenticatedChatsVendorIdRoute: typeof AuthenticatedChatsVendorIdRoute
+  AuthenticatedPayCodeRoute: typeof AuthenticatedPayCodeRoute
   AuthenticatedRiderAvailableRoute: typeof AuthenticatedRiderAvailableRoute
   AuthenticatedRiderDashboardRoute: typeof AuthenticatedRiderDashboardRoute
   AuthenticatedRiderDocumentsRoute: typeof AuthenticatedRiderDocumentsRoute
@@ -1780,6 +1800,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminWebshopRoute: AuthenticatedAdminWebshopRoute,
   AuthenticatedChatsVendorIdRoute: AuthenticatedChatsVendorIdRoute,
+  AuthenticatedPayCodeRoute: AuthenticatedPayCodeRoute,
   AuthenticatedRiderAvailableRoute: AuthenticatedRiderAvailableRoute,
   AuthenticatedRiderDashboardRoute: AuthenticatedRiderDashboardRoute,
   AuthenticatedRiderDocumentsRoute: AuthenticatedRiderDocumentsRoute,

@@ -120,3 +120,100 @@ export const initiatePayment = createServerFn({ method: "POST" })
 
     throw new Error(`No payment provider configured for currency ${order.currency}`);
   });
+
+// Wallet top-up: same provider checkout flow as orders, but the webhook
+// credits the user's wallet (see creditWalletTopup) instead of an order.
+// The wallet is only ever credited by the webhook after signature
+// verification — never by the redirect back to the app.
+export const initiateWalletTopup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      amount: z.number().positive().max(10_000_000),
+      currency: z.enum(["NGN", "GBP"]),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId, claims } = context;
+    const config = getPaymentConfig();
+    const email = typeof claims?.email === "string" ? claims.email : undefined;
+
+    if (data.currency === "NGN") {
+      if (!config.paystackSecretKey) {
+        throw new Error("Card top-ups are not enabled yet (Paystack is not configured on this server)");
+      }
+      if (!email) throw new Error("Your account has no email on file — required to pay via Paystack");
+
+      const res = await fetch("https://api.paystack.co/transaction/initialize", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.paystackSecretKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          amount: Math.round(data.amount * 100), // kobo
+          currency: "NGN",
+          callback_url: `${config.appUrl}/wallet?topup=pending`,
+          metadata: { wallet_topup: true, user_id: userId },
+        }),
+      });
+      const json = (await res.json()) as {
+        status: boolean;
+        message?: string;
+        data?: { authorization_url: string; reference: string };
+      };
+      if (!res.ok || !json.status || !json.data) {
+        throw new Error(json.message ?? "Paystack could not initialize this top-up");
+      }
+
+      const { error: insertError } = await (supabaseAdmin as any).from("wallet_topups").insert({
+        user_id: userId,
+        provider: "paystack",
+        provider_reference: json.data.reference,
+        amount: data.amount,
+        currency: "NGN",
+        status: "pending",
+      });
+      if (insertError) throw new Error(insertError.message);
+
+      return { checkoutUrl: json.data.authorization_url };
+    }
+
+    if (!config.stripeSecretKey) {
+      throw new Error("Card top-ups are not enabled yet (Stripe is not configured on this server)");
+    }
+
+    const stripe = new Stripe(config.stripeSecretKey);
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      customer_email: email,
+      line_items: [
+        {
+          price_data: {
+            currency: "gbp",
+            product_data: { name: "Naija Eats wallet top-up" },
+            unit_amount: Math.round(data.amount * 100), // pence
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${config.appUrl}/wallet?topup=pending`,
+      cancel_url: `${config.appUrl}/wallet/top-up?topup=cancelled`,
+      metadata: { wallet_topup: "true", user_id: userId },
+    });
+    if (!session.url) throw new Error("Stripe did not return a checkout URL");
+
+    const { error: insertError } = await (supabaseAdmin as any).from("wallet_topups").insert({
+      user_id: userId,
+      provider: "stripe",
+      provider_reference: session.id,
+      amount: data.amount,
+      currency: "GBP",
+      status: "pending",
+    });
+    if (insertError) throw new Error(insertError.message);
+
+    return { checkoutUrl: session.url };
+  });

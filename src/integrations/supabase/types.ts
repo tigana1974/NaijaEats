@@ -1055,11 +1055,14 @@ export type Database = {
           country: Database["public"]["Enums"]["country_code"]
           created_at: string
           currency: string
+          customer_plan: string
+          customer_plan_expires_at: string | null
           default_city: string | null
           email: string | null
           full_name: string | null
           id: string
           phone: string | null
+          referral_code: string | null
           updated_at: string
           username: string | null
           vendor_plan: string
@@ -1069,11 +1072,14 @@ export type Database = {
           country?: Database["public"]["Enums"]["country_code"]
           created_at?: string
           currency?: string
+          customer_plan?: string
+          customer_plan_expires_at?: string | null
           default_city?: string | null
           email?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
+          referral_code?: string | null
           updated_at?: string
           username?: string | null
           vendor_plan?: string
@@ -1083,11 +1089,14 @@ export type Database = {
           country?: Database["public"]["Enums"]["country_code"]
           created_at?: string
           currency?: string
+          customer_plan?: string
+          customer_plan_expires_at?: string | null
           default_city?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
           updated_at?: string
           username?: string | null
           vendor_plan?: string
@@ -1144,6 +1153,54 @@ export type Database = {
           usage_limit?: number | null
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          referred_id: string
+          referrer_id: string
+          reward_amount: number
+          rewarded_at: string | null
+          status: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number
+          rewarded_at?: string | null
+          status?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number
+          rewarded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -1335,6 +1392,39 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -1748,6 +1838,171 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_accounts: {
+        Row: {
+          balance: number
+          currency: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          currency?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          currency?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_requests: {
+        Row: {
+          amount: number
+          code: string
+          created_at: string
+          from_label: string | null
+          id: string
+          paid_at: string | null
+          payer_id: string | null
+          reason: string
+          requester_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          code: string
+          created_at?: string
+          from_label?: string | null
+          id?: string
+          paid_at?: string | null
+          payer_id?: string | null
+          reason?: string
+          requester_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          code?: string
+          created_at?: string
+          from_label?: string | null
+          id?: string
+          paid_at?: string | null
+          payer_id?: string | null
+          reason?: string
+          requester_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_requests_payer_id_fkey"
+            columns: ["payer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_topups: {
+        Row: {
+          amount: number
+          created_at: string
+          credited_at: string | null
+          currency: string
+          id: string
+          provider: string
+          provider_reference: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credited_at?: string | null
+          currency: string
+          id?: string
+          provider: string
+          provider_reference: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credited_at?: string | null
+          currency?: string
+          id?: string
+          provider?: string
+          provider_reference?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_topups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_transfers: {
         Row: {
           amount: number
@@ -1789,6 +2044,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_referral_code: { Args: { p_code: string }; Returns: undefined }
+      cancel_premium: { Args: never; Returns: undefined }
       create_admin_access_code: {
         Args: {
           p_country: Database["public"]["Enums"]["country_code"]
@@ -1835,6 +2092,10 @@ export type Database = {
         Returns: undefined
       }
       mark_order_paid: { Args: { p_order_id: string }; Returns: undefined }
+      purchase_premium: {
+        Args: { p_cadence: string; p_region: string }
+        Returns: undefined
+      }
       redeem_admin_code: {
         Args: {
           p_code: string
@@ -1845,6 +2106,54 @@ export type Database = {
       set_admin_code_active: {
         Args: { p_active: boolean; p_id: string }
         Returns: undefined
+      }
+      wallet_charge: {
+        Args: { p_amount: number; p_note?: string; p_title: string }
+        Returns: number
+      }
+      wallet_ensure: { Args: { p_user: string }; Returns: undefined }
+      wallet_get: { Args: never; Returns: Json }
+      wallet_move: {
+        Args: {
+          p_amount: number
+          p_note?: string
+          p_title: string
+          p_type: string
+          p_user: string
+        }
+        Returns: number
+      }
+      wallet_pay_order: { Args: { p_order_id: string }; Returns: number }
+      wallet_request_create: {
+        Args: { p_amount: number; p_from?: string; p_reason?: string }
+        Returns: {
+          amount: number
+          code: string
+          created_at: string
+          from_label: string | null
+          id: string
+          paid_at: string | null
+          payer_id: string | null
+          reason: string
+          requester_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "wallet_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      wallet_request_lookup: { Args: { p_code: string }; Returns: Json }
+      wallet_request_mark: {
+        Args: { p_id: string; p_status: string }
+        Returns: undefined
+      }
+      wallet_request_pay: { Args: { p_code: string }; Returns: number }
+      wallet_send: {
+        Args: { p_amount: number; p_note?: string; p_recipient: string }
+        Returns: number
       }
     }
     Enums: {

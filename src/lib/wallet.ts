@@ -1,23 +1,31 @@
 /**
- * Local wallet ledger. Balance, transactions, contacts, and outgoing money
- * requests persist in localStorage so the wallet flows behave as one coherent
- * product while the Paystack/Stripe backend integration is pending. Swap the
- * storage layer for Supabase tables when payments go live.
+ * Server-backed wallet. The balance and ledger live in Supabase
+ * (`wallet_accounts` / `wallet_ledger`) and only move through SECURITY
+ * DEFINER RPCs — the client can never fabricate money.
  *
- * User-to-user transfers ARE backed by Supabase (`wallet_transfers`) so a send
- * from user A actually credits user B. See `sendToUser` and `claimIncoming`.
+ * Pages read a cached snapshot synchronously via `loadWallet()`; the cache
+ * refreshes itself in the background and dispatches WALLET_EVENT when new
+ * data lands, so existing listeners re-render automatically.
  */
 
 import { supabase } from "@/integrations/supabase/client";
 
-export type WalletTxnType = "topup" | "bonus" | "send" | "request" | "order" | "referral";
+export type WalletTxnType =
+  | "topup"
+  | "bonus"
+  | "send"
+  | "receive"
+  | "request"
+  | "order"
+  | "referral"
+  | "premium";
 
 export type WalletTxn = {
   id: string;
   type: WalletTxnType;
   title: string;
   note?: string;
-  /** Positive = credit, negative = debit (in NGN). */
+  /** Positive = credit, negative = debit. */
   amount: number;
   createdAt: string;
 };
@@ -46,6 +54,10 @@ export type MoneyRequest = {
   paidAt?: string;
 };
 
+export const WALLET_EVENT = "naijaeats-wallet-changed";
+export const CONTACTS_EVENT = "naijaeats-contacts-changed";
+export const REQUESTS_EVENT = "naijaeats-requests-changed";
+
 function getCurrentUserId() {
   if (typeof window === "undefined") return "guest";
   for (let i = 0; i < localStorage.length; i++) {
@@ -60,66 +72,149 @@ function getCurrentUserId() {
   return "guest";
 }
 
-const getWalletKey = () => `naijaeats.wallet.v1.${getCurrentUserId()}`;
-const getContactsKey = () => `naijaeats.wallet.contacts.v1.${getCurrentUserId()}`;
-const getRequestsKey = () => `naijaeats.wallet.requests.v1.${getCurrentUserId()}`;
+/* ─────────── Wallet snapshot cache ─────────── */
 
-export const WALLET_EVENT = "naijaeats-wallet-changed";
-export const CONTACTS_EVENT = "naijaeats-contacts-changed";
-export const REQUESTS_EVENT = "naijaeats-requests-changed";
+let cache: WalletState = { balance: 0, txns: [] };
+let lastFetch = 0;
+let fetching = false;
 
-/* ─────────── Wallet ledger ─────────── */
+function mapLedgerRow(r: any): WalletTxn {
+  return {
+    id: r.id,
+    type: (r.type as WalletTxnType) ?? "order",
+    title: r.title,
+    note: r.note ?? undefined,
+    amount: Number(r.amount),
+    createdAt: r.created_at,
+  };
+}
 
-export function loadWallet(): WalletState {
-  if (typeof window === "undefined") return { balance: 0, txns: [] };
+/** Fetch the live balance + ledger and broadcast the change. */
+export async function refreshWallet(): Promise<WalletState> {
+  if (typeof window === "undefined") return cache;
+  fetching = true;
   try {
-    const raw = JSON.parse(localStorage.getItem(getWalletKey()) || "null");
-    if (raw && typeof raw.balance === "number" && Array.isArray(raw.txns)) {
-      return raw as WalletState;
-    }
+    const [{ data: acct, error: acctErr }, { data: ledger }] = await Promise.all([
+      (supabase as any).rpc("wallet_get"),
+      (supabase as any)
+        .from("wallet_ledger")
+        .select("id, type, title, note, amount, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
+    if (acctErr) throw acctErr;
+    cache = {
+      balance: Number(acct?.balance ?? 0),
+      txns: (ledger ?? []).map(mapLedgerRow),
+    };
+    lastFetch = Date.now();
+    window.dispatchEvent(new Event(WALLET_EVENT));
   } catch {
-    // corrupted storage — start fresh
+    // signed out, or migration not applied — keep the last snapshot
+  } finally {
+    fetching = false;
   }
-  return { balance: 0, txns: [] };
+  return cache;
 }
 
-export function addWalletTxn(txn: Omit<WalletTxn, "id" | "createdAt">): WalletState {
-  const w = loadWallet();
-  const t: WalletTxn = {
-    ...txn,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-  };
-  const next: WalletState = {
-    balance: Math.max(0, w.balance + t.amount),
-    txns: [t, ...w.txns].slice(0, 200),
-  };
-  localStorage.setItem(getWalletKey(), JSON.stringify(next));
-  window.dispatchEvent(new Event(WALLET_EVENT));
-  return next;
+/** Synchronous snapshot; kicks a background refresh when stale. */
+export function loadWallet(): WalletState {
+  if (typeof window !== "undefined" && !fetching && Date.now() - lastFetch > 5_000) {
+    void refreshWallet();
+  }
+  return cache;
 }
 
-/* ─────────── Contacts ─────────── */
+/* ─────────── Money movements (server RPCs) ─────────── */
 
-const SEED_CONTACTS: Contact[] = [
-  { id: "seed-1", name: "Tunde Adebayo", handle: "@tunde", initials: "TA", tone: "clay" },
-  { id: "seed-2", name: "Amaka Okafor", handle: "@amaka", initials: "AO", tone: "forest" },
-  { id: "seed-3", name: "Bola Kayode", handle: "@bola", initials: "BK", tone: "gold" },
-  { id: "seed-4", name: "Chinedu Eze", handle: "@chi", initials: "CE", tone: "clay" },
-  { id: "seed-5", name: "Ifeoma Nwosu", handle: "@ify", initials: "IN", tone: "ink" },
-  { id: "seed-6", name: "Kunle Bello", handle: "@kunle", initials: "KB", tone: "forest" },
-];
+/** Pay one of your own unpaid orders from the wallet. */
+export async function walletPayOrder(orderId: string): Promise<void> {
+  const { error } = await (supabase as any).rpc("wallet_pay_order", { p_order_id: orderId });
+  if (error) throw new Error(error.message);
+  await refreshWallet();
+}
+
+/** Debit the wallet for a platform purchase (meal plan, chef booking, …). */
+export async function walletCharge(amount: number, title: string, note?: string): Promise<void> {
+  const { error } = await (supabase as any).rpc("wallet_charge", {
+    p_amount: amount,
+    p_title: title,
+    p_note: note ?? null,
+  });
+  if (error) throw new Error(error.message);
+  await refreshWallet();
+}
+
+/** Send money to another Naija Eats user — atomic on the server. */
+export async function sendToUser(input: {
+  recipientId: string;
+  recipientLabel: string;
+  amount: number;
+  note?: string;
+  senderName?: string | null;
+  senderUsername?: string | null;
+}): Promise<void> {
+  if (input.amount <= 0) throw new Error("Amount must be greater than zero");
+  const { error } = await (supabase as any).rpc("wallet_send", {
+    p_recipient: input.recipientId,
+    p_amount: input.amount,
+    p_note: input.note?.trim() || null,
+  });
+  if (error) throw new Error(error.message);
+  await refreshWallet();
+}
+
+/* ─────────── Incoming money (compat layer) ─────────── */
+
+const seenKey = () => `naijaeats.wallet.seenAt.v2.${getCurrentUserId()}`;
+
+/**
+ * Transfers now settle instantly on the server, so there is nothing to
+ * "claim" — this refreshes the snapshot and reports how many inbound credits
+ * arrived since the last check (so callers can toast about new money).
+ */
+export async function claimIncomingTransfers(): Promise<number> {
+  const prev = Number(localStorage.getItem(seenKey()) ?? 0);
+  const state = await refreshWallet();
+  const inbound = state.txns.filter(
+    (t) =>
+      t.amount > 0 &&
+      (t.type === "receive" || t.type === "request" || t.type === "referral") &&
+      new Date(t.createdAt).getTime() > prev,
+  );
+  localStorage.setItem(seenKey(), String(Date.now()));
+  return prev === 0 ? 0 : inbound.length;
+}
+
+/** Realtime: fire the callback whenever a new ledger row lands for anyone
+ *  visible to this client (RLS limits that to the signed-in user). */
+export function subscribeIncomingTransfers(onEvent: () => void): () => void {
+  const channel = supabase
+    .channel("wallet-ledger-inbox")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "wallet_ledger" },
+      () => onEvent(),
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/* ─────────── Contacts (local address book) ─────────── */
+
+const getContactsKey = () => `naijaeats.wallet.contacts.v2.${getCurrentUserId()}`;
 
 export function loadContacts(): Contact[] {
-  if (typeof window === "undefined") return SEED_CONTACTS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = JSON.parse(localStorage.getItem(getContactsKey()) || "null");
     if (Array.isArray(raw)) return raw as Contact[];
   } catch {
     // ignore
   }
-  localStorage.setItem(getContactsKey(), JSON.stringify(SEED_CONTACTS));
-  return SEED_CONTACTS;
+  return [];
 }
 
 export function initialsOf(name: string): string {
@@ -139,9 +234,6 @@ export function upsertContact(input: {
 }): Contact {
   const list = loadContacts();
   const handle = input.handle?.trim() || "@" + input.name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 12);
-  // Prefer matching an existing contact by userId (most authoritative), then
-  // by handle, then by name — so bringing a Naija Eats user into an old
-  // local contact upgrades it in place rather than duplicating.
   const existing =
     (input.userId ? list.find((c) => c.userId === input.userId) : undefined) ??
     list.find(
@@ -154,7 +246,6 @@ export function upsertContact(input: {
     initials: initialsOf(input.name),
     tone: input.tone ?? (["clay", "forest", "gold", "ink"] as const)[Math.floor(Math.random() * 4)],
   };
-  // Keep the freshest info if we're upgrading a local-only contact.
   contact.name = input.name.trim() || contact.name;
   contact.handle = handle || contact.handle;
   if (input.userId) contact.userId = input.userId;
@@ -165,174 +256,98 @@ export function upsertContact(input: {
   return contact;
 }
 
-/* ─────────── Money requests ─────────── */
+/* ─────────── Money requests (server-backed) ─────────── */
+
+let requestsCache: MoneyRequest[] = [];
+let requestsLastFetch = 0;
+
+function mapRequestRow(r: any): MoneyRequest {
+  return {
+    id: r.id,
+    code: r.code,
+    amount: Number(r.amount),
+    reason: r.reason ?? "",
+    from: r.from_label ?? undefined,
+    // "settled" (marked received outside the app) renders as paid.
+    status: r.status === "settled" ? "paid" : (r.status as MoneyRequest["status"]),
+    createdAt: r.created_at,
+    paidAt: r.paid_at ?? undefined,
+  };
+}
+
+export async function refreshRequests(): Promise<MoneyRequest[]> {
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return requestsCache;
+    const { data, error } = await (supabase as any)
+      .from("wallet_requests")
+      .select("*")
+      .eq("requester_id", u.user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    requestsCache = (data ?? []).map(mapRequestRow);
+    requestsLastFetch = Date.now();
+    window.dispatchEvent(new Event(REQUESTS_EVENT));
+  } catch {
+    // signed out or table missing — keep snapshot
+  }
+  return requestsCache;
+}
 
 export function loadRequests(): MoneyRequest[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = JSON.parse(localStorage.getItem(getRequestsKey()) || "null");
-    if (Array.isArray(raw)) return raw as MoneyRequest[];
-  } catch {
-    // ignore
+  if (typeof window !== "undefined" && Date.now() - requestsLastFetch > 5_000) {
+    void refreshRequests();
   }
-  return [];
+  return requestsCache;
 }
 
-export function createRequest(input: { amount: number; reason: string; from?: string }): MoneyRequest {
-  const req: MoneyRequest = {
-    id: crypto.randomUUID(),
-    code: Math.random().toString(36).slice(2, 8).toUpperCase(),
-    amount: input.amount,
-    reason: input.reason,
-    from: input.from?.trim() || undefined,
-    status: "open",
-    createdAt: new Date().toISOString(),
-  };
-  const list = [req, ...loadRequests()].slice(0, 50);
-  localStorage.setItem(getRequestsKey(), JSON.stringify(list));
-  window.dispatchEvent(new Event(REQUESTS_EVENT));
-  return req;
+export async function createRequest(input: { amount: number; reason: string; from?: string }): Promise<MoneyRequest> {
+  const { data, error } = await (supabase as any).rpc("wallet_request_create", {
+    p_amount: input.amount,
+    p_reason: input.reason,
+    p_from: input.from ?? null,
+  });
+  if (error) throw new Error(error.message);
+  await refreshRequests();
+  return mapRequestRow(data);
 }
 
-export function markRequest(id: string, status: MoneyRequest["status"]): MoneyRequest | null {
-  const list = loadRequests();
-  const req = list.find((r) => r.id === id);
-  if (!req) return null;
-  req.status = status;
-  if (status === "paid") req.paidAt = new Date().toISOString();
-  localStorage.setItem(getRequestsKey(), JSON.stringify(list));
-  window.dispatchEvent(new Event(REQUESTS_EVENT));
-  if (status === "paid") {
-    addWalletTxn({
-      type: "request",
-      title: `Payment received${req.from ? ` from ${req.from}` : ""}`,
-      note: req.reason,
-      amount: req.amount,
-    });
-  }
-  return req;
+/**
+ * Requester bookkeeping. "cancelled" closes the request; "paid" marks it as
+ * settled outside the app — it does NOT credit the wallet (only a real payer
+ * using the code moves money).
+ */
+export async function markRequest(id: string, status: MoneyRequest["status"]): Promise<MoneyRequest | null> {
+  const serverStatus = status === "paid" ? "settled" : "cancelled";
+  const { error } = await (supabase as any).rpc("wallet_request_mark", { p_id: id, p_status: serverStatus });
+  if (error) throw new Error(error.message);
+  const list = await refreshRequests();
+  return list.find((r) => r.id === id) ?? null;
+}
+
+/** Look up someone's open request by code (to pay it). */
+export async function lookupRequest(code: string): Promise<{
+  id: string;
+  code: string;
+  amount: number;
+  reason: string;
+  status: string;
+  requester_name: string;
+}> {
+  const { data, error } = await (supabase as any).rpc("wallet_request_lookup", { p_code: code });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/** Pay someone's request by code — debits you, credits them, atomically. */
+export async function payRequestByCode(code: string): Promise<void> {
+  const { error } = await (supabase as any).rpc("wallet_request_pay", { p_code: code });
+  if (error) throw new Error(error.message);
+  await refreshWallet();
 }
 
 export function requestUrl(code: string): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://naijaeats.app";
   return `${origin}/pay/${code}`;
-}
-
-/* ─────────── User-to-user transfers (Supabase-backed) ─────────── */
-
-export type WalletTransferRow = {
-  id: string;
-  sender_id: string;
-  recipient_id: string;
-  amount: number;
-  note: string | null;
-  sender_name: string | null;
-  sender_username: string | null;
-  created_at: string;
-  claimed_at: string | null;
-};
-
-/**
- * Debit the local wallet AND persist a wallet_transfers row so the recipient
- * client can claim it. Returns the inserted row (or throws).
- */
-export async function sendToUser(input: {
-  recipientId: string;
-  recipientLabel: string;   // for the sender's local ledger
-  amount: number;
-  note?: string;
-  senderName?: string | null;
-  senderUsername?: string | null;
-}): Promise<WalletTransferRow> {
-  const { data: u } = await supabase.auth.getUser();
-  const senderId = u.user?.id;
-  if (!senderId) throw new Error("You must be signed in to send money");
-  if (input.amount <= 0) throw new Error("Amount must be greater than zero");
-  if (loadWallet().balance < input.amount) throw new Error("Not enough balance — top up first");
-
-  const { data, error } = await ((supabase as any).from("wallet_transfers") as any)
-    .insert({
-      sender_id: senderId,
-      recipient_id: input.recipientId,
-      amount: input.amount,
-      note: input.note?.trim() || null,
-      sender_name: input.senderName ?? null,
-      sender_username: input.senderUsername ?? null,
-    })
-    .select("*")
-    .single();
-
-  if (error) {
-    // Bubble up a friendly error; the DB constraint / RLS handles the rest
-    throw new Error(error.message || "Could not record transfer");
-  }
-
-  // Only debit locally once the server row is safely persisted.
-  addWalletTxn({
-    type: "send",
-    title: `Sent to ${input.recipientLabel}`,
-    note: input.note,
-    amount: -input.amount,
-  });
-
-  return data as WalletTransferRow;
-}
-
-/**
- * Pull any unclaimed transfers for the current user, credit them into the
- * local wallet, then mark them as claimed. Safe to call repeatedly.
- * Returns how many transfers were newly claimed.
- */
-export async function claimIncomingTransfers(): Promise<number> {
-  const { data: u } = await supabase.auth.getUser();
-  const me = u.user?.id;
-  if (!me) return 0;
-
-  const { data: pending, error } = await ((supabase as any).from("wallet_transfers") as any)
-    .select("id, amount, note, sender_name, sender_username, created_at")
-    .eq("recipient_id", me)
-    .is("claimed_at", null);
-
-  if (error || !pending || pending.length === 0) return 0;
-
-  for (const row of pending as WalletTransferRow[]) {
-    const label = row.sender_username
-      ? `@${row.sender_username}`
-      : row.sender_name || "a friend";
-    addWalletTxn({
-      type: "send", // credit on receiver side; positive amount
-      title: `Received from ${label}`,
-      note: row.note ?? undefined,
-      amount: Number(row.amount),
-    });
-  }
-
-  // Mark them all as claimed. If this update partially fails for one row,
-  // the next call will simply re-claim it — but addWalletTxn is idempotent
-  // per-row via UUID so the ledger stays consistent within reason.
-  const ids = pending.map((p: WalletTransferRow) => p.id);
-  await ((supabase as any).from("wallet_transfers") as any)
-    .update({ claimed_at: new Date().toISOString() })
-    .in("id", ids)
-    .is("claimed_at", null);
-
-  return pending.length;
-}
-
-/**
- * Subscribe to inbound wallet_transfers. Fires the callback when a new row
- * arrives so the wallet page can re-claim & re-render immediately.
- */
-export function subscribeIncomingTransfers(onEvent: () => void): () => void {
-  const channel = supabase
-    .channel("wallet-transfers-inbox")
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "wallet_transfers" },
-      () => onEvent(),
-    )
-    .subscribe();
-  return () => {
-    supabase.removeChannel(channel);
-  };
 }

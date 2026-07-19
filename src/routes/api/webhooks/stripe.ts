@@ -3,6 +3,7 @@ import Stripe from "stripe";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getPaymentConfig } from "@/lib/payments.config.server";
+import { creditWalletTopup } from "@/lib/api/wallet-topup.server";
 
 // Stripe POSTs every Checkout/PaymentIntent event here. As with the
 // Paystack webhook, this is the only place a payment is ever marked
@@ -37,6 +38,12 @@ export const Route = createFileRoute("/api/webhooks/stripe")({
         if (event.type === "checkout.session.completed") {
           const session = event.data.object as Stripe.Checkout.Session;
           if (session.payment_status === "paid") {
+            // Wallet top-ups use the same provider flow but credit the wallet
+            // instead of an order.
+            if (await creditWalletTopup("stripe", session.id)) {
+              return new Response("OK", { status: 200 });
+            }
+
             const { data: payment, error: findError } = await supabaseAdmin
               .from("payments")
               .select("id, order_id, status")

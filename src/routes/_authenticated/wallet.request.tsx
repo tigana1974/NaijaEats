@@ -67,16 +67,20 @@ function RequestPage() {
   const canGenerate = amount >= 100;
   const openCount = history.filter((r) => r.status === "open").length;
 
-  const generate = () => {
+  const generate = async () => {
     if (!canGenerate) return toast.error("Minimum request is ₦100");
-    const req = createRequest({
-      amount,
-      reason: reason.trim() || "Payment request",
-      from: from.trim() || undefined,
-    });
-    setRequest(req);
-    setStep("share");
-    toast.success("Request link ready");
+    try {
+      const req = await createRequest({
+        amount,
+        reason: reason.trim() || "Payment request",
+        from: from.trim() || undefined,
+      });
+      setRequest(req);
+      setStep("share");
+      toast.success("Request link ready");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not create the request");
+    }
   };
 
   const goBack = () => {
@@ -128,8 +132,8 @@ function RequestPage() {
               history={history}
               tab={tab}
               setTab={setTab}
-              onMarkPaid={(id) => markRequest(id, "paid")}
-              onCancel={(id) => markRequest(id, "cancelled")}
+              onMarkPaid={(id) => void markRequest(id, "paid").catch((e) => toast.error(e.message))}
+              onCancel={(id) => void markRequest(id, "cancelled").catch((e) => toast.error(e.message))}
             />
           ) : request ? (
             <ShareStep request={request} onDone={() => navigate({ to: "/wallet" })} />

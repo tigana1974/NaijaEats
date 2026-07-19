@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Trash2, ShoppingCart, MapPin, StickyNote, Store, ShieldCheck, CreditCard, TicketPercent, Check, CalendarClock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, type Cart } from "@/hooks/useCart";
-import { loadWallet, addWalletTxn } from "@/lib/wallet";
+import { loadWallet, walletPayOrder } from "@/lib/wallet";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { QuantityStepper } from "@/components/naija/customer-ui";
 import { toast } from "sonner";
@@ -187,15 +187,10 @@ function CartPage() {
       // Clear the local cart now that everything is placed on the server.
       for (const c of vendorCarts) clearVendorCart(c.vendorId);
 
-      // Deduct from wallet and mark all orders as paid
-      addWalletTxn({
-        type: "order",
-        title: orderIds.length === 1 ? `Order Payment` : `Multiple Orders Payment`,
-        amount: -grandTotal,
-      });
-
+      // Pay each order from the server-side wallet — the RPC atomically
+      // debits the balance and marks the order paid.
       for (const orderId of orderIds) {
-        await supabase.rpc("mark_order_paid", { p_order_id: orderId });
+        await walletPayOrder(orderId);
       }
 
       toast.success(`${orderIds.length} order${orderIds.length > 1 ? 's' : ''} paid from wallet`);

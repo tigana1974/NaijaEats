@@ -246,7 +246,7 @@ function WalletPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="font-display text-xl font-semibold tracking-tight">Activity</h2>
-              <p className="text-sm text-muted-foreground">Every naira in and out, kept private on this device.</p>
+              <p className="text-sm text-muted-foreground">Every naira in and out, synced securely across your devices.</p>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -338,9 +338,11 @@ const TXN_META: Record<
   topup: { Icon: PiHandCoinsDuotone, tone: "bg-[oklch(0.95_0.04_145)] text-[oklch(0.42_0.14_145)]" },
   bonus: { Icon: Sparkles, tone: "bg-[oklch(0.96_0.05_90)] text-[oklch(0.62_0.13_75)]" },
   send: { Icon: ArrowUpRight, tone: "bg-[oklch(0.96_0.03_25)] text-[var(--brand-clay)]" },
+  receive: { Icon: ArrowDownLeft, tone: "bg-[oklch(0.95_0.04_145)] text-[oklch(0.42_0.14_145)]" },
   request: { Icon: ArrowDownLeft, tone: "bg-[oklch(0.95_0.03_250)] text-[oklch(0.55_0.15_250)]" },
   order: { Icon: PiForkKnifeDuotone, tone: "bg-[oklch(0.96_0.03_25)] text-[var(--brand-clay)]" },
   referral: { Icon: PiUsersThreeDuotone, tone: "bg-[oklch(0.96_0.05_90)] text-[oklch(0.62_0.13_75)]" },
+  premium: { Icon: Sparkles, tone: "bg-[oklch(0.96_0.03_25)] text-[var(--brand-clay)]" },
 };
 
 function TxnRow({ txn }: { txn: WalletTxn }) {

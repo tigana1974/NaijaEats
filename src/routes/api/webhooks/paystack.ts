@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getPaymentConfig } from "@/lib/payments.config.server";
+import { creditWalletTopup } from "@/lib/api/wallet-topup.server";
 
 // Paystack POSTs every transaction event here. We only trust this endpoint
 // to mark a payment "success" if the request carries a valid HMAC-SHA512
@@ -42,6 +43,12 @@ export const Route = createFileRoute("/api/webhooks/paystack")({
 
         if (event.event === "charge.success" && event.data?.reference) {
           const reference = event.data.reference;
+
+          // Wallet top-ups use the same provider flow but credit the wallet
+          // instead of an order.
+          if (await creditWalletTopup("paystack", reference)) {
+            return new Response("OK", { status: 200 });
+          }
 
           const { data: payment, error: findError } = await supabaseAdmin
             .from("payments")

@@ -12,7 +12,7 @@ import {
   PiCurrencyNgnDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
-import { loadWallet, addWalletTxn } from "@/lib/wallet";
+import { loadWallet, sendToUser, walletCharge } from "@/lib/wallet";
 import { useDrawerOpen } from "@/hooks/useDrawerOpen";
 
 const PAID_KEY = "naijaeats.paidInvoices.v1";
@@ -281,14 +281,29 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
         toast.error("Insufficient wallet balance — top up first");
         return;
       }
-      // Small perceived delay for the "processing" state
-      await new Promise((r) => setTimeout(r, 700));
-      addWalletTxn({
-        amount: -amount,
-        type: "order",
-        title: `Paid ${otherName ?? "vendor"}`,
-        note: `Invoice INV-${msgId.slice(0, 8)}`,
-      });
+
+      // Resolve the counterparty so the money actually reaches them: the
+      // vendor's owner account (or the customer, when a vendor is paying).
+      const { data: convo } = await supabase
+        .from("conversations")
+        .select("customer_id, vendors(owner_id)")
+        .eq("id", conversationId)
+        .maybeSingle();
+      const counterparty = isVendor
+        ? (convo as any)?.customer_id
+        : (convo as any)?.vendors?.owner_id;
+
+      if (counterparty && counterparty !== meId) {
+        await sendToUser({
+          recipientId: counterparty,
+          recipientLabel: otherName ?? "vendor",
+          amount,
+          note: `Invoice INV-${msgId.slice(0, 8)}`,
+        });
+      } else {
+        // No linked account to credit — still debit honestly as a platform charge.
+        await walletCharge(amount, `Paid ${otherName ?? "vendor"}`, `Invoice INV-${msgId.slice(0, 8)}`);
+      }
       markPaid(msgId);
       setPaidInvoices((prev) => new Set(prev).add(msgId));
       // Also send a follow-up "receipt" message so the vendor sees payment confirmation

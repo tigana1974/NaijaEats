@@ -31,7 +31,8 @@ import {
 import { toast } from "sonner";
 import {
   loadCustomerPlan,
-  setCustomerPlan,
+  purchasePremium,
+  cancelPremium,
   detectRegion,
   PLAN_EVENT,
   type CustomerPlan,
@@ -250,12 +251,29 @@ function SubscriptionPage() {
 
   const confirmChoice = async (plan: CustomerPlan) => {
     setProcessing(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setCustomerPlan(plan);
-    setProcessing(false);
-    setConfirmPlan(null);
-    toast.success(plan === "basic" ? "Switched to Basic" : `Welcome to ${PLANS.find((p) => p.key === plan)?.name}!`);
-    if (plan !== "basic") navigate({ to: "/discover" });
+    try {
+      if (plan === "basic") {
+        await cancelPremium();
+        toast.success("Switched to Basic");
+      } else {
+        // Charged from the wallet; the RPC enforces the real price server-side.
+        await purchasePremium(billing, region);
+        toast.success(`Welcome to ${PLANS.find((p) => p.key === plan)?.name}! Paid from your wallet.`);
+      }
+      setCurrent(loadCustomerPlan());
+      setConfirmPlan(null);
+      if (plan !== "basic") navigate({ to: "/discover" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not update your membership";
+      if (/insufficient/i.test(msg)) {
+        toast.error("Not enough wallet balance — top up first, then subscribe.");
+        navigate({ to: "/wallet/top-up" });
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (

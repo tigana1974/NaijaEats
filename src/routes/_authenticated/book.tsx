@@ -18,7 +18,7 @@ import {
   PiChefHatDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
-import { loadWallet, addWalletTxn } from "@/lib/wallet";
+import { loadWallet, walletCharge } from "@/lib/wallet";
 import { useCountry } from "@/hooks/useCountry";
 import { useDrawerOpen } from "@/hooks/useDrawerOpen";
 
@@ -290,12 +290,7 @@ function MealPlannerSection() {
         toast.error("Insufficient wallet balance");
         return;
       }
-      addWalletTxn({
-        amount: -totalPrice,
-        type: "order",
-        title: "Weekly Meal Plan",
-        note: `Paid for ${totalPlanned} meals`,
-      });
+      await walletCharge(totalPrice, "Weekly Meal Plan", `Paid for ${totalPlanned} meals`);
       toast.success("Payment successful! Your meals are booked.");
       setPlan({});
       setConfirming(false);

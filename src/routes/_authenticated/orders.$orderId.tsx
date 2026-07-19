@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, CreditCard, ChevronDown, ChevronUp, Bike, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { loadWallet, addWalletTxn } from "@/lib/wallet";
+import { loadWallet, walletPayOrder } from "@/lib/wallet";
 import { OrderStatusTracker, statusHeadlineFor } from "@/components/naija/OrderTracking";
 import { LiveOrderMap } from "@/components/naija/LiveOrderMap";
 import { toast } from "sonner";
@@ -61,14 +61,7 @@ function OrderDetailPage() {
 
     setPaying(true);
     try {
-      addWalletTxn({
-        type: "order",
-        title: "Order Payment",
-        amount: -data.total,
-      });
-
-      const { error } = await supabase.rpc("mark_order_paid", { p_order_id: orderId });
-      if (error) throw error;
+      await walletPayOrder(orderId);
 
       toast.success("Paid successfully from wallet");
       qc.invalidateQueries({ queryKey: ["order-detail", orderId] });

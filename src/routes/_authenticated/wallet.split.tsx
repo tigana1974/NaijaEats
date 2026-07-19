@@ -70,20 +70,25 @@ function SplitBillPage() {
     setNewFriend("");
   };
 
-  const sendSplit = () => {
+  const sendSplit = async () => {
     if (total <= 0) return void toast.error("Enter the bill amount first");
     if (friendCount === 0) return void toast.error("Pick at least one friend to split with");
     const chosen = contacts.filter((c) => selected.has(c.id));
-    const results = chosen.map((contact) => ({
-      contact,
-      request: createRequest({
-        amount: perHead,
-        reason: `${reason.trim() || "Food bill"} — your share (1 of ${headCount})`,
-        from: contact.name,
-      }),
-    }));
-    setSent(results);
-    toast.success(`Sent ${results.length} payment request${results.length > 1 ? "s" : ""}`);
+    try {
+      const results = [];
+      for (const contact of chosen) {
+        const request = await createRequest({
+          amount: perHead,
+          reason: `${reason.trim() || "Food bill"} — your share (1 of ${headCount})`,
+          from: contact.name,
+        });
+        results.push({ contact, request });
+      }
+      setSent(results);
+      toast.success(`Created ${results.length} payment request${results.length > 1 ? "s" : ""}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not create the requests");
+    }
   };
 
   const shareLink = async (contact: Contact, request: MoneyRequest) => {
