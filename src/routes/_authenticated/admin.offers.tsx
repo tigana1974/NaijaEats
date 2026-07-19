@@ -17,6 +17,7 @@ import {
 } from "@/components/admin/AdminUI";
 import { Tag, Plus, CheckCircle2, XCircle, Percent, Gift } from "lucide-react";
 import { toast } from "sonner";
+import { exportCsv } from "@/lib/csv";
 import {
   Sheet,
   SheetContent,
@@ -65,12 +66,21 @@ function AdminOffers() {
 
   const createMutation = useMutation({
     mutationFn: async (formData: any) => {
-      // Simulate API call since we don't have a specific insert format confirmed
-      await new Promise(r => setTimeout(r, 1000));
-      console.log("Created offer:", formData);
+      const discountType = formData.discount_type === "fixed" ? "fixed_amount" : formData.discount_type;
+      // promotions is not in the generated types yet
+      const { error } = await (supabase as any).from("promotions").insert({
+        code: String(formData.code).trim().toUpperCase(),
+        description: formData.description || null,
+        discount_type: discountType,
+        discount_value: Number(formData.discount_value),
+        usage_limit: formData.usage_limit ? Number(formData.usage_limit) : null,
+        ends_at: formData.expires_at ? new Date(`${formData.expires_at}T23:59:59`).toISOString() : null,
+        is_active: true,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Offer created successfully");
+      toast.success("Offer created and live");
       setIsCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: ["admin-promotions-full"] });
     },
@@ -81,13 +91,19 @@ function AdminOffers() {
 
   const list = data ?? [];
 
+  const [statusFilter, setStatusFilter] = useState("");
+
   const filtered = useMemo(() => {
-    if (!search) return list;
-    const s = search.toLowerCase();
-    return list.filter((p: any) =>
-      [p.code, p.description].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s)),
-    );
-  }, [list, search]);
+    return list.filter((p: any) => {
+      if (statusFilter === "active" && !p.is_active) return false;
+      if (statusFilter === "inactive" && p.is_active) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![p.code, p.description].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [list, search, statusFilter]);
 
   const kpis = useMemo(() => {
     const active = list.filter((p: any) => p.is_active);
@@ -122,8 +138,29 @@ function AdminOffers() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "Status" }, { label: "Type" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: "active", label: "Active" },
+                  { value: "inactive", label: "Inactive" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`promotions_${new Date().toISOString().slice(0, 10)}.csv`, filtered as any[], {
+                Code: "code",
+                Description: (r: any) => r.description ?? "",
+                Type: (r: any) => r.discount_type ?? "",
+                Value: "discount_value",
+                "Usage limit": (r: any) => r.usage_limit ?? "",
+                "Times used": (r: any) => r.times_used ?? 0,
+                Active: (r: any) => (r.is_active ? "yes" : "no"),
+                Ends: (r: any) => r.ends_at ?? "",
+              })
+            }
           />
 
           <UberTable>

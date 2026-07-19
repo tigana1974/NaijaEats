@@ -17,6 +17,7 @@ import {
 import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { REQUIRED_RIDER_DOCS } from "@/hooks/useRiderStatus";
+import { exportCsv } from "@/lib/csv";
 import { useAdminRegion } from "@/hooks/useAdminScope";
 import {
   Dialog,
@@ -39,12 +40,22 @@ function AdminRiders() {
 
   const inviteMutation = useMutation({
     mutationFn: async (formData: any) => {
-      // Simulate API/edge function call to invite rider
-      await new Promise(r => setTimeout(r, 1000));
-      console.log("Invited rider:", formData);
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase.from("user_invites" as any).insert({
+        email: String(formData.email).trim().toLowerCase(),
+        role: "rider",
+        invited_by: u.user?.id,
+      });
+      if (error) throw error;
+      return String(formData.email).trim().toLowerCase();
     },
-    onSuccess: () => {
-      toast.success("Rider invited successfully");
+    onSuccess: (email) => {
+      const signupUrl = `${window.location.origin}/auth`;
+      navigator.clipboard?.writeText(signupUrl).catch(() => {});
+      toast.success(
+        `Invite recorded — when ${email} signs up they join as a rider. Signup link copied to clipboard.`,
+        { duration: 6000 },
+      );
       setIsInviteOpen(false);
     },
     onError: (err: any) => {
@@ -105,13 +116,18 @@ function AdminRiders() {
   const awaitingCount = [...verificationByRider.values()].filter((v) => v === "pending").length;
   const activeCount = list.filter((r: any) => data?.activeRiderIds?.has(r.id)).length;
 
+  const [verificationFilter, setVerificationFilter] = useState("");
+
   const filtered = useMemo(() => {
-    if (!search) return list;
-    const s = search.toLowerCase();
-    return list.filter((r: any) =>
-      [r.full_name, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
-    );
-  }, [list, search]);
+    return list.filter((r: any) => {
+      if (verificationFilter && verificationByRider.get(r.id) !== verificationFilter) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![r.full_name, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [list, search, verificationFilter, verificationByRider]);
 
   return (
     <AdminShell>
@@ -137,8 +153,28 @@ function AdminRiders() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "City" }, { label: "Vehicle" }, { label: "Status" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "Verification",
+                value: verificationFilter,
+                onChange: setVerificationFilter,
+                options: [
+                  { value: "verified", label: "Verified" },
+                  { value: "pending", label: "Pending review" },
+                  { value: "incomplete", label: "Incomplete" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`riders_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                ID: "id",
+                Name: (r: any) => r.full_name ?? "",
+                Phone: (r: any) => r.phone ?? "",
+                Country: (r: any) => r.country ?? "",
+                Verification: (r: any) => verificationByRider.get(r.id) ?? "",
+                Joined: (r: any) => r.created_at ?? "",
+              })
+            }
           />
 
           <UberTable>

@@ -18,6 +18,7 @@ import {
 } from "@/components/admin/AdminUI";
 import { Building2, ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Landmark } from "lucide-react";
 import { toast } from "sonner";
+import { exportCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/admin/banking")({
   component: AdminBanking,
@@ -62,13 +63,20 @@ function AdminBanking() {
 
   const list = data ?? [];
 
+  const [statusFilter, setStatusFilter] = useState("");
+  const [userTypeFilter, setUserTypeFilter] = useState("");
+
   const filtered = useMemo(() => {
-    if (!search) return list;
-    const s = search.toLowerCase();
-    return list.filter((b: any) =>
-      [b.account_name, b.account_number, b.bank_name, (b.profiles as any)?.full_name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s)),
-    );
-  }, [list, search]);
+    return list.filter((b: any) => {
+      if (statusFilter && b.status !== statusFilter) return false;
+      if (userTypeFilter && b.user_type !== userTypeFilter) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![b.account_name, b.account_number, b.bank_name, (b.profiles as any)?.full_name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [list, search, statusFilter, userTypeFilter]);
 
   const kpis = useMemo(() => {
     return {
@@ -99,8 +107,38 @@ function AdminBanking() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "User Type" }, { label: "Status" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "User type",
+                value: userTypeFilter,
+                onChange: setUserTypeFilter,
+                options: [
+                  { value: "vendor", label: "Vendors" },
+                  { value: "rider", label: "Riders" },
+                ],
+              },
+              {
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: "pending", label: "Awaiting review" },
+                  { value: "verified", label: "Verified" },
+                  { value: "rejected", label: "Rejected" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`bank_accounts_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                "Account name": "account_name",
+                "Account number": "account_number",
+                Bank: "bank_name",
+                "User type": (r: any) => r.user_type ?? "",
+                Owner: (r: any) => (r.profiles as any)?.full_name ?? "",
+                Status: "status",
+                Added: (r: any) => r.created_at ?? "",
+              })
+            }
           />
 
           <UberTable>

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { recordDeviceSession } from "@/lib/device";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -10,5 +12,14 @@ export const Route = createFileRoute("/_authenticated")({
     }
     return { user: data.user };
   },
-  component: () => <Outlet />,
+  component: AuthenticatedLayout,
 });
+
+function AuthenticatedLayout() {
+  // Track this browser as an active device session (also enforces admin
+  // revocation — a revoked device is signed out on next load).
+  useEffect(() => {
+    void recordDeviceSession();
+  }, []);
+  return <Outlet />;
+}

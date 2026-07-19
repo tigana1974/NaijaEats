@@ -28,6 +28,7 @@ import {
   uberBtn,
 } from "@/components/admin/AdminUI";
 import { Plus, MoreHorizontal, CheckCircle, Ban, XCircle } from "lucide-react";
+import { exportCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/admin/stores")({
   component: AdminStores,
@@ -46,12 +47,46 @@ function AdminStores() {
 
   const createMutation = useMutation({
     mutationFn: async (formData: any) => {
-      // Simulate API call. Will push to vendors table on real setup
-      await new Promise(r => setTimeout(r, 1000));
-      console.log("Onboarded vendor:", formData);
+      const vendorCountry = (formData.country as "NG" | "UK") || "NG";
+      const slug =
+        String(formData.name)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "")
+          .slice(0, 40) + `-${Math.random().toString(36).slice(2, 6)}`;
+
+      const { error } = await supabase.from("vendors").insert({
+        name: formData.name,
+        type: formData.type,
+        city: formData.city,
+        country: vendorCountry,
+        currency: vendorCountry === "UK" ? "GBP" : "NGN",
+        slug,
+        status: "pending",
+        description: [formData.phone && `Contact: ${formData.phone}`, formData.owner_email && `Owner: ${formData.owner_email}`]
+          .filter(Boolean)
+          .join(" · ") || null,
+      } as any);
+      if (error) throw error;
+
+      // Invite the owner so they get the vendor role when they sign up.
+      if (formData.owner_email) {
+        const { data: u } = await supabase.auth.getUser();
+        await supabase
+          .from("user_invites" as any)
+          .insert({
+            email: String(formData.owner_email).trim().toLowerCase(),
+            role: "vendor",
+            invited_by: u.user?.id,
+          })
+          .then(({ error: invErr }) => {
+            // Duplicate invite is fine — don't fail vendor creation over it.
+            if (invErr && !`${invErr.message}`.includes("duplicate")) console.warn(invErr.message);
+          });
+      }
     },
     onSuccess: () => {
-      toast.success("Vendor onboarded successfully (Pending Verification)");
+      toast.success("Vendor created (pending verification). The owner gets vendor access when they sign up with the invited email.");
       setIsOnboardOpen(false);
       qc.invalidateQueries({ queryKey: ["admin-stores-full"] });
     },
@@ -102,13 +137,16 @@ function AdminStores() {
     return c;
   }, [list]);
 
+  const [statusFilter, setStatusFilter] = useState("");
+
   const filtered = useMemo(() => {
     return list.filter((v: any) => {
       if (tab !== "all" && v.type !== tab) return false;
+      if (statusFilter && v.status !== statusFilter) return false;
       if (search && !JSON.stringify(v).toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [list, tab, search]);
+  }, [list, tab, search, statusFilter]);
 
   const stats = useMemo(
     () => ({
@@ -155,8 +193,29 @@ function AdminStores() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "City" }, { label: "Country" }, { label: "Status" }, { label: "Rating" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: "approved", label: "Approved" },
+                  { value: "pending", label: "Pending" },
+                  { value: "suspended", label: "Suspended" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`stores_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                ID: "id",
+                Name: "name",
+                Type: "type",
+                Status: "status",
+                City: (r: any) => r.city ?? "",
+                Country: (r: any) => r.country ?? "",
+                Onboarded: (r: any) => r.created_at ?? "",
+              })
+            }
           />
 
           <UberTable>
@@ -292,9 +351,18 @@ function AdminStores() {
               <input required type="email" name="owner_email" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="owner@example.com" />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">City</label>
-              <input required name="city" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. Lagos" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">City</label>
+                <input required name="city" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" placeholder="e.g. Lagos" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Country</label>
+                <select name="country" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                  <option value="NG">Nigeria (₦)</option>
+                  <option value="UK">United Kingdom (£)</option>
+                </select>
+              </div>
             </div>
 
             <SheetFooter className="mt-8 pt-4 border-t">

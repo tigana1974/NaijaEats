@@ -251,13 +251,14 @@ function DiscoverPage() {
           country={country}
         />
 
-          {/* ─── 6 · Category / Items Grid ─── */}
+        {/* ─── 6 · Category / Items Grid ─── */}
+        <section className="mt-12">
           <RailHeader title={isFoodType ? `${activeCategory.label} near you` : "Popular near you"} />
           {itemsLoading ? (
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Skeleton className="h-[280px] w-full rounded-3xl" />
-              <Skeleton className="h-[280px] w-full rounded-3xl" />
-              <Skeleton className="h-[280px] w-full rounded-3xl" />
+              <div className="h-[280px] w-full rounded-3xl bg-muted animate-pulse" />
+              <div className="h-[280px] w-full rounded-3xl bg-muted animate-pulse" />
+              <div className="h-[280px] w-full rounded-3xl bg-muted animate-pulse" />
             </div>
           ) : filteredItems.length === 0 ? (
             <EmptyState
@@ -530,9 +531,18 @@ function RailHeader({ title }: { title: string }) {
   return <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">{title}</h2>;
 }
 
-function EmptyState({ title, hint }: { title: string; hint: string }) {
+function EmptyState({
+  title,
+  hint,
+  icon: Icon,
+}: {
+  title: string;
+  hint: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
   return (
     <div className="mt-3 rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center">
+      {Icon && <Icon className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />}
       <p className="font-bold text-foreground">{title}</p>
       <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{hint}</p>
     </div>

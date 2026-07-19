@@ -657,7 +657,7 @@ function FilteredList({
   title,
   subtitle,
   items,
-  vendorSlug,
+  vendor,
   fmtPrice,
   emptyMsg,
 }: {

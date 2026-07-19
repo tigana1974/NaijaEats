@@ -18,6 +18,7 @@ import {
 } from "@/components/admin/AdminUI";
 import { MessageSquare, Star, ThumbsDown, ShieldAlert, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { exportCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/admin/reviews")({
   component: AdminReviews,
@@ -64,14 +65,21 @@ function AdminReviews() {
   });
 
   const list = data ?? [];
+  const [statusFilter, setStatusFilter] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("");
 
   const filtered = useMemo(() => {
-    if (!search) return list;
-    const s = search.toLowerCase();
-    return list.filter((r: any) =>
-      [r.comment, (r.vendors as any)?.name, (r.profiles as any)?.full_name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s)),
-    );
-  }, [list, search]);
+    return list.filter((r: any) => {
+      if (statusFilter && r.status !== statusFilter) return false;
+      if (ratingFilter === "low" && r.rating > 2) return false;
+      if (ratingFilter === "high" && r.rating < 4) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![r.comment, (r.vendors as any)?.name, (r.profiles as any)?.full_name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [list, search, statusFilter, ratingFilter]);
 
   const kpis = useMemo(() => {
     return {
@@ -102,8 +110,37 @@ function AdminReviews() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "Rating" }, { label: "Status" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "Rating",
+                value: ratingFilter,
+                onChange: setRatingFilter,
+                options: [
+                  { value: "low", label: "Low (1–2 stars)" },
+                  { value: "high", label: "High (4–5 stars)" },
+                ],
+              },
+              {
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: "published", label: "Published" },
+                  { value: "flagged", label: "Flagged" },
+                  { value: "hidden", label: "Hidden" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`reviews_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                Vendor: (r: any) => (r.vendors as any)?.name ?? "",
+                Customer: (r: any) => (r.profiles as any)?.full_name ?? "",
+                Rating: "rating",
+                Comment: (r: any) => r.comment ?? "",
+                Status: "status",
+                Date: (r: any) => r.created_at ?? "",
+              })
+            }
           />
 
           <UberTable>

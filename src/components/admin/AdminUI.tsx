@@ -593,14 +593,6 @@ export function UberOpportunityCard({
           <Icon className="h-8 w-8" />
         </div>
       </div>
-      <div className="mt-4 flex items-center gap-6 border-t border-[oklch(0.94_0.003_260)] pt-3 text-[13px] text-neutral-500">
-        <button type="button" className="inline-flex items-center gap-1.5 hover:text-neutral-800">
-          <span className="text-base leading-none">👍</span> Helpful
-        </button>
-        <button type="button" className="inline-flex items-center gap-1.5 hover:text-neutral-800">
-          <span className="text-base leading-none">👎</span> Not helpful
-        </button>
-      </div>
     </div>
   );
 }
@@ -710,7 +702,16 @@ export function UberTabs<T extends string>({
   );
 }
 
-/** Uber-style search + filter chip bar. Cleaner than FilterBar which was too dense. */
+/** A functional filter definition: renders as a pill-shaped <select>.
+ *  Filters without options/onChange are ignored (no decorative chips). */
+export type UberFilter = {
+  label: string;
+  value?: string;
+  options?: { value: string; label: string }[];
+  onChange?: (value: string) => void;
+};
+
+/** Uber-style search + filter bar. Filter pills are real <select> controls. */
 export function UberFilterBar({
   search,
   onSearch,
@@ -720,10 +721,11 @@ export function UberFilterBar({
 }: {
   search?: string;
   onSearch?: (v: string) => void;
-  filters?: { label: string }[];
+  filters?: UberFilter[];
   extra?: ReactNode;
   onExport?: () => void;
 }) {
+  const activeFilters = (filters ?? []).filter((f) => f.options && f.onChange);
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <div className="relative min-w-[220px] flex-1">
@@ -735,15 +737,33 @@ export function UberFilterBar({
           className="h-9 w-full rounded-full border border-[oklch(0.92_0.003_260)] bg-white pl-9 pr-3 text-[13.5px] outline-none focus:border-[var(--naija-green)]"
         />
       </div>
-      {(filters ?? []).map((f, i) => (
-        <button
+      {activeFilters.map((f, i) => (
+        <label
           key={i}
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.92_0.003_260)] bg-white px-3.5 py-2 text-[13px] hover:bg-[oklch(0.965_0.003_260)]"
+          className={`relative inline-flex cursor-pointer items-center gap-1.5 rounded-full border bg-white px-3.5 py-2 text-[13px] hover:bg-[oklch(0.965_0.003_260)] ${
+            f.value ? "border-[oklch(0.18_0.006_260)] font-medium" : "border-[oklch(0.92_0.003_260)]"
+          }`}
         >
-          {f.label}
-          <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
-        </button>
+          <span className="pointer-events-none">
+            {f.value
+              ? f.options!.find((o) => o.value === f.value)?.label ?? f.label
+              : f.label}
+          </span>
+          <ChevronDown className="pointer-events-none h-3.5 w-3.5 text-neutral-400" />
+          <select
+            value={f.value ?? ""}
+            onChange={(e) => f.onChange!(e.target.value)}
+            className="absolute inset-0 cursor-pointer opacity-0"
+            aria-label={f.label}
+          >
+            <option value="">{`All — ${f.label}`}</option>
+            {f.options!.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
       ))}
       {extra}
       {onExport && (

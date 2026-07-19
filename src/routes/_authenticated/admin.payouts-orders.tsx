@@ -28,11 +28,9 @@ function AdminPayoutsByOrder() {
   const kpiCurrency = regionCurrency ?? "NGN";
   const [search, setSearch] = useState("");
 
-  const { data: orders, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-payouts-orders", region],
     queryFn: async () => {
-      // In a real app we would paginate this heavily.
-      // For the demo we fetch the most recent 100 delivered orders.
       let q = supabase
         .from("orders")
         .select(`
@@ -43,27 +41,49 @@ function AdminPayoutsByOrder() {
         .order('created_at', { ascending: false })
         .limit(100);
       if (regionCurrency) q = q.eq("currency", regionCurrency);
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
+
+      // Split rates come from live platform configuration, not hardcoded values.
+      const [ordersRes, settingsRes, deliveryRes] = await Promise.all([
+        q,
+        supabase.from("platform_settings").select("default_commission_pct").maybeSingle(),
+        supabase
+          .from("delivery_settings")
+          .select("country, rider_cut_percentage")
+          .then((r) => r),
+      ]);
+      if (ordersRes.error) throw ordersRes.error;
+
+      const commissionPct = Number(settingsRes.data?.default_commission_pct ?? 15);
+      const riderCuts = new Map(
+        (deliveryRes.data ?? []).map((d: any) => [d.country, Number(d.rider_cut_percentage ?? 80)]),
+      );
+      const riderCutPct =
+        (regionCurrency === "GBP" ? riderCuts.get("UK") : riderCuts.get("NG")) ??
+        [...riderCuts.values()][0] ??
+        80;
+
+      return { orders: ordersRes.data ?? [], commissionPct, riderCutPct };
     },
   });
 
+  const orders = data?.orders;
+  const commissionPct = data?.commissionPct ?? 15;
+  const riderCutPct = data?.riderCutPct ?? 80;
+
   const processedOrders = (orders || [])
-    .filter(o => 
-      o.id.toLowerCase().includes(search.toLowerCase()) || 
+    .filter(o =>
+      o.id.toLowerCase().includes(search.toLowerCase()) ||
       (o.vendors as any)?.name.toLowerCase().includes(search.toLowerCase())
     )
     .map(o => {
-      // Simulate backend financial splits for the UI
       const total = Number(o.total || 0);
       const delFee = Number(o.delivery_fee || 0);
-      const subtotal = total - delFee; // assuming total includes delivery for this calc
-      
-      const commission = subtotal * 0.15; // 15% platform take
+      const subtotal = total - delFee;
+
+      const commission = subtotal * (commissionPct / 100);
       const vendorNet = subtotal - commission;
-      const riderPayout = delFee * 0.8; // rider gets 80% of delivery fee
-      const platformNet = commission + (delFee * 0.2); // platform gets commission + 20% of delivery fee
+      const riderPayout = delFee * (riderCutPct / 100);
+      const platformNet = commission + delFee * (1 - riderCutPct / 100);
 
       return {
         ...o,
@@ -92,7 +112,7 @@ function AdminPayoutsByOrder() {
         <UberPageTitle
           eyebrow="Finance"
           title={`Order Reconciliation — ${countryLabel}`}
-          description="Per-order breakdown of commission, delivery fees, and platform earnings."
+          description={`Per-order breakdown using your configured rates: ${commissionPct}% commission, ${riderCutPct}% rider share of delivery fees.`}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-8">

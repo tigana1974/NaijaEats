@@ -54,15 +54,21 @@ function AdminDashboard() {
       let payoutsQ = supabase.from("payouts").select("id,status,amount,currency").eq("status", "requested");
       if (regionCurrency) payoutsQ = payoutsQ.eq("currency", regionCurrency);
 
-      const [vendorsRes, ordersRes, ridersRes, docsRes, payoutsRes] = await Promise.all([
+      const [vendorsRes, ordersRes, ridersRes, docsRes, payoutsRes, complaintsRes, noPhotoRes] = await Promise.all([
         vendorsQ,
         ordersQ,
         supabase.from("user_roles").select("user_id").eq("role", "rider"),
         docsQ,
         payoutsQ,
+        // Open complaints = customer reviews flagged for moderation.
+        (supabase as any).from("reviews").select("id", { count: "exact", head: true }).eq("status", "flagged"),
+        // Menu photo quality opportunity: dishes without an image.
+        supabase.from("menu_items").select("id", { count: "exact", head: true }).is("image_url", null),
       ]);
       const vendors = vendorsRes.data ?? [];
       const orders = ordersRes.data ?? [];
+      const openComplaints = complaintsRes.error ? 0 : (complaintsRes.count ?? 0);
+      const missingPhotoCount = noPhotoRes.error ? 0 : (noPhotoRes.count ?? 0);
 
       // Riders live in profiles; scope the count by home country.
       let riderCount = (ridersRes.data ?? []).length;
@@ -79,16 +85,8 @@ function AdminDashboard() {
       const isToday = (d: string) => new Date(d).toDateString() === now.toDateString();
       const ordersToday = orders.filter((o: any) => isToday(o.created_at));
       const salesToday = ordersToday.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-      const liveStatuses = new Set([
-        "new",
-        "awaiting_acceptance",
-        "accepted",
-        "preparing",
-        "ready_for_pickup",
-        "assigned",
-        "picked_up",
-        "on_the_way",
-      ]);
+      // Matches the order_status enum in the database.
+      const liveStatuses = new Set(["pending", "accepted", "preparing", "ready", "picked_up"]);
       const liveOrders = orders.filter((o: any) => liveStatuses.has(o.status));
       const currency = regionCurrency ?? ((ordersToday[0]?.currency as string) || "NGN");
       const pendingPayouts = (payoutsRes.data ?? []).reduce(
@@ -126,7 +124,8 @@ function AdminDashboard() {
         pendingDocs: (docsRes.data ?? []).length,
         pendingPayoutsCount: (payoutsRes.data ?? []).length,
         pendingPayoutsAmount: pendingPayouts,
-        openComplaints: 0,
+        openComplaints,
+        missingPhotoCount,
         completed,
         cancelled,
         tier,
@@ -245,15 +244,17 @@ function AdminDashboard() {
                   Icon={Tag}
                   iconColor="orange"
                 />
-                <UberOpportunityCard
-                  tag="Quality"
-                  title="Review menu photos with low quality scores"
-                  body="12 vendors have dishes without high-quality images. Improving photos can lift conversion by up to 8%."
-                  ctaLabel="Open menus"
-                  ctaHref="/admin/menu"
-                  Icon={UtensilsCrossed}
-                  iconColor="peach"
-                />
+                {(data?.missingPhotoCount ?? 0) > 0 && (
+                  <UberOpportunityCard
+                    tag="Quality"
+                    title="Review menu items without photos"
+                    body={`${data?.missingPhotoCount} menu item${data?.missingPhotoCount === 1 ? " is" : "s are"} listed without a photo. Items with photos convert significantly better.`}
+                    ctaLabel="Open menus"
+                    ctaHref="/admin/menu"
+                    Icon={UtensilsCrossed}
+                    iconColor="peach"
+                  />
+                )}
               </div>
             </div>
 

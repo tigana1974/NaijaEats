@@ -19,6 +19,7 @@ import {
 } from "@/components/admin/AdminUI";
 import { FileCheck2, FileText, ShieldCheck, AlertTriangle, Eye, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { exportCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/admin/documents")({
   component: AdminDocuments,
@@ -87,13 +88,20 @@ function AdminDocuments() {
 
   const list = data ?? [];
 
+  const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+
   const filtered = useMemo(() => {
-    if (!search) return list;
-    const s = search.toLowerCase();
-    return list.filter((d) =>
-      [d.user_name, d.doc_type, d.file_name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s)),
-    );
-  }, [list, search]);
+    return list.filter((d) => {
+      if (statusFilter && d.status !== statusFilter) return false;
+      if (typeFilter && d.user_type !== typeFilter) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![d.user_name, d.doc_type, d.file_name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [list, search, statusFilter, typeFilter]);
 
   const kpis = useMemo(() => {
     return {
@@ -134,8 +142,37 @@ function AdminDocuments() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "Type" }, { label: "Status" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "User type",
+                value: typeFilter,
+                onChange: setTypeFilter,
+                options: [
+                  { value: "vendor", label: "Vendors" },
+                  { value: "rider", label: "Riders" },
+                ],
+              },
+              {
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: "pending", label: "Awaiting review" },
+                  { value: "verified", label: "Verified" },
+                  { value: "rejected", label: "Rejected" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`documents_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                User: "user_name",
+                "User type": "user_type",
+                "Document type": (r: any) => r.doc_type ?? "",
+                File: (r: any) => r.file_name ?? "",
+                Status: "status",
+                Uploaded: (r: any) => r.created_at ?? "",
+              })
+            }
           />
 
           <UberTable>

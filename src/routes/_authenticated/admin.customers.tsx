@@ -17,8 +17,9 @@ import {
   uberBtn,
   formatMoney,
 } from "@/components/admin/AdminUI";
-import { MoreHorizontal, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
+import { exportCsv } from "@/lib/csv";
 import {
   Sheet,
   SheetContent,
@@ -40,12 +41,31 @@ function AdminCustomers() {
 
   const campaignMutation = useMutation({
     mutationFn: async (formData: any) => {
-      // Simulate API call to email provider or marketing service
-      await new Promise(r => setTimeout(r, 1200));
-      console.log("Sent campaign:", formData);
+      const { data: u } = await supabase.auth.getUser();
+      const { data: campaign, error } = await (supabase as any)
+        .from("marketing_campaigns")
+        .insert({
+          title: formData.title,
+          type: "in_app",
+          audience: formData.audience,
+          status: "draft",
+          subject: formData.subject,
+          body: formData.body,
+          created_by: u.user?.id ?? null,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      // Deliver as in-app notifications to the selected audience.
+      const { data: sent, error: dispatchErr } = await (supabase as any).rpc("dispatch_campaign", {
+        p_campaign_id: campaign.id,
+      });
+      if (dispatchErr) throw dispatchErr;
+      return sent as number;
     },
-    onSuccess: () => {
-      toast.success("Campaign dispatched successfully");
+    onSuccess: (sent) => {
+      toast.success(`Campaign delivered to ${sent} customer${sent === 1 ? "" : "s"} as in-app notifications`);
       setIsCampaignOpen(false);
     },
     onError: (err: any) => {
@@ -86,13 +106,20 @@ function AdminCustomers() {
     }));
   }, [data, regionCurrency]);
 
+  const [segmentFilter, setSegmentFilter] = useState("");
+
   const filtered = useMemo(() => {
-    if (!search) return rows;
-    const s = search.toLowerCase();
-    return rows.filter((r: any) =>
-      [r.full_name, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s)),
-    );
-  }, [rows, search]);
+    return rows.filter((r: any) => {
+      if (segmentFilter === "repeat" && r.count < 2) return false;
+      if (segmentFilter === "active" && r.count < 1) return false;
+      if (segmentFilter === "inactive" && r.count > 0) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![r.full_name, r.phone].filter(Boolean).some((v: string) => v.toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [rows, search, segmentFilter]);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -130,8 +157,30 @@ function AdminCustomers() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "Segment" }, { label: "City" }, { label: "Signup" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "Segment",
+                value: segmentFilter,
+                onChange: setSegmentFilter,
+                options: [
+                  { value: "repeat", label: "Repeat (2+ orders)" },
+                  { value: "active", label: "Has ordered" },
+                  { value: "inactive", label: "Never ordered" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`customers_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                ID: "id",
+                Name: (r: any) => r.full_name ?? "",
+                Phone: (r: any) => r.phone ?? "",
+                Orders: "count",
+                Spend: "spend",
+                Currency: "currency",
+                "Last order": (r: any) => r.last ?? "",
+                Joined: (r: any) => r.created_at ?? "",
+              })
+            }
           />
 
           <UberTable>
@@ -143,7 +192,6 @@ function AdminCustomers() {
                 <UberTh>Spend</UberTh>
                 <UberTh>Last order</UberTh>
                 <UberTh>Status</UberTh>
-                <UberTh className="w-[1%]" />
               </tr>
             </UberThead>
             <tbody>
@@ -180,11 +228,6 @@ function AdminCustomers() {
                     <UberTd>
                       <UberStatus status={c.count > 0 ? "active" : "inactive"} />
                     </UberTd>
-                    <UberTd>
-                      <button className="rounded-full p-1.5 hover:bg-[oklch(0.965_0.003_260)]">
-                        <MoreHorizontal className="h-4 w-4 text-neutral-500" />
-                      </button>
-                    </UberTd>
                   </UberTr>
                 ))
               )}
@@ -198,7 +241,7 @@ function AdminCustomers() {
           <SheetHeader>
             <SheetTitle>Send Campaign</SheetTitle>
             <SheetDescription>
-              Draft and send an email or push notification to your customers.
+              Delivered instantly to the selected audience as in-app notifications; the campaign is tracked under Marketing.
             </SheetDescription>
           </SheetHeader>
           <form 

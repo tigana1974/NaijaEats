@@ -30,7 +30,8 @@ function AdminOperations() {
       let q = supabase
         .from("orders")
         .select(`
-          id, status, currency, created_at, updated_at
+          id, status, currency, created_at, updated_at, accepted_at, ready_at, delivered_at,
+          deliveries (picked_up_at, delivered_at)
         `)
         .gte("created_at", past.toISOString());
       if (regionCurrency) q = q.eq("currency", regionCurrency);
@@ -42,7 +43,7 @@ function AdminOperations() {
 
   const { chartData, kpis } = useMemo(() => {
     if (!operations) return { chartData: [], kpis: { avgPrep: 0, avgDelivery: 0, success: 0 } };
-    
+
     let totalPrepMins = 0;
     let totalDeliveryMins = 0;
     let prepCount = 0;
@@ -57,24 +58,38 @@ function AdminOperations() {
       byDay[key] = { date: key, avgTime: 0, count: 0 };
     }
 
-    operations.forEach(o => {
+    const minutesBetween = (a?: string | null, b?: string | null) => {
+      if (!a || !b) return null;
+      const diff = (new Date(b).getTime() - new Date(a).getTime()) / 60000;
+      return diff > 0 && diff < 24 * 60 ? diff : null; // ignore garbage spans
+    };
+
+    operations.forEach((o: any) => {
       const key = new Date(o.created_at).toISOString().split('T')[0];
-      
+
       if (o.status === 'delivered') {
         successCount++;
-        // Rough estimate of delivery time for dashboard purposes
-        const start = new Date(o.created_at).getTime();
-        const end = new Date(o.updated_at).getTime();
-        const diffMins = (end - start) / 60000;
-        
-        // Split roughly 40% prep / 60% delivery for the UI 
-        totalPrepMins += (diffMins * 0.4);
-        totalDeliveryMins += (diffMins * 0.6);
-        prepCount++;
-        deliveryCount++;
 
-        if (byDay[key]) {
-          byDay[key].avgTime += diffMins;
+        // Prep = accepted → ready, measured from real kitchen timestamps.
+        const prep = minutesBetween(o.accepted_at, o.ready_at);
+        if (prep !== null) {
+          totalPrepMins += prep;
+          prepCount++;
+        }
+
+        // Delivery = rider pickup → drop-off from the deliveries record.
+        const delivery = minutesBetween(o.deliveries?.picked_up_at, o.deliveries?.delivered_at);
+        if (delivery !== null) {
+          totalDeliveryMins += delivery;
+          deliveryCount++;
+        }
+
+        // Chart: total fulfilment time (order placed → delivered).
+        const fulfil =
+          minutesBetween(o.created_at, o.delivered_at ?? o.deliveries?.delivered_at) ??
+          minutesBetween(o.created_at, o.updated_at);
+        if (fulfil !== null && byDay[key]) {
+          byDay[key].avgTime += fulfil;
           byDay[key].count += 1;
         }
       }

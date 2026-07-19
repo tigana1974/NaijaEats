@@ -25,13 +25,13 @@ function AdminPrepTimes() {
     queryKey: ["admin-prep-settings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("platform_settings")
+        .from("platform_config")
         .select(`*`)
         .eq('key', 'prep_settings')
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      
+        .maybeSingle();
+
+      if (error) throw error;
+
       if (data?.value) {
         setFormData({ ...formData, ...(data.value as any) });
       }
@@ -42,13 +42,13 @@ function AdminPrepTimes() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
-        .from("platform_settings")
-        .upsert({ 
-          key: 'prep_settings', 
+        .from("platform_config")
+        .upsert({
+          key: 'prep_settings',
           value: formData,
           updated_at: new Date().toISOString()
         });
-      
+
       if (error) throw error;
     },
     onSuccess: () => {

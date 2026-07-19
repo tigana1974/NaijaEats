@@ -27,6 +27,8 @@ import {
 } from "recharts";
 import { Download, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
+import { exportCsv, printHtml } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/admin/reports")({
   component: AdminReports,
@@ -50,10 +52,12 @@ const REPORT_TEMPLATES = [
   "Top vendors",
   "Top customers",
   "Rider earnings",
-  "Refunds & chargebacks",
+  "Refunds & cancellations",
   "Commission summary",
   "Payment method mix",
-];
+] as const;
+
+type ReportTemplate = (typeof REPORT_TEMPLATES)[number];
 
 function AdminReports() {
   const { region, currency: regionCurrency } = useAdminRegion();
@@ -122,6 +126,241 @@ function AdminReports() {
     };
   }, [data]);
 
+  const [runningTemplate, setRunningTemplate] = useState<string | null>(null);
+
+  const exportSummaryCsv = () => {
+    exportCsv("sales_report_last30.csv", trend, {
+      Day: "day",
+      "Gross sales": (r: any) => r.sales.toFixed(2),
+      Orders: "count",
+    });
+    toast.success("sales_report_last30.csv downloaded");
+  };
+
+  const exportSummaryPdf = () => {
+    const rowsHtml = trend
+      .map((t) => `<tr><td>${t.day}</td><td class="right">${formatMoney(t.sales, currency)}</td><td class="right">${t.count}</td></tr>`)
+      .join("");
+    const statusHtml = statusBreakdown
+      .map((s) => `<tr><td>${s.status}</td><td class="right">${s.count}</td></tr>`)
+      .join("");
+    const ok = printHtml(
+      "NaijaEats — Sales report (last 30 days)",
+      `<h1>NaijaEats — Sales report</h1>
+       <div class="muted">Last 30 days · Generated ${new Date().toLocaleString()}</div>
+       <h2>Summary</h2>
+       <table>
+         <tr><th>Gross sales</th><th>Orders</th><th>Avg ticket</th><th>Refunds / cancels</th></tr>
+         <tr><td>${formatMoney(kpiTotal, currency)}</td><td>${kpiOrders}</td><td>${formatMoney(kpiAvg, currency)}</td><td>${kpiRefund}</td></tr>
+       </table>
+       <h2>Daily sales</h2>
+       <table><tr><th>Day</th><th class="right">Sales</th><th class="right">Orders</th></tr>${rowsHtml}</table>
+       <h2>Status breakdown</h2>
+       <table><tr><th>Status</th><th class="right">Orders</th></tr>${statusHtml}</table>`,
+    );
+    if (!ok) toast.error("Popup blocked — allow popups to export PDF");
+  };
+
+  const runTemplate = async (template: ReportTemplate) => {
+    setRunningTemplate(template);
+    const tId = toast.loading(`Building "${template}"…`);
+    try {
+      const since = new Date();
+      since.setDate(since.getDate() - 30);
+      const sinceIso = since.toISOString();
+      const stamp = new Date().toISOString().slice(0, 10);
+      const file = (name: string) => `${name}_${stamp}.csv`;
+
+      switch (template) {
+        case "Sales by day": {
+          exportCsv(file("sales_by_day"), trend, {
+            Day: "day",
+            Sales: (r: any) => r.sales.toFixed(2),
+            Orders: "count",
+          });
+          break;
+        }
+        case "Sales by store":
+        case "Top vendors":
+        case "Commission summary":
+        case "Sales by city": {
+          let q = supabase
+            .from("orders")
+            .select("total,currency,status,created_at,vendors(name,city)")
+            .gte("created_at", sinceIso)
+            .neq("status", "cancelled");
+          if (regionCurrency) q = q.eq("currency", regionCurrency);
+          const { data, error } = await q;
+          if (error) throw error;
+          const orders = data ?? [];
+
+          if (template === "Sales by city") {
+            const byCity = new Map<string, { sales: number; orders: number }>();
+            for (const o of orders as any[]) {
+              const city = o.vendors?.city || "Unknown";
+              const cur = byCity.get(city) ?? { sales: 0, orders: 0 };
+              cur.sales += Number(o.total ?? 0);
+              cur.orders += 1;
+              byCity.set(city, cur);
+            }
+            exportCsv(
+              file("sales_by_city"),
+              [...byCity.entries()].map(([city, v]) => ({ city, sales: v.sales.toFixed(2), orders: v.orders })),
+            );
+          } else {
+            const byStore = new Map<string, { sales: number; orders: number }>();
+            for (const o of orders as any[]) {
+              const store = o.vendors?.name || "Unknown";
+              const cur = byStore.get(store) ?? { sales: 0, orders: 0 };
+              cur.sales += Number(o.total ?? 0);
+              cur.orders += 1;
+              byStore.set(store, cur);
+            }
+            let rows = [...byStore.entries()]
+              .map(([store, v]) => ({ store, sales: v.sales, orders: v.orders }))
+              .sort((a, b) => b.sales - a.sales);
+            if (template === "Top vendors") rows = rows.slice(0, 20);
+            if (template === "Commission summary") {
+              const { data: settings } = await supabase.from("platform_settings").select("default_commission_pct").maybeSingle();
+              const pct = Number(settings?.default_commission_pct ?? 15);
+              exportCsv(
+                file("commission_summary"),
+                rows.map((r) => ({
+                  store: r.store,
+                  sales: r.sales.toFixed(2),
+                  commission_pct: pct,
+                  commission: ((r.sales * pct) / 100).toFixed(2),
+                })),
+              );
+            } else {
+              exportCsv(file(template === "Top vendors" ? "top_vendors" : "sales_by_store"),
+                rows.map((r) => ({ store: r.store, sales: r.sales.toFixed(2), orders: r.orders })));
+            }
+          }
+          break;
+        }
+        case "Orders by status": {
+          exportCsv(file("orders_by_status"), statusBreakdown);
+          break;
+        }
+        case "Top customers": {
+          let q = supabase
+            .from("orders")
+            .select("customer_id,total,currency,status,created_at")
+            .gte("created_at", sinceIso)
+            .neq("status", "cancelled");
+          if (regionCurrency) q = q.eq("currency", regionCurrency);
+          const { data, error } = await q;
+          if (error) throw error;
+          const byCustomer = new Map<string, { spend: number; orders: number }>();
+          for (const o of (data ?? []) as any[]) {
+            if (!o.customer_id) continue;
+            const cur = byCustomer.get(o.customer_id) ?? { spend: 0, orders: 0 };
+            cur.spend += Number(o.total ?? 0);
+            cur.orders += 1;
+            byCustomer.set(o.customer_id, cur);
+          }
+          const top = [...byCustomer.entries()].sort((a, b) => b[1].spend - a[1].spend).slice(0, 50);
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name, phone")
+            .in("id", top.map(([id]) => id));
+          const names = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+          exportCsv(
+            file("top_customers"),
+            top.map(([id, v]) => ({
+              customer: names.get(id)?.full_name || id.slice(0, 8),
+              phone: names.get(id)?.phone || "",
+              spend: v.spend.toFixed(2),
+              orders: v.orders,
+            })),
+          );
+          break;
+        }
+        case "Rider earnings": {
+          const { data, error } = await supabase
+            .from("deliveries")
+            .select("rider_id, fee, currency, delivered_at")
+            .gte("created_at", sinceIso)
+            .not("rider_id", "is", null);
+          if (error) throw error;
+          const byRider = new Map<string, { fees: number; deliveries: number }>();
+          for (const d of (data ?? []) as any[]) {
+            const cur = byRider.get(d.rider_id) ?? { fees: 0, deliveries: 0 };
+            cur.fees += Number(d.fee ?? 0);
+            cur.deliveries += 1;
+            byRider.set(d.rider_id, cur);
+          }
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", [...byRider.keys()]);
+          const names = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
+          exportCsv(
+            file("rider_earnings"),
+            [...byRider.entries()].map(([id, v]) => ({
+              rider: names.get(id) || id.slice(0, 8),
+              deliveries: v.deliveries,
+              delivery_fees: v.fees.toFixed(2),
+            })),
+          );
+          break;
+        }
+        case "Refunds & cancellations": {
+          let q = supabase
+            .from("orders")
+            .select("id,total,currency,status,payment_status,created_at")
+            .gte("created_at", sinceIso)
+            .or("status.eq.cancelled,payment_status.eq.refunded");
+          if (regionCurrency) q = q.eq("currency", regionCurrency);
+          const { data, error } = await q;
+          if (error) throw error;
+          exportCsv(
+            file("refunds_cancellations"),
+            ((data ?? []) as any[]).map((o) => ({
+              order: o.id,
+              status: o.status,
+              payment_status: o.payment_status,
+              total: o.total,
+              currency: o.currency,
+              created: o.created_at,
+            })),
+          );
+          break;
+        }
+        case "Payment method mix": {
+          const { data, error } = await supabase
+            .from("payments")
+            .select("provider, status, amount, currency, created_at")
+            .gte("created_at", sinceIso);
+          if (error) throw error;
+          const byProvider = new Map<string, { count: number; volume: number }>();
+          for (const p of (data ?? []) as any[]) {
+            const key = `${p.provider} (${p.status})`;
+            const cur = byProvider.get(key) ?? { count: 0, volume: 0 };
+            cur.count += 1;
+            cur.volume += Number(p.amount ?? 0);
+            byProvider.set(key, cur);
+          }
+          exportCsv(
+            file("payment_method_mix"),
+            [...byProvider.entries()].map(([provider, v]) => ({
+              provider,
+              transactions: v.count,
+              volume: v.volume.toFixed(2),
+            })),
+          );
+          break;
+        }
+      }
+      toast.success(`"${template}" exported`, { id: tId });
+    } catch (err: any) {
+      toast.error(err.message || `Failed to build "${template}"`, { id: tId });
+    } finally {
+      setRunningTemplate(null);
+    }
+  };
+
   return (
     <AdminShell>
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6">
@@ -131,24 +370,10 @@ function AdminReports() {
           description="Last 30 days across every vendor, rider and city — exportable to CSV or PDF."
           actions={
             <>
-              <button 
-                type="button" 
-                className={uberBtn.secondary} 
-                onClick={() => {
-                  const tId = toast.loading("Generating CSV export...");
-                  setTimeout(() => toast.success("sales_report_last30.csv downloaded", { id: tId }), 1500);
-                }}
-              >
+              <button type="button" className={uberBtn.secondary} onClick={exportSummaryCsv}>
                 <Download className="h-3.5 w-3.5" /> Export CSV
               </button>
-              <button 
-                type="button" 
-                className={uberBtn.primary} 
-                onClick={() => {
-                  const tId = toast.loading("Generating PDF export...");
-                  setTimeout(() => toast.success("sales_report_last30.pdf downloaded", { id: tId }), 2000);
-                }}
-              >
+              <button type="button" className={uberBtn.primary} onClick={exportSummaryPdf}>
                 <FileText className="h-3.5 w-3.5" /> Export PDF
               </button>
             </>
@@ -222,15 +447,17 @@ function AdminReports() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Report templates" description="One-tap exports for finance, ops and marketing teams">
+          <ChartCard title="Report templates" description="One-tap CSV exports for finance, ops and marketing teams">
             <div className="grid grid-cols-2 gap-2 p-4">
               {REPORT_TEMPLATES.map((t) => (
                 <button
                   key={t}
                   type="button"
-                  className="flex items-center justify-between rounded-lg border border-[oklch(0.92_0.003_260)] bg-white px-3 py-2 text-left text-[13px] hover:border-[var(--naija-green)]"
+                  onClick={() => runTemplate(t)}
+                  disabled={runningTemplate !== null}
+                  className="flex items-center justify-between rounded-lg border border-[oklch(0.92_0.003_260)] bg-white px-3 py-2 text-left text-[13px] hover:border-[var(--naija-green)] disabled:opacity-50"
                 >
-                  <span className="truncate">{t}</span>
+                  <span className="truncate">{runningTemplate === t ? "Building…" : t}</span>
                   <Download className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
                 </button>
               ))}

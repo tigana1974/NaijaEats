@@ -18,27 +18,38 @@ export const Route = createFileRoute("/_authenticated/admin/customer-insights")(
 });
 
 function AdminCustomerInsights() {
-  const { data: users, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-customer-insights"],
     staleTime: 60_000,
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select(`id, created_at, role`);
-      
-      if (error) throw error;
-      return profiles || [];
+      const [profilesRes, rolesRes, ordersRes] = await Promise.all([
+        supabase.from("profiles").select("id, created_at"),
+        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("orders").select("customer_id, status"),
+      ]);
+      if (profilesRes.error) throw profilesRes.error;
+      return {
+        profiles: profilesRes.data ?? [],
+        roles: rolesRes.data ?? [],
+        orders: ordersRes.data ?? [],
+      };
     },
   });
 
   const { chartData, kpis } = useMemo(() => {
-    if (!users) return { chartData: [], kpis: { total: 0, customers: 0, retention: 85 } };
-    
+    if (!data) return { chartData: [], kpis: { total: 0, customers: 0, retention: 0 } };
+    const { profiles, roles, orders } = data;
+
+    // A "customer" is anyone without a staff/vendor/rider role.
+    const nonCustomerIds = new Set(
+      roles.filter((r: any) => r.role !== "customer").map((r: any) => r.user_id),
+    );
+
     let customerCount = 0;
-    
+
     // Group users by month joined
     const byMonth: Record<string, number> = {};
-    const last6Months = [];
+    const last6Months: string[] = [];
     for(let i=5; i>=0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
@@ -47,8 +58,8 @@ function AdminCustomerInsights() {
       last6Months.push(key);
     }
 
-    users.forEach(u => {
-      if (u.role === 'customer' || !u.role) {
+    profiles.forEach((u: any) => {
+      if (!nonCustomerIds.has(u.id)) {
         customerCount++;
         const d = new Date(u.created_at);
         const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -57,6 +68,15 @@ function AdminCustomerInsights() {
         }
       }
     });
+
+    // Retention = share of ordering customers who came back for a 2nd order.
+    const orderCounts = new Map<string, number>();
+    for (const o of orders as any[]) {
+      if (!o.customer_id || o.status === "cancelled") continue;
+      orderCounts.set(o.customer_id, (orderCounts.get(o.customer_id) ?? 0) + 1);
+    }
+    const ordering = orderCounts.size;
+    const repeat = [...orderCounts.values()].filter((c) => c >= 2).length;
 
     const plot = last6Months.map(month => {
       const [y, m] = month.split('-');
@@ -71,12 +91,12 @@ function AdminCustomerInsights() {
     return {
       chartData: plot,
       kpis: {
-        total: users.length,
+        total: profiles.length,
         customers: customerCount,
-        retention: 85 // Mocked retention metric for now until we query all orders per user
+        retention: ordering > 0 ? Math.round((repeat / ordering) * 100) : 0,
       }
     };
-  }, [users]);
+  }, [data]);
 
   return (
     <AdminShell>
@@ -90,7 +110,7 @@ function AdminCustomerInsights() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-8">
           <UberKpi label="Total Platform Users" value={isLoading ? "…" : kpis.total} Icon={Users} accent="blue" />
           <UberKpi label="Total Customers" value={isLoading ? "…" : kpis.customers} Icon={UserCheck} />
-          <UberKpi label="Avg Retention Rate" value={isLoading ? "…" : `${kpis.retention}%`} Icon={Heart} accent="green" />
+          <UberKpi label="Repeat Order Rate" value={isLoading ? "…" : `${kpis.retention}%`} Icon={Heart} accent="green" />
         </div>
 
         <div className="mt-8">

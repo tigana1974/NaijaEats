@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { exportCsv } from "@/lib/csv";
 import {
   UberPageTitle,
   UberKpi,
@@ -41,12 +42,22 @@ function AdminUsers() {
 
   const inviteMutation = useMutation({
     mutationFn: async (formData: any) => {
-      // Simulate edge function call to invite user
-      await new Promise(r => setTimeout(r, 1000));
-      console.log("Invited user:", formData);
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase.from("user_invites" as any).insert({
+        email: String(formData.email).trim().toLowerCase(),
+        role: formData.role,
+        invited_by: u.user?.id,
+      });
+      if (error) throw error;
+      return String(formData.email).trim().toLowerCase();
     },
-    onSuccess: () => {
-      toast.success("User invited successfully");
+    onSuccess: (email) => {
+      const signupUrl = `${window.location.origin}/auth`;
+      navigator.clipboard?.writeText(signupUrl).catch(() => {});
+      toast.success(
+        `Invite recorded — when ${email} signs up they get the role automatically. Signup link copied to clipboard.`,
+        { duration: 6000 },
+      );
       setIsInviteOpen(false);
     },
     onError: (err: any) => {
@@ -98,14 +109,18 @@ function AdminUsers() {
   });
 
   const list = data ?? [];
+  const [roleFilter, setRoleFilter] = useState("");
 
   const filtered = useMemo(() => {
-    if (!search) return list;
-    const s = search.toLowerCase();
-    return list.filter((r) =>
-      [r.full_name, r.email, r.phone].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s)),
-    );
-  }, [list, search]);
+    return list.filter((r) => {
+      if (roleFilter && !r.roles.includes(roleFilter)) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![r.full_name, r.email, r.phone].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [list, search, roleFilter]);
 
   const kpis = useMemo(() => {
     return {
@@ -141,8 +156,24 @@ function AdminUsers() {
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "Role" }, { label: "Status" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "Role",
+                value: roleFilter,
+                onChange: setRoleFilter,
+                options: AVAILABLE_ROLES.map((r) => ({ value: r, label: r[0].toUpperCase() + r.slice(1) })),
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`users_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                ID: "id",
+                Name: (r: any) => r.full_name ?? "",
+                Email: (r: any) => r.email ?? "",
+                Phone: (r: any) => r.phone ?? "",
+                Roles: (r: any) => r.roles.join("; "),
+                Joined: (r: any) => r.created_at ?? "",
+              })
+            }
           />
 
           <UberTable>

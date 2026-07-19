@@ -30,13 +30,13 @@ function AdminInvoiceSettings() {
     queryKey: ["admin-invoice-settings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("platform_settings")
+        .from("platform_config")
         .select(`*`)
         .eq('key', 'invoice_settings')
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error; // ignore not found
-      
+        .maybeSingle();
+
+      if (error) throw error;
+
       if (data?.value) {
         setFormData({ ...formData, ...(data.value as any) });
       }
@@ -47,13 +47,13 @@ function AdminInvoiceSettings() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
-        .from("platform_settings")
-        .upsert({ 
-          key: 'invoice_settings', 
+        .from("platform_config")
+        .upsert({
+          key: 'invoice_settings',
           value: formData,
           updated_at: new Date().toISOString()
         });
-      
+
       if (error) throw error;
     },
     onSuccess: () => {

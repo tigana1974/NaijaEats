@@ -19,6 +19,7 @@ import {
 } from "@/components/admin/AdminUI";
 import { UtensilsCrossed, ShoppingBasket, PackageOpen, AlertTriangle, EyeOff, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { exportCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/admin/menu")({
   component: AdminMenu,
@@ -58,23 +59,32 @@ function AdminMenu() {
   });
 
   const list = data ?? [];
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const filtered = useMemo(() => {
-    if (!search) return list;
-    const s = search.toLowerCase();
-    return list.filter((item) =>
-      [item.name, (item.vendors as any)?.name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s)),
-    );
-  }, [list, search]);
+    return list.filter((item) => {
+      const vtype = (item.vendors as any)?.type === "grocery" ? "grocery" : "restaurant";
+      if (typeFilter && vtype !== typeFilter) return false;
+      if (statusFilter === "available" && !item.is_available) return false;
+      if (statusFilter === "hidden" && item.is_available) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (![item.name, (item.vendors as any)?.name].filter(Boolean).some((v) => (v as string).toLowerCase().includes(s))) return false;
+      }
+      return true;
+    });
+  }, [list, search, typeFilter, statusFilter]);
 
   const kpis = useMemo(() => {
     const dishes = list.filter(i => (i.vendors as any)?.type !== 'grocery');
     const groceries = list.filter(i => (i.vendors as any)?.type === 'grocery');
-    
+
     return {
       activeDishes: dishes.filter(i => i.is_available).length,
       activeGroceries: groceries.filter(i => i.is_available).length,
       outOfStock: list.filter(i => !i.is_available).length,
+      missingPhotos: list.filter(i => !i.image_url).length,
     };
   }, [list]);
 
@@ -91,15 +101,42 @@ function AdminMenu() {
           <UberKpi label="Active Dishes" value={isLoading ? "…" : kpis.activeDishes} Icon={UtensilsCrossed} accent="green" />
           <UberKpi label="Grocery SKUs" value={isLoading ? "…" : kpis.activeGroceries} Icon={ShoppingBasket} accent="orange" />
           <UberKpi label="Hidden / Out of Stock" value={isLoading ? "…" : kpis.outOfStock} Icon={PackageOpen} accent="ink" />
-          <UberKpi label="Flagged Items" value={0} Icon={AlertTriangle} accent="red" />
+          <UberKpi label="Missing Photos" value={isLoading ? "…" : kpis.missingPhotos} Icon={AlertTriangle} accent="red" />
         </div>
 
         <div className="mt-8">
           <UberFilterBar
             search={search}
             onSearch={setSearch}
-            filters={[{ label: "Vendor Type" }, { label: "Status" }]}
-            onExport={() => {}}
+            filters={[
+              {
+                label: "Vendor type",
+                value: typeFilter,
+                onChange: setTypeFilter,
+                options: [
+                  { value: "restaurant", label: "Restaurants & chefs" },
+                  { value: "grocery", label: "Groceries" },
+                ],
+              },
+              {
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: "available", label: "Available" },
+                  { value: "hidden", label: "Hidden / out of stock" },
+                ],
+              },
+            ]}
+            onExport={() =>
+              exportCsv(`menu_items_${new Date().toISOString().slice(0, 10)}.csv`, filtered, {
+                Item: "name",
+                Vendor: (r: any) => (r.vendors as any)?.name ?? "",
+                Price: "price",
+                Available: (r: any) => (r.is_available ? "yes" : "no"),
+                "Has photo": (r: any) => (r.image_url ? "yes" : "no"),
+              })
+            }
           />
 
           <UberTable>

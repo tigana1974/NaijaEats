@@ -1,8 +1,19 @@
 -- Track D: Marketing & Ads tables
+-- NOTE: this migration originally referenced profiles.role (a column that does
+-- not exist) so it never applied. Rewritten to be idempotent and to use
+-- has_role(), matching the rest of the schema.
 
-CREATE TYPE public.ad_status AS ENUM ('pending', 'active', 'paused', 'completed', 'rejected');
-CREATE TYPE public.campaign_status AS ENUM ('draft', 'scheduled', 'active', 'completed', 'paused');
-CREATE TYPE public.campaign_type AS ENUM ('email', 'push', 'sms', 'in_app');
+DO $$ BEGIN
+  CREATE TYPE public.ad_status AS ENUM ('pending', 'active', 'paused', 'completed', 'rejected');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.campaign_status AS ENUM ('draft', 'scheduled', 'active', 'completed', 'paused');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.campaign_type AS ENUM ('email', 'push', 'sms', 'in_app');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE IF NOT EXISTS public.vendor_ads (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -23,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.marketing_campaigns (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     type public.campaign_type NOT NULL DEFAULT 'email',
-    audience TEXT NOT NULL, -- e.g., 'all', 'inactive_30d', 'vip'
+    audience TEXT NOT NULL, -- 'all', 'high_spenders', 'churned', 'new'
     status public.campaign_status NOT NULL DEFAULT 'draft',
     subject TEXT,
     body TEXT,
@@ -38,25 +49,25 @@ CREATE TABLE IF NOT EXISTS public.marketing_campaigns (
 ALTER TABLE public.vendor_ads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketing_campaigns ENABLE ROW LEVEL SECURITY;
 
--- Admins can do anything
-CREATE POLICY "Admins manage ads" ON public.vendor_ads FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
-);
+DROP POLICY IF EXISTS "Admins manage ads" ON public.vendor_ads;
+CREATE POLICY "Admins manage ads" ON public.vendor_ads
+  FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Admins manage campaigns" ON public.marketing_campaigns FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
-);
+DROP POLICY IF EXISTS "Admins manage campaigns" ON public.marketing_campaigns;
+CREATE POLICY "Admins manage campaigns" ON public.marketing_campaigns
+  FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
--- Vendors can view and create their own ads
-CREATE POLICY "Vendors manage own ads" ON public.vendor_ads FOR ALL USING (
-    vendor_id IN (SELECT id FROM public.vendors WHERE owner_id = auth.uid())
-) WITH CHECK (
-    vendor_id IN (SELECT id FROM public.vendors WHERE owner_id = auth.uid())
-);
+DROP POLICY IF EXISTS "Vendors manage own ads" ON public.vendor_ads;
+CREATE POLICY "Vendors manage own ads" ON public.vendor_ads
+  FOR ALL TO authenticated
+  USING (vendor_id IN (SELECT id FROM public.vendors WHERE owner_id = auth.uid()))
+  WITH CHECK (vendor_id IN (SELECT id FROM public.vendors WHERE owner_id = auth.uid()));
 
--- Insert some dummy data for the Admin UI to look good immediately
-INSERT INTO public.marketing_campaigns (title, type, audience, status, subject, sent_count, open_count, click_count, scheduled_for)
-VALUES 
-    ('Summer Eats Discount', 'email', 'all_customers', 'completed', 'Get 20% off your next meal!', 4500, 2100, 850, now() - interval '5 days'),
-    ('We miss you!', 'push', 'inactive_30d', 'active', 'Claim your free delivery', 1200, 400, 150, now() - interval '1 day'),
-    ('VIP Exclusive Preview', 'email', 'vip_customers', 'scheduled', 'Try our new premium chefs', 0, 0, 0, now() + interval '2 days');
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.vendor_ads TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.marketing_campaigns TO authenticated;
+GRANT ALL ON public.vendor_ads TO service_role;
+GRANT ALL ON public.marketing_campaigns TO service_role;
