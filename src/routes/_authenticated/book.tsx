@@ -496,37 +496,48 @@ function MealPlannerSection() {
           })}
         </div>
 
-        {/* Bottom prompt */}
+        {/* Checkout card */}
         {totalPrice > 0 && (
-          <div className="mt-8 rounded-3xl border border-[var(--brand-clay)]/20 bg-white p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[0_8px_30px_-12px_rgba(217,75,58,0.2)]">
-            <div className="flex items-start gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
-                <PiWalletDuotone className="h-6 w-6" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="text-[11px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">Checkout</div>
-                <h3 className="font-display text-2xl font-bold text-zinc-900 leading-tight">
-                  ₦{totalPrice.toLocaleString()}
-                </h3>
-                <p className="text-sm text-zinc-500 mt-1">
-                  For {totalPlanned} meals this week. Money will be deducted from your wallet.
-                </p>
+          <div className="relative mt-8 overflow-hidden rounded-[28px] p-6 sm:p-8 text-white shadow-[0_24px_60px_-20px_rgba(122,45,18,0.55)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(145deg,#1a1108,#3a1a14_55%,#7c2d12)]">
+            <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/30 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-52 w-52 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.08)_50%,transparent_60%)]" />
+
+            <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3 py-1 text-[10px] uppercase tracking-[0.18em] font-bold">
+                  <PiWalletDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" />
+                  Checkout
+                </div>
+                <div className="mt-3 flex items-baseline gap-3">
+                  <span className="font-display text-4xl sm:text-5xl font-bold tabular-nums leading-none">
+                    ₦{totalPrice.toLocaleString()}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/75">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur px-2.5 py-1">
+                    <Calendar className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> {totalPlanned} meal{totalPlanned === 1 ? "" : "s"} this week
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur px-2.5 py-1">
+                    <PiWalletDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Paid instantly from your wallet
+                  </span>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  if (totalPrice <= 0) {
+                    toast.error("Add some meals first");
+                    return;
+                  }
+                  setConfirming(true);
+                }}
+                disabled={paying}
+                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl bg-white text-zinc-900 px-8 py-4 text-[15px] font-bold shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-70 disabled:hover:translate-y-0"
+              >
+                Pay Now
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                if (totalPrice <= 0) {
-                  toast.error("Add some meals first");
-                  return;
-                }
-                setConfirming(true);
-              }}
-              disabled={paying}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-clay)] text-white px-8 py-3.5 text-[15px] font-bold shadow-lg shadow-[var(--brand-clay)]/30 hover:scale-105 active:scale-95 transition disabled:opacity-70 disabled:hover:scale-100"
-            >
-              Pay Now
-              <ArrowRight className="h-4 w-4" />
-            </button>
           </div>
         )}
       </div>
@@ -1131,6 +1142,13 @@ function BookChefSection() {
   );
 }
 
+type BusySlot = { start: string; end: string; source: "booking" | "block" };
+
+const timeToMin = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+
 function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => void }) {
   useDrawerOpen();
   const qc = useQueryClient();
@@ -1146,6 +1164,28 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
   const [offerAmount, setOfferAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Times already taken on the chosen date — existing bookings plus
+  // admin/chef-declared unavailable windows.
+  const { data: busySlots } = useQuery({
+    queryKey: ["chef-busy-slots", chef.id, eventDate],
+    enabled: !!eventDate,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("chef_busy_slots", {
+        p_chef_id: chef.id,
+        p_date: eventDate,
+      });
+      if (error) throw error;
+      return (data ?? []) as BusySlot[];
+    },
+  });
+
+  const requestedStart = timeToMin(startTime || "00:00");
+  const requestedEnd = Math.min(requestedStart + Math.max(0, hours) * 60, 1439);
+  const conflict = (busySlots ?? []).find(
+    (s) => requestedStart < timeToMin(s.end) && requestedEnd > timeToMin(s.start),
+  );
+
   const rateTotal = Math.max(0, hours) * chef.hourly_rate;
   const offerTotal = Number(offerAmount) || 0;
   const total = priceMode === "offer" ? offerTotal : rateTotal;
@@ -1155,6 +1195,7 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
     e.preventDefault();
     if (!eventDate) return void toast.error("Pick a date for your event");
     if (hours <= 0) return void toast.error("How many hours do you need the chef?");
+    if (conflict) return void toast.error(`${chef.name.split(" ")[0]} is unavailable ${conflict.start}–${conflict.end} that day — pick another time`);
     if (priceMode === "offer" && offerTotal <= 0) return void toast.error("Enter the amount you'd like to offer");
     setSubmitting(true);
     try {
@@ -1197,9 +1238,17 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
         className="relative w-full sm:max-w-md max-h-[90dvh] overflow-y-auto bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl animate-in slide-in-from-bottom-4 duration-200"
       >
         <div className="p-5 border-b border-border flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
-            <PiChefHatDuotone className="h-6 w-6" />
-          </span>
+          {chef.logo_url || chef.cover_image_url ? (
+            <img
+              src={chef.logo_url ?? chef.cover_image_url ?? undefined}
+              alt={chef.name}
+              className="h-11 w-11 rounded-2xl object-cover shrink-0 ring-2 ring-[var(--brand-clay)]/20"
+            />
+          ) : (
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] shrink-0">
+              <PiChefHatDuotone className="h-6 w-6" />
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <div className="font-display text-lg font-bold truncate">Book {chef.name}</div>
             <div className="text-xs text-muted-foreground">
@@ -1221,9 +1270,38 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
             <label className="block">
               <span className="text-xs font-bold text-muted-foreground mb-1 block">Start time</span>
               <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+                className={`w-full h-11 rounded-xl border bg-background px-3 text-sm ${conflict ? "border-red-400 ring-1 ring-red-300" : "border-border"}`} />
             </label>
           </div>
+
+          {/* Availability for the chosen day */}
+          {eventDate && (
+            <div className={`rounded-2xl border p-3 ${conflict ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50/60"}`}>
+              {(busySlots ?? []).length === 0 ? (
+                <div className="text-xs font-semibold text-emerald-700">
+                  {chef.name.split(" ")[0]} is free all day — pick any time.
+                </div>
+              ) : (
+                <>
+                  <div className={`text-xs font-bold ${conflict ? "text-red-700" : "text-zinc-700"}`}>
+                    {conflict
+                      ? `That time is taken (${conflict.start}–${conflict.end}). Choose a free window:`
+                      : "Already booked that day — avoid these times:"}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {(busySlots ?? []).map((s, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 rounded-full bg-white border border-red-200 text-red-600 px-2.5 py-1 text-[11px] font-bold tabular-nums"
+                      >
+                        <X className="h-3 w-3" /> {s.start}–{s.end}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs font-bold text-muted-foreground mb-1 block">Hours needed</span>
@@ -1302,10 +1380,10 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !!conflict}
             className="w-full rounded-full bg-[var(--brand-clay)] py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--brand-clay)]/30 transition hover:scale-[1.01] active:scale-95 disabled:opacity-60"
           >
-            {submitting ? "Sending…" : priceMode === "offer" ? "Send offer" : "Send booking request"}
+            {submitting ? "Sending…" : conflict ? "Time unavailable — pick another" : priceMode === "offer" ? "Send offer" : "Send booking request"}
           </button>
           <p className="text-[11px] text-center text-muted-foreground">
             The chef confirms first — you'll only pay once your booking is accepted.

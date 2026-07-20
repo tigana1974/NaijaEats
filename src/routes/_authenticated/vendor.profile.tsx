@@ -445,7 +445,10 @@ function VendorProfilePage() {
         )}
 
         {existing && isChef && (
-          <ChefBookingsSection vendorId={existing.id} currency={existing.currency} />
+          <>
+            <ChefAvailabilitySection vendorId={existing.id} />
+            <ChefBookingsSection vendorId={existing.id} currency={existing.currency} />
+          </>
         )}
 
         {existing && (
@@ -523,6 +526,142 @@ function VendorProfilePage() {
 }
 
 /** Incoming event bookings for a chef, with accept / decline actions. */
+/** Chefs mark the hours they can't take event bookings. Customers see these
+ *  windows as unavailable in "Book a Chef" and can't book over them. */
+function ChefAvailabilitySection({ vendorId }: { vendorId: string }) {
+  const qc = useQueryClient();
+  const [adding, setAdding] = useState(false);
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data: blocks, isLoading } = useQuery({
+    queryKey: ["chef-time-blocks", vendorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("chef_time_blocks")
+        .select("*")
+        .eq("vendor_id", vendorId)
+        .gte("date", today)
+        .order("date", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const addBlock = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const date = String(fd.get("date") ?? "");
+    const start = String(fd.get("start_time") ?? "");
+    const end = String(fd.get("end_time") ?? "");
+    const allDay = fd.get("all_day") === "on";
+    if (!date) return toast.error("Pick a date");
+    if (!allDay && (!start || !end || end <= start)) {
+      return toast.error("End time must be after start time");
+    }
+    setAdding(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase.from("chef_time_blocks").insert({
+        vendor_id: vendorId,
+        date,
+        start_time: allDay ? "00:00" : start,
+        end_time: allDay ? "23:59" : end,
+        reason: String(fd.get("reason") ?? "").trim(),
+        created_by: u.user?.id ?? null,
+      });
+      if (error) throw error;
+      toast.success("Marked unavailable — customers can't book that window");
+      form.reset();
+      qc.invalidateQueries({ queryKey: ["chef-time-blocks", vendorId] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const removeBlock = async (id: string) => {
+    const { error } = await supabase.from("chef_time_blocks").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Removed — you're bookable again");
+    qc.invalidateQueries({ queryKey: ["chef-time-blocks", vendorId] });
+  };
+
+  return (
+    <div className="mt-10">
+      <h2 className="font-display text-xl sm:text-2xl font-semibold">Your availability</h2>
+      <p className="text-muted-foreground mt-1 text-sm">
+        Block the hours you can't cook. Customers see these as unavailable and pick another time.
+        Accepted bookings block themselves automatically.
+      </p>
+
+      <form onSubmit={addBlock} className="mt-5 rounded-2xl border border-border bg-card p-4">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
+          <label className="block">
+            <span className="text-xs font-bold text-muted-foreground mb-1 block">Date</span>
+            <input required name="date" type="date" min={today}
+              className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold text-muted-foreground mb-1 block">From</span>
+            <input name="start_time" type="time" defaultValue="09:00"
+              className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold text-muted-foreground mb-1 block">To</span>
+            <input name="end_time" type="time" defaultValue="17:00"
+              className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+          </label>
+          <label className="flex items-end pb-3">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold">
+              <input name="all_day" type="checkbox" className="h-4 w-4" />
+              All day
+            </span>
+          </label>
+        </div>
+        <div className="mt-3 flex flex-col sm:flex-row gap-3">
+          <input name="reason" placeholder="Reason (optional) — e.g. Family event"
+            className="flex-1 h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+          <button type="submit" disabled={adding}
+            className="h-11 rounded-xl bg-[var(--brand-clay)] text-[var(--brand-cream)] px-6 text-sm font-bold disabled:opacity-50">
+            {adding ? "Saving…" : "Block time"}
+          </button>
+        </div>
+      </form>
+
+      <div className="mt-4 grid gap-2">
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {!isLoading && (blocks ?? []).length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No blocked time — you're bookable at any hour.
+          </div>
+        )}
+        {(blocks ?? []).map((b: any) => {
+          const allDay = String(b.start_time).startsWith("00:00") && String(b.end_time).startsWith("23:59");
+          return (
+            <div key={b.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold">
+                  {new Date(b.date).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" })}
+                  <span className="ml-2 font-normal text-muted-foreground tabular-nums">
+                    {allDay ? "All day" : `${String(b.start_time).substring(0, 5)} – ${String(b.end_time).substring(0, 5)}`}
+                  </span>
+                </div>
+                {b.reason && <div className="text-xs text-muted-foreground truncate mt-0.5">{b.reason}</div>}
+              </div>
+              <button onClick={() => removeBlock(b.id)}
+                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--brand-clay)] hover:bg-[var(--brand-clay)]/10 transition">
+                Remove
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ChefBookingsSection({ vendorId, currency }: { vendorId: string; currency: string }) {
   const qc = useQueryClient();
   const symbol = currency === "GBP" ? "£" : "₦";

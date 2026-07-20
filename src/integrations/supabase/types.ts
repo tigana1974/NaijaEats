@@ -289,6 +289,47 @@ export type Database = {
           },
         ]
       }
+      chef_time_blocks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          end_time: string
+          id: string
+          reason: string
+          start_time: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          end_time?: string
+          id?: string
+          reason?: string
+          start_time?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          end_time?: string
+          id?: string
+          reason?: string
+          start_time?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chef_time_blocks_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -2049,6 +2090,10 @@ export type Database = {
     Functions: {
       apply_referral_code: { Args: { p_code: string }; Returns: undefined }
       cancel_premium: { Args: never; Returns: undefined }
+      chef_busy_slots: {
+        Args: { p_chef_id: string; p_date: string }
+        Returns: Json
+      }
       create_admin_access_code: {
         Args: {
           p_country: Database["public"]["Enums"]["country_code"]

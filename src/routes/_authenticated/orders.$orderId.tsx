@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, CreditCard, ChevronDown, ChevronUp, Bike, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { loadWallet, walletPayOrder } from "@/lib/wallet";
+import { printHtml } from "@/lib/csv";
 import { OrderStatusTracker, statusHeadlineFor } from "@/components/naija/OrderTracking";
 import { LiveOrderMap } from "@/components/naija/LiveOrderMap";
 import { toast } from "sonner";
@@ -47,8 +48,9 @@ function OrderDetailPage() {
   // collapse it on Delivered/Cancelled so the map breathes.
   useEffect(() => {
     if (!data) return;
-    const isActive = data.status !== "delivered" && data.status !== "cancelled";
-    setDetailsOpen(isActive);
+    // Always open the invoice/details sheet — clicking an order card on the
+    // Orders page should land straight on the order's full breakdown.
+    setDetailsOpen(true);
   }, [data?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const payNow = async () => {
@@ -224,8 +226,11 @@ function OrderDetailPage() {
               </section>
 
               <section>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">Summary</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">Invoice</h3>
                 <div className="rounded-2xl bg-zinc-50/50 ring-1 ring-zinc-100 px-4 py-3 space-y-1.5 text-sm">
+                  <Row label="Invoice no." value={`INV-${data.id.slice(0, 8).toUpperCase()}`} />
+                  <Row label="Date" value={new Date(data.created_at).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })} />
+                  <Row label="Payment" value={(data.payment_status ?? "unpaid").toUpperCase()} />
                   <Row label="Subtotal" value={fmt(Number(data.subtotal), data.currency)} />
                   <Row label="Delivery fee" value={fmt(Number(data.delivery_fee), data.currency)} />
                   <div className="border-t border-zinc-200 pt-2 mt-2 flex justify-between text-base font-bold">
@@ -233,6 +238,35 @@ function OrderDetailPage() {
                     <span>{fmt(Number(data.total), data.currency)}</span>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const itemsHtml = (data.order_items ?? [])
+                      .map(
+                        (it: any) =>
+                          `<tr><td>${it.quantity}× ${it.name}</td><td class="right">${fmt(Number(it.subtotal), data.currency)}</td></tr>`,
+                      )
+                      .join("");
+                    const ok = printHtml(
+                      `Invoice INV-${data.id.slice(0, 8).toUpperCase()}`,
+                      `<h1>Naija Eats — Invoice</h1>
+                       <div class="muted">INV-${data.id.slice(0, 8).toUpperCase()} · ${new Date(data.created_at).toLocaleString()} · Payment: ${(data.payment_status ?? "unpaid").toUpperCase()}</div>
+                       <h2>${data.vendor?.name ?? "Vendor"}</h2>
+                       ${data.delivery_address ? `<div class="muted">Delivered to: ${data.delivery_address}</div>` : ""}
+                       <table>
+                         <tr><th>Item</th><th class="right">Amount</th></tr>
+                         ${itemsHtml}
+                         <tr><td>Subtotal</td><td class="right">${fmt(Number(data.subtotal), data.currency)}</td></tr>
+                         <tr><td>Delivery fee</td><td class="right">${fmt(Number(data.delivery_fee), data.currency)}</td></tr>
+                         <tr><th>Total</th><th class="right">${fmt(Number(data.total), data.currency)}</th></tr>
+                       </table>`,
+                    );
+                    if (!ok) toast.error("Popup blocked — allow popups to download the invoice");
+                  }}
+                  className="mt-2 w-full rounded-2xl border border-zinc-200 bg-white py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition"
+                >
+                  Download / print invoice
+                </button>
               </section>
 
               {data.delivery_address && (

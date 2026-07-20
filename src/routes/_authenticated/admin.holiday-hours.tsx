@@ -66,9 +66,24 @@ function AdminHolidayHours() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vendors")
-        .select("id,name")
+        .select("id,name,type")
         .eq("status", "approved")
         .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  // Read-only view of chef availability. Chefs set these themselves from
+  // their own profile — admin sees them for support context.
+  const { data: chefBlocks } = useQuery({
+    queryKey: ["admin-chef-blocks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("chef_time_blocks")
+        .select("*, vendors(name)")
+        .gte("date", new Date().toISOString().split("T")[0])
+        .order("date", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
@@ -220,6 +235,51 @@ function AdminHolidayHours() {
                           </button>
                         </div>
                       </UberTd>
+                    </UberTr>
+                  ))
+                )}
+              </tbody>
+            </UberTable>
+          </div>
+        </div>
+
+        {/* Chef booking blocks */}
+        <div className="mt-8">
+          <div className="rounded-xl border border-border bg-card p-0 shadow-sm overflow-hidden">
+            <div className="border-b border-border p-5 bg-neutral-50/50">
+              <h3 className="font-semibold text-lg">Chef Booking Availability</h3>
+              <p className="text-sm text-neutral-500 mt-0.5">
+                Hours chefs have blocked out for event bookings. Chefs set these themselves from their profile — this is a read-only view for support.
+              </p>
+            </div>
+
+            <UberTable>
+              <UberThead>
+                <tr>
+                  <UberTh>Chef</UberTh>
+                  <UberTh>Date</UberTh>
+                  <UberTh>Unavailable</UberTh>
+                  <UberTh>Reason</UberTh>
+                </tr>
+              </UberThead>
+              <tbody>
+                {(chefBlocks ?? []).length === 0 ? (
+                  <UberTr>
+                    <UberTd colSpan={4} className="py-8 text-center text-neutral-500">
+                      No blocked hours — every chef is bookable at any time.
+                    </UberTd>
+                  </UberTr>
+                ) : (
+                  (chefBlocks ?? []).map((b: any) => (
+                    <UberTr key={b.id}>
+                      <UberTd className="font-medium text-neutral-900">{b.vendors?.name ?? "Unknown chef"}</UberTd>
+                      <UberTd>{format(new Date(b.date), "MMM d, yyyy")}</UberTd>
+                      <UberTd className="tabular-nums">
+                        {String(b.start_time).startsWith("00:00") && String(b.end_time).startsWith("23:59")
+                          ? "All day"
+                          : `${String(b.start_time).substring(0, 5)} – ${String(b.end_time).substring(0, 5)}`}
+                      </UberTd>
+                      <UberTd className="max-w-[220px] truncate text-neutral-600">{b.reason || "—"}</UberTd>
                     </UberTr>
                   ))
                 )}
