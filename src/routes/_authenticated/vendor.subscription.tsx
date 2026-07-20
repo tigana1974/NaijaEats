@@ -304,21 +304,34 @@ function SubscriptionPage() {
   const upgrade = useMutation({
     mutationFn: async (plan: PlanKey) => {
       if (!profile?.uid) throw new Error("Not signed in");
-      // Wallet_plan may not yet exist on the profiles type — cast for now.
-      const { error } = await supabase
-        .from("profiles")
-        .update({ vendor_plan: plan } as any)
-        .eq("id", profile.uid);
+      // Charged from the vendor's wallet; prices are enforced server-side.
+      const { error } = await (supabase as any).rpc("purchase_vendor_plan", {
+        p_plan: plan,
+        p_cadence: billing,
+        p_region: region,
+      });
       if (error) throw error;
       return plan;
     },
     onSuccess: (plan) => {
-      toast.success(plan === "basic" ? "Switched to Basic plan" : `Welcome to ${plan[0].toUpperCase() + plan.slice(1)}!`);
+      toast.success(
+        plan === "basic"
+          ? "Switched to Basic plan"
+          : `Welcome to ${plan[0].toUpperCase() + plan.slice(1)}! Paid from your wallet.`,
+      );
       qc.invalidateQueries();
       setConfirmPlan(null);
       navigate({ to: "/vendor/shops" });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Something went wrong"),
+    onError: (e: any) => {
+      const msg = e?.message ?? "Something went wrong";
+      if (/insufficient/i.test(msg)) {
+        toast.error("Not enough wallet balance — top up your wallet first, then upgrade.");
+        navigate({ to: "/wallet/top-up" });
+      } else {
+        toast.error(msg);
+      }
+    },
   });
 
   if (!roleLoading && role !== "vendor") return <Navigate to="/" replace />;

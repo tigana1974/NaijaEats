@@ -1066,6 +1066,7 @@ export type Database = {
           updated_at: string
           username: string | null
           vendor_plan: string
+          vendor_plan_expires_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1083,6 +1084,7 @@ export type Database = {
           updated_at?: string
           username?: string | null
           vendor_plan?: string
+          vendor_plan_expires_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1100,6 +1102,7 @@ export type Database = {
           updated_at?: string
           username?: string | null
           vendor_plan?: string
+          vendor_plan_expires_at?: string | null
         }
         Relationships: []
       }
@@ -2094,6 +2097,10 @@ export type Database = {
       mark_order_paid: { Args: { p_order_id: string }; Returns: undefined }
       purchase_premium: {
         Args: { p_cadence: string; p_region: string }
+        Returns: undefined
+      }
+      purchase_vendor_plan: {
+        Args: { p_cadence: string; p_plan: string; p_region: string }
         Returns: undefined
       }
       redeem_admin_code: {
