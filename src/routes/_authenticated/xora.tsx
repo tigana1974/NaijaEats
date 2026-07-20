@@ -19,6 +19,9 @@ import {
   type XoraMessage,
 } from "@/lib/xora";
 import { useMyRole } from "@/hooks/useMyRole";
+import { XoraAvatar } from "@/components/naija/XoraAvatar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/xora")({
   validateSearch: (s: Record<string, unknown>): { intent?: string; q?: string } => ({
@@ -30,20 +33,77 @@ export const Route = createFileRoute("/_authenticated/xora")({
 
 type ChatMsg = XoraMessage;
 
-const SUGGESTIONS: { Icon: React.ComponentType<{ className?: string }>; label: string; prompt: string }[] = [
-  { Icon: PiCalendarCheckDuotone, label: "Plan my week", prompt: "Help me plan meals for the whole week" },
-  { Icon: PiLeafDuotone, label: "Vegetarian ideas", prompt: "I'm vegetarian — what dishes work for me?" },
-  { Icon: PiPercentDuotone, label: "On a budget", prompt: "I want to eat well on a small budget. Any picks?" },
-  { Icon: PiForkKnifeDuotone, label: "What should I eat?", prompt: "Recommend something for lunch today" },
-  { Icon: PiStorefrontDuotone, label: "Find a chef", prompt: "Show me the top chefs near me" },
-  { Icon: PiWalletDuotone, label: "How does the wallet work?", prompt: "How does the Naija Eats wallet work?" },
-];
+type Suggestion = { Icon: React.ComponentType<{ className?: string }>; label: string; prompt: string };
+
+/** Xora meets each app on its own terms — a foodie concierge for customers,
+ *  a business co-pilot for restaurants and grocers, a bookings manager for
+ *  chefs, and an operations analyst for admins. */
+function suggestionsFor(role: string | undefined, vendorType?: string | null): Suggestion[] {
+  if (role === "admin") {
+    return [
+      { Icon: PiStorefrontDuotone, label: "Platform pulse", prompt: "Give me a quick summary of how the platform is doing right now" },
+      { Icon: PiCalendarCheckDuotone, label: "Pending approvals", prompt: "What vendors or documents are waiting for verification?" },
+      { Icon: PiWalletDuotone, label: "Orders & payments", prompt: "Summarise recent orders and any payment issues I should look at" },
+      { Icon: PiPercentDuotone, label: "Growth ideas", prompt: "Based on recent activity, where should we focus to grow orders?" },
+      { Icon: PiForkKnifeDuotone, label: "Vendor health", prompt: "Which vendors look like they need attention or support?" },
+      { Icon: PiLeafDuotone, label: "Rider operations", prompt: "How are deliveries performing lately? Any bottlenecks?" },
+    ];
+  }
+  if (role === "vendor" && vendorType === "chef") {
+    return [
+      { Icon: PiCalendarCheckDuotone, label: "My bookings", prompt: "Summarise my event bookings — anything I need to respond to?" },
+      { Icon: PiPercentDuotone, label: "Price my hours", prompt: "Help me decide a competitive hourly rate for private events" },
+      { Icon: PiForkKnifeDuotone, label: "Menu ideas", prompt: "Suggest a standout event menu I could offer clients" },
+      { Icon: PiStorefrontDuotone, label: "Get more clients", prompt: "How do I get more chef bookings on Naija Eats?" },
+      { Icon: PiLeafDuotone, label: "Handling offers", prompt: "A customer sent a low offer — how should I counter it?" },
+      { Icon: PiWalletDuotone, label: "My earnings", prompt: "How do payouts and the wallet work for chefs?" },
+    ];
+  }
+  if (role === "vendor") {
+    return [
+      { Icon: PiStorefrontDuotone, label: "Today's orders", prompt: "Summarise my recent orders — anything that needs action?" },
+      { Icon: PiForkKnifeDuotone, label: "Menu tips", prompt: "How can I improve my menu to sell more?" },
+      { Icon: PiPercentDuotone, label: "Boost sales", prompt: "What can I do this week to increase my orders?" },
+      { Icon: PiCalendarCheckDuotone, label: "Busy periods", prompt: "When are my busiest times, and how should I prepare?" },
+      { Icon: PiWalletDuotone, label: "Earnings & payouts", prompt: "How do earnings and payouts work for my store?" },
+      { Icon: PiLeafDuotone, label: "Customer messages", prompt: "Any customer messages or reviews I should respond to?" },
+    ];
+  }
+  return [
+    { Icon: PiCalendarCheckDuotone, label: "Plan my week", prompt: "Help me plan meals for the whole week" },
+    { Icon: PiLeafDuotone, label: "Vegetarian ideas", prompt: "I'm vegetarian — what dishes work for me?" },
+    { Icon: PiPercentDuotone, label: "On a budget", prompt: "I want to eat well on a small budget. Any picks?" },
+    { Icon: PiForkKnifeDuotone, label: "What should I eat?", prompt: "Recommend something for lunch today" },
+    { Icon: PiStorefrontDuotone, label: "Find a chef", prompt: "Show me the top chefs near me" },
+    { Icon: PiWalletDuotone, label: "How does the wallet work?", prompt: "How does the Naija Eats wallet work?" },
+  ];
+}
 
 function XoraChatPage() {
   const navigate = useNavigate();
   const { intent, q } = Route.useSearch();
   const { data: role } = useMyRole();
   const region = useMemo(() => getRegion(), []);
+
+  // Chefs get booking-focused Xora; restaurants and grocers get the
+  // business co-pilot version.
+  const { data: vendorType } = useQuery({
+    queryKey: ["xora-vendor-type"],
+    enabled: role === "vendor",
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data: v } = await supabase
+        .from("vendors")
+        .select("type")
+        .eq("owner_id", u.user.id)
+        .maybeSingle();
+      return v?.type ?? null;
+    },
+  });
+
+  const suggestions = useMemo(() => suggestionsFor(role, vendorType), [role, vendorType]);
 
   const [thread, setThread] = useState(() => loadThread());
   const [draft, setDraft] = useState("");
@@ -206,7 +266,7 @@ function XoraChatPage() {
         style={{ scrollBehavior: "smooth" }}
       >
         {thread.messages.length === 0 ? (
-          <EmptyState region={region} onPick={(prompt) => send(prompt)} />
+          <EmptyState region={region} role={role} vendorType={vendorType} suggestions={suggestions} onPick={(prompt) => send(prompt)} />
         ) : (
           thread.messages.map((m) => <MessageBubble key={m.id} msg={m} region={region} />)
         )}
@@ -220,7 +280,7 @@ function XoraChatPage() {
         {/* Quick suggestion chips when the input is empty */}
         {draft === "" && thread.messages.length > 0 && !streaming && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
-            {SUGGESTIONS.slice(0, 4).map((s) => (
+            {suggestions.slice(0, 4).map((s) => (
               <button
                 key={s.label}
                 type="button"
@@ -284,45 +344,6 @@ function XoraChatPage() {
 
 /* ─────────── Sub-components ─────────── */
 
-function XoraAvatar({ size = 38, pulsing = false }: { size?: number; pulsing?: boolean }) {
-  return (
-    <div
-      className="relative shrink-0"
-      style={{ width: size, height: size }}
-      aria-hidden="true"
-    >
-      {/* Clay-to-gold gradient ring */}
-      <div
-        className={`absolute inset-0 rounded-full bg-gradient-to-br from-[var(--brand-clay)] via-[oklch(0.68_0.22_45)] to-[var(--brand-gold)] shadow-md ${pulsing ? "animate-pulse" : ""}`}
-      />
-      {/* Character portrait — Xora */}
-      <div className="absolute inset-[3px] rounded-full overflow-hidden bg-background">
-        <img
-          src="/xora.jpg"
-          alt=""
-          className="h-full w-full object-cover object-top scale-[1.15]"
-          draggable={false}
-          onError={(e) => {
-            // Fallback to a big "X" mark so the avatar never renders blank
-            // when the image asset is missing.
-            (e.currentTarget as HTMLImageElement).style.display = "none";
-            const fallback = e.currentTarget.parentElement?.querySelector(".xora-fallback") as HTMLElement | null;
-            if (fallback) fallback.style.display = "grid";
-          }}
-        />
-        <span
-          className="xora-fallback hidden h-full w-full place-items-center font-display font-extrabold text-[var(--brand-clay)]"
-          style={{ fontSize: Math.round(size * 0.42) }}
-        >
-          X
-        </span>
-      </div>
-      {/* Online dot */}
-      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
-    </div>
-  );
-}
-
 function MessageBubble({ msg, region }: { msg: ChatMsg; region: ReturnType<typeof getRegion> }) {
   const mine = msg.role === "user";
   const content = renderInlineMarkdown(msg.content);
@@ -378,28 +399,50 @@ function TypingIndicator() {
 
 function EmptyState({
   region,
+  role,
+  vendorType,
+  suggestions,
   onPick,
 }: {
   region: ReturnType<typeof getRegion>;
+  role: string | undefined;
+  vendorType: string | null | undefined;
+  suggestions: Suggestion[];
   onPick: (prompt: string) => void;
 }) {
+  const tagline =
+    role === "admin"
+      ? "Operations analyst"
+      : role === "vendor" && vendorType === "chef"
+        ? "Bookings co-pilot"
+        : role === "vendor"
+          ? "Business co-pilot"
+          : "Naija Eats AI";
+  const intro =
+    role === "admin"
+      ? "Your operations analyst for NaijaEats. Ask about vendors, orders, deliveries, verifications — I read the live platform data."
+      : role === "vendor" && vendorType === "chef"
+        ? "Your bookings co-pilot. Ask me about event requests, offers and counters, pricing your hours, or growing your client list."
+        : role === "vendor"
+          ? "Your business co-pilot. Ask me about today's orders, menu performance, busy periods, earnings — I know your store's data."
+          : region === "NG"
+            ? "Your food buddy on Naija Eats. Ask me for jollof spots, plan your week, or find something under your budget — I got you."
+            : "Your food buddy on Naija Eats. Ask me to plan meals, find a chef, filter by diet, or answer anything about the app.";
   return (
     <div className="min-h-full flex flex-col items-center justify-center text-center px-2 py-8">
       <XoraAvatar size={72} />
       <div className="mt-4 inline-flex items-center rounded-full bg-[var(--brand-gold)]/20 text-[oklch(0.5_0.14_75)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
-        Naija Eats AI
+        {tagline}
       </div>
       <h1 className="mt-3 font-display text-2xl sm:text-3xl font-bold tracking-tight">
         Hey, I'm Xora
       </h1>
       <p className="mt-2 text-sm text-muted-foreground max-w-sm">
-        {region === "NG"
-          ? "Your food buddy on Naija Eats. Ask me for jollof spots, plan your week, or find something under your budget — I got you."
-          : "Your food buddy on Naija Eats. Ask me to plan meals, find a chef, filter by diet, or answer anything about the app."}
+        {intro}
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-2 w-full max-w-md">
-        {SUGGESTIONS.map((s) => (
+        {suggestions.map((s) => (
           <button
             key={s.label}
             type="button"

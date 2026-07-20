@@ -22,7 +22,6 @@ import {
   X,
   Check,
   Lock,
-  Sparkles,
 } from "lucide-react";
 import {
   PiHouseDuotone,
@@ -395,9 +394,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <Link
         to="/xora"
         aria-label="Speak to Xora"
-        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[var(--naija-green)] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_-18px_rgba(0,0,0,0.65)] transition hover:-translate-y-0.5 hover:bg-[oklch(0.42_0.13_145)] focus:outline-none focus:ring-2 focus:ring-[var(--naija-green)] focus:ring-offset-2"
+        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 rounded-full bg-[var(--naija-green)] py-1.5 pl-1.5 pr-4 text-sm font-semibold text-white shadow-[0_16px_40px_-18px_rgba(0,0,0,0.65)] transition hover:-translate-y-0.5 hover:bg-[oklch(0.42_0.13_145)] focus:outline-none focus:ring-2 focus:ring-[var(--naija-green)] focus:ring-offset-2"
       >
-        <Sparkles className="h-4 w-4" />
+        <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full ring-2 ring-white/40">
+          <img src="/xora.jpg" alt="" className="h-full w-full object-cover object-top" draggable={false} />
+          <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[var(--naija-green)]" />
+        </span>
         <span className="hidden sm:inline">Xora</span>
       </Link>
 

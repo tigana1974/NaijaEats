@@ -3,7 +3,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
-import { ShoppingBag, Bell, MessageCircle, Sparkles, X } from "lucide-react";
+import { ShoppingBag, Bell, MessageCircle, X } from "lucide-react";
 import {
   PiSquaresFourDuotone,
   PiClipboardTextDuotone,
@@ -26,6 +26,10 @@ import {
   PiBagDuotone,
   PiUserCircleDuotone,
   PiSealCheckDuotone,
+  PiBuildingsDuotone,
+  PiChefHatDuotone,
+  PiCrownDuotone,
+  PiSparkleDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -113,7 +117,13 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     navigate({ to: "/auth", replace: true });
   };
 
-  type NavItem = { to: string; label: string; Icon: React.ComponentType<{ className?: string }> };
+  type NavItem = {
+    to: string;
+    label: string;
+    Icon: React.ComponentType<{ className?: string }>;
+    /** When set, the nav item shows this picture instead of an icon (Xora). */
+    image?: string;
+  };
   const navByRole: Record<AppRole, NavItem[]> = {
     customer: [
       { to: "/discover", label: "Discover", Icon: PiCompassDuotone },
@@ -150,11 +160,11 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
   // Extra role-specific links shown in the sidebar under a second section.
   const workspaceByRole: Partial<Record<AppRole, NavItem[]>> = {
     vendor: [
-      { to: "/vendor/shops", label: "My shops", Icon: PiSquaresFourDuotone },
+      { to: "/vendor/shops", label: "My shops", Icon: PiBuildingsDuotone },
       { to: "/vendor/messages", label: "Messages", Icon: PiChatCircleDotsDuotone },
-      { to: "/xora", label: "Speak to Xora", Icon: Sparkles },
-      { to: "/vendor/profile", label: vendorType === "grocery" ? "Store profile" : vendorType === "chef" ? "Kitchen profile" : "Restaurant profile", Icon: PiStorefrontDuotone },
-      { to: "/vendor/subscription", label: "Subscription & billing", Icon: PiSealCheckDuotone },
+      { to: "/xora", label: "Speak to Xora", Icon: PiSparkleDuotone, image: "/xora.jpg" },
+      { to: "/vendor/profile", label: vendorType === "grocery" ? "Store profile" : vendorType === "chef" ? "Kitchen profile" : "Restaurant profile", Icon: vendorType === "chef" ? PiChefHatDuotone : PiStorefrontDuotone },
+      { to: "/vendor/subscription", label: "Subscription & billing", Icon: PiCrownDuotone },
     ],
     rider: [
       { to: "/account", label: "My profile", Icon: PiUserCircleDuotone },
@@ -236,15 +246,29 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
             active ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
           }`}
         />
-        <span
-          className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-all duration-200 ${
-            active
-              ? "bg-gradient-to-br from-[var(--brand-clay)] to-[oklch(0.62_0.22_40)] text-white shadow-lg shadow-[var(--brand-clay)]/35"
-              : "bg-white/[0.06] text-white/70 group-hover:bg-white/10 group-hover:text-white"
-          }`}
-        >
-          <n.Icon className="h-[22px] w-[22px]" />
-        </span>
+        {n.image ? (
+          /* Profile-picture nav item (Xora) — the photo IS the icon. */
+          <span
+            className={`relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl transition-all duration-200 ${
+              active
+                ? "ring-2 ring-[var(--brand-gold)] shadow-lg shadow-[var(--brand-clay)]/35"
+                : "ring-1 ring-white/15 group-hover:ring-[var(--brand-gold)]/60"
+            }`}
+          >
+            <img src={n.image} alt="" className="h-full w-full object-cover object-top" draggable={false} />
+            <span className="absolute bottom-0.5 right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[#0b0b0d]" />
+          </span>
+        ) : (
+          <span
+            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-all duration-200 ${
+              active
+                ? "bg-gradient-to-br from-[var(--brand-clay)] to-[oklch(0.62_0.22_40)] text-white shadow-lg shadow-[var(--brand-clay)]/35"
+                : "bg-white/[0.06] text-white/70 group-hover:bg-white/10 group-hover:text-white"
+            }`}
+          >
+            <n.Icon className="h-[22px] w-[22px]" />
+          </span>
+        )}
         <span className={`text-[15px] ${active ? "font-semibold" : "font-medium"}`}>{n.label}</span>
         {active && (
           <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--brand-gold)]" />
