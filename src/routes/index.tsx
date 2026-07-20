@@ -964,8 +964,6 @@ function MenuCarousel() {
 /* ------------------------------ Offer Banner ----------------------------- */
 
 function OfferBanner() {
-  const { data } = useQuery(landingItemsQuery);
-  const bannerItem = data && data.length > 0 ? (data[11] ?? data[data.length - 1]) : null;
   return (
     <section className="py-12 md:py-20 bg-background">
       <div className="mx-auto max-w-7xl px-6">
@@ -992,7 +990,14 @@ function OfferBanner() {
             </div>
           </div>
           <div className="relative h-64 md:h-full min-h-[280px]">
-            <img src={bannerItem?.image_url ?? offerPlatter} alt={bannerItem?.name ?? "Festive platter"} width={1024} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+            <img
+              src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80"
+              alt="Friends sharing a festive dinner with drinks"
+              width={1200}
+              height={800}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
             <span className="absolute top-4 right-4 grid place-items-center h-16 w-16 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-[var(--shadow-warm)]">
               50%<br />OFF
             </span>
@@ -1007,10 +1012,10 @@ function OfferBanner() {
 
 function Testimonials() {
   const cards = [
-    { name: "Tunde Bakare", role: "Foodie · Lagos", avatar: "https://images.unsplash.com/photo-1531123897727-8f129e1bf98a?w=150&h=150&fit=crop&q=80", text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave chefs a stage." },
-    { name: "Rahim Hassan", role: "Chef · London", avatar: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=150&h=150&fit=crop&q=80", text: "I started cooking from my kitchen in Peckham. Within a month, I had 80 regulars ordering my egusi every weekend." },
-    { name: "Emily Carter", role: "Customer · Manchester", avatar: "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=150&h=150&fit=crop&q=80", text: "I found African chefs I never knew existed in my city. The chef booking made my birthday unforgettable." },
-    { name: "Sade Ojo", role: "Foodie · Abuja", avatar: "https://images.unsplash.com/photo-1543269664-76bc3997d9ea?w=150&h=150&fit=crop&q=80", text: "Fast delivery, real flavour, and stories about every dish. This is more than an app." },
+    { name: "Tunde Bakare", role: "Foodie · Lagos", avatar: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=150&h=150&fit=crop&q=80", text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave chefs a stage." },
+    { name: "Rahim Hassan", role: "Chef · London", avatar: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=150&h=150&fit=crop&q=80", text: "I started cooking from my kitchen in Peckham. Within a month, I had 80 regulars ordering my egusi every weekend." },
+    { name: "Emily Carter", role: "Customer · Manchester", avatar: "https://images.unsplash.com/photo-1618085222100-93f0eecad0aa?w=150&h=150&fit=crop&q=80", text: "I found African chefs I never knew existed in my city. The chef booking made my birthday unforgettable." },
+    { name: "Sade Ojo", role: "Foodie · Abuja", avatar: "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=150&h=150&fit=crop&q=80", text: "Fast delivery, real flavour, and stories about every dish. This is more than an app." },
   ];
   return (
     <section className="py-20 md:py-24 bg-background">
