@@ -18,6 +18,7 @@ import {
   newThread,
   type XoraMessage,
 } from "@/lib/xora";
+import { useMyRole } from "@/hooks/useMyRole";
 
 export const Route = createFileRoute("/_authenticated/xora")({
   validateSearch: (s: Record<string, unknown>): { intent?: string; q?: string } => ({
@@ -41,6 +42,7 @@ const SUGGESTIONS: { Icon: React.ComponentType<{ className?: string }>; label: s
 function XoraChatPage() {
   const navigate = useNavigate();
   const { intent, q } = Route.useSearch();
+  const { data: role } = useMyRole();
   const region = useMemo(() => getRegion(), []);
 
   const [thread, setThread] = useState(() => loadThread());
@@ -148,7 +150,16 @@ function XoraChatPage() {
       {/* ─── Header ─── */}
       <div className="shrink-0 flex items-center gap-2 px-3 py-2.5 border-b border-border bg-card/95 backdrop-blur lg:px-[max(0.75rem,calc((100%-48rem)/2))]">
         <button
-          onClick={() => navigate({ to: "/discover" })}
+          onClick={() =>
+            navigate({
+              to:
+                role === "admin"
+                  ? "/admin/dashboard"
+                  : role === "vendor"
+                    ? "/vendor/dashboard"
+                    : "/discover",
+            })
+          }
           aria-label="Back"
           className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted shrink-0 transition"
         >

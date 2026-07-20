@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorSlugRouteImport } from './routes/vendor.$slug'
+import { Route as ApiXoraRouteImport } from './routes/api/xora'
 import { Route as AuthenticatedXoraRouteImport } from './routes/_authenticated/xora'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -114,6 +115,11 @@ const IndexRoute = IndexRouteImport.update({
 const VendorSlugRoute = VendorSlugRouteImport.update({
   id: '/vendor/$slug',
   path: '/vendor/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiXoraRoute = ApiXoraRouteImport.update({
+  id: '/api/xora',
+  path: '/api/xora',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedXoraRoute = AuthenticatedXoraRouteImport.update({
@@ -575,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/xora': typeof AuthenticatedXoraRoute
+  '/api/xora': typeof ApiXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
@@ -658,6 +665,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/xora': typeof AuthenticatedXoraRoute
+  '/api/xora': typeof ApiXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
@@ -743,6 +751,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/xora': typeof AuthenticatedXoraRoute
+  '/api/xora': typeof ApiXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
@@ -828,6 +837,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/subscription'
     | '/xora'
+    | '/api/xora'
     | '/vendor/$slug'
     | '/admin/access'
     | '/admin/ads'
@@ -911,6 +921,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/subscription'
     | '/xora'
+    | '/api/xora'
     | '/vendor/$slug'
     | '/admin/access'
     | '/admin/ads'
@@ -995,6 +1006,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/subscription'
     | '/_authenticated/xora'
+    | '/api/xora'
     | '/vendor/$slug'
     | '/_authenticated/admin/access'
     | '/_authenticated/admin/ads'
@@ -1064,6 +1076,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiXoraRoute: typeof ApiXoraRoute
   VendorSlugRoute: typeof VendorSlugRouteWithChildren
   ApiWebhooksPaystackRoute: typeof ApiWebhooksPaystackRoute
   ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
@@ -1104,6 +1117,13 @@ declare module '@tanstack/react-router' {
       path: '/vendor/$slug'
       fullPath: '/vendor/$slug'
       preLoaderRoute: typeof VendorSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/xora': {
+      id: '/api/xora'
+      path: '/api/xora'
+      fullPath: '/api/xora'
+      preLoaderRoute: typeof ApiXoraRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/xora': {
@@ -1843,6 +1863,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiXoraRoute: ApiXoraRoute,
   VendorSlugRoute: VendorSlugRouteWithChildren,
   ApiWebhooksPaystackRoute: ApiWebhooksPaystackRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,

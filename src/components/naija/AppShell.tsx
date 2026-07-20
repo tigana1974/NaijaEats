@@ -3,7 +3,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
-import { ShoppingBag, Bell, MessageCircle, X } from "lucide-react";
+import { ShoppingBag, Bell, MessageCircle, Sparkles, X } from "lucide-react";
 import {
   PiSquaresFourDuotone,
   PiClipboardTextDuotone,
@@ -152,6 +152,7 @@ export function AppShell({ children, hideHeader, hideBottomNav }: { children: Re
     vendor: [
       { to: "/vendor/shops", label: "My shops", Icon: PiSquaresFourDuotone },
       { to: "/vendor/messages", label: "Messages", Icon: PiChatCircleDotsDuotone },
+      { to: "/xora", label: "Speak to Xora", Icon: Sparkles },
       { to: "/vendor/profile", label: vendorType === "grocery" ? "Store profile" : vendorType === "chef" ? "Kitchen profile" : "Restaurant profile", Icon: PiStorefrontDuotone },
       { to: "/vendor/subscription", label: "Subscription & billing", Icon: PiSealCheckDuotone },
     ],

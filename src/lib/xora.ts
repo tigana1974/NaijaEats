@@ -10,6 +10,7 @@
  */
 
 import { detectRegion, type BillingRegion } from "@/lib/premium";
+import { supabase } from "@/integrations/supabase/client";
 
 export type XoraRole = "user" | "xora";
 
@@ -322,12 +323,44 @@ export async function* generateReply(
   opts?: { region?: BillingRegion },
 ): AsyncGenerator<{ delta?: string; done?: boolean; actions?: { label: string; to: string }[] }> {
   const region = opts?.region ?? getRegion();
+  const serverReply = await tryServerReply(userText, region);
+  if (serverReply) {
+    yield* streamContent(serverReply);
+    return;
+  }
+
   const intent = detectIntent(userText);
   const { content, actions } = replyFor(intent, userText, region);
 
   // Simulate the "thinking" beat before the stream kicks in.
   await new Promise((r) => setTimeout(r, 350));
+  yield* streamContent(content, actions);
+}
 
+async function tryServerReply(userText: string, region: BillingRegion) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return null;
+
+    const response = await fetch("/api/xora", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ message: userText, region }),
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as { reply?: unknown };
+    return typeof payload.reply === "string" ? payload.reply : null;
+  } catch (err) {
+    console.warn("[xora] server reply unavailable, using local fallback", err);
+    return null;
+  }
+}
+
+async function* streamContent(content: string, actions?: { label: string; to: string }[]) {
   // Stream by word / punctuation groups so it feels natural.
   const tokens = content.match(/(\s+|\S+)/g) ?? [content];
   for (const t of tokens) {

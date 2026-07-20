@@ -22,6 +22,7 @@ import {
   X,
   Check,
   Lock,
+  Sparkles,
 } from "lucide-react";
 import {
   PiHouseDuotone,
@@ -390,6 +391,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+
+      <Link
+        to="/xora"
+        aria-label="Speak to Xora"
+        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[var(--naija-green)] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_-18px_rgba(0,0,0,0.65)] transition hover:-translate-y-0.5 hover:bg-[oklch(0.42_0.13_145)] focus:outline-none focus:ring-2 focus:ring-[var(--naija-green)] focus:ring-offset-2"
+      >
+        <Sparkles className="h-4 w-4" />
+        <span className="hidden sm:inline">Xora</span>
+      </Link>
 
       {codeModal && (
         <AccessCodeModal
