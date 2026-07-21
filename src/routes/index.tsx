@@ -794,7 +794,7 @@ function SpecialDishes() {
   const marqueeItems = [...displayDishes, ...displayDishes];
 
   return (
-    <section className="relative py-20 md:py-24 bg-background">
+    <section className="relative py-20 md:py-24 bg-background overflow-x-clip">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center max-w-2xl mx-auto">
           <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Signature dishes</div>
@@ -805,9 +805,10 @@ function SpecialDishes() {
             Bestsellers cooked by chefs and African restaurants across Lagos, Abuja, London and Manchester.
           </p>
         </div>
+      </div>
 
-        <div className="relative mt-16 overflow-hidden">
-          <div className="flex w-max pt-14 pb-4 px-4 hover:[animation-play-state:paused] animate-marquee-ltr gap-6">
+      <div className="relative mt-16">
+        <div className="flex w-max pt-14 pb-4 px-4 hover:[animation-play-state:paused] animate-marquee-ltr gap-6">
             {isLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="group relative w-64 shrink-0">
@@ -841,7 +842,6 @@ function SpecialDishes() {
                 </article>
               ))
             )}
-          </div>
         </div>
       </div>
     </section>
