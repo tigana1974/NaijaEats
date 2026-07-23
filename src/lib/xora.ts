@@ -153,11 +153,11 @@ function detectIntent(text: string): Intent {
   if (/\b(hi|hey|hello|howdy|hola|how far|abeg)\b/.test(t)) return "greeting";
   if (/(plan|meal ?plan|weekly|week|schedule|prepare).*?(week|breakfast|lunch|dinner|menu)/.test(t) || /build (my|a) week/.test(t)) return "meal_plan";
   if (/\bbudget|cheap|affordable|₦|£|naira|pound|under \d/.test(t)) return "budget";
-  if (/\b(vegetarian|vegan|halal|dairy|gluten|allergy|allergen|no ?pork|no ?beef|pescatarian)\b/.test(t)) return "dietary";
+  if (/\b(vegetarian|vegan|halal|dairy|gluten|allerg(y|ies)|allergens?|no ?pork|no ?beef|pescatarian)\b/.test(t)) return "dietary";
   if (/\brecommend|suggest|what should i (eat|order)|surprise me|hungry|craving\b/.test(t)) return "recommend";
-  if (/\b(delivery|track|rider|eta|when will|how long)\b/.test(t)) return "delivery";
+  if (/\b(deliver(y|ies)|track(ing)?|riders?|eta|when will|how long)\b/.test(t)) return "delivery";
   if (/\bprice|cost|how much|expensive\b/.test(t)) return "price";
-  if (/\b(chef|restaurant|vendor|store|grocery|store list|kitchen)\b/.test(t)) return "vendors";
+  if (/\b(chefs?|restaurants?|vendors?|stores?|grocery|groceries|store lists?|kitchens?)\b/.test(t)) return "vendors";
   if (/\bwallet|top ?up|balance|refer|referral|reward|cashback\b/.test(t)) return "wallet";
   if (/\bpremium|subscribe|naija one\b/.test(t)) return "premium";
   if (/\bthank(s|you|ies)?\b/.test(t)) return "thanks";

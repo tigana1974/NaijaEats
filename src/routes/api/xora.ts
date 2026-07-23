@@ -16,7 +16,7 @@ type ContextBlock = {
   vendorType?: string | null;
 };
 
-const DEFAULT_MODEL = "gpt-5.6-terra";
+const DEFAULT_MODEL = "gpt-4o-mini";
 const MAX_MESSAGE_LENGTH = 2_000;
 
 export const Route = createFileRoute("/api/xora")({
