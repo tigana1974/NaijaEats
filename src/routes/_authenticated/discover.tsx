@@ -36,6 +36,14 @@ type VendorType = "restaurant" | "grocery" | "chef";
 
 type QuickFilter = "top" | "fast" | "freeDelivery" | null;
 
+/** Resolve a category thumbnail from the food-type name (or its admin image),
+ *  with graceful fallbacks so tiles never render blank. */
+function photoForFoodType(name: string, imageUrl?: string | null): string | null {
+  if (imageUrl) return imageUrl;
+  const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return categoryPhotos[slug] ?? categoryPhotos[slug.split("-")[0]] ?? null;
+}
+
 function DiscoverPage() {
   const { data: profile } = useMyProfile();
   const { addItem } = useCart();
@@ -62,17 +70,20 @@ function DiscoverPage() {
   });
 
   const CATEGORIES = useMemo(() => {
-    const base = [{ id: "all", label: "All", emoji: "🍽️" }];
+    const base: any[] = [{ id: "all", label: "All", emoji: "🍽️", photo: categoryPhotos.all }];
     const dynamic = (foodTypes ?? []).map(ft => ({
       id: ft.id,
       label: ft.name,
       emoji: ft.emoji || "🍲",
       isFoodType: true,
+      // Food types come from the DB with UUID ids, so we can't key the photo
+      // map by id — resolve by the type's admin image or its name slug instead.
+      photo: photoForFoodType(ft.name, ft.image_url),
     }));
     const vendors: any[] = [
-      { id: "grocery", label: "Grocery", emoji: "🥬", kind: "grocery" },
-      { id: "chefs", label: "Chefs", emoji: "👨🏾‍🍳", kind: "chef" },
-      { id: "restaurants", label: "Restaurants", emoji: "🏪", kind: "restaurant" },
+      { id: "grocery", label: "Grocery", emoji: "🥬", kind: "grocery", photo: categoryPhotos.grocery },
+      { id: "chefs", label: "Chefs", emoji: "👨🏾‍🍳", kind: "chef", photo: categoryPhotos.chefs },
+      { id: "restaurants", label: "Restaurants", emoji: "🏪", kind: "restaurant", photo: categoryPhotos.restaurants },
     ];
     return [...base, ...dynamic, ...vendors];
   }, [foodTypes]);
@@ -194,14 +205,21 @@ function DiscoverPage() {
                     active ? "ring-2 ring-[var(--brand-clay)] ring-offset-2 ring-offset-background" : "ring-1 ring-border"
                   }`}
                 >
-                  <img
-                    src={categoryPhotos[c.id]}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
+                  <span aria-hidden className="text-2xl leading-none">{c.emoji}</span>
+                  {(c as any).photo && (
+                    <img
+                      src={(c as any).photo}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      width={56}
+                      height={56}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  )}
                 </span>
                 <span className={`text-[11px] font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>
                   {c.label}

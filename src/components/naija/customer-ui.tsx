@@ -89,6 +89,8 @@ export function FeaturedPromoCard({
             src={image}
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-700 ease-out"
           />
         </div>
@@ -132,6 +134,8 @@ export function FoodCard({
           <img
             src={imageUrl}
             alt={name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           />
         ) : (
@@ -227,6 +231,8 @@ export function VendorCard({
           <img
             src={coverUrl}
             alt={name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           />
         ) : (
