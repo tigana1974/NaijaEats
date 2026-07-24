@@ -45,14 +45,15 @@ export const Route = createFileRoute("/api/xora")({
         }
 
         const userId = userData.user.id;
+        const region = body?.region === "UK" ? "UK" : "NG";
         try {
           const role = await getPrimaryRole(userId);
-          const context = await buildXoraContext(userId, role);
+          const context = await buildXoraContext(userId, role, region);
           const reply = await askOpenAI({
             apiKey,
             model: process.env.XORA_OPENAI_MODEL || DEFAULT_MODEL,
             message,
-            region: body?.region === "UK" ? "UK" : "NG",
+            region,
             context,
           });
 
@@ -101,11 +102,11 @@ async function getPrimaryRole(userId: string): Promise<AppRole> {
   return "customer";
 }
 
-async function buildXoraContext(userId: string, role: AppRole): Promise<ContextBlock> {
+async function buildXoraContext(userId: string, role: AppRole, region: "NG" | "UK"): Promise<ContextBlock> {
   if (role === "admin") return buildAdminContext();
   if (role === "vendor") return buildVendorContext(userId);
   if (role === "rider") return buildRiderContext(userId);
-  return buildCustomerContext(userId);
+  return buildCustomerContext(userId, region);
 }
 
 async function buildAdminContext(): Promise<ContextBlock> {
@@ -275,8 +276,8 @@ async function buildRiderContext(userId: string): Promise<ContextBlock> {
   };
 }
 
-async function buildCustomerContext(userId: string): Promise<ContextBlock> {
-  const [ordersRes, conversationsRes] = await Promise.all([
+async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promise<ContextBlock> {
+  const [ordersRes, conversationsRes, vendorsRes, dishesRes] = await Promise.all([
     supabaseAdmin
       .from("orders")
       .select("id,status,payment_status,total,currency,created_at,customer_note,vendor_id")
@@ -289,9 +290,27 @@ async function buildCustomerContext(userId: string): Promise<ContextBlock> {
       .eq("customer_id", userId)
       .order("last_message_at", { ascending: false })
       .limit(15),
+    // Live catalog — the whole point of Xora on the customer side is to
+    // search/list what is actually available, so pull approved vendors and
+    // available dishes for this customer's region into the context.
+    supabaseAdmin
+      .from("vendors")
+      .select("id,name,type,city,country,rating,rating_count,delivery_fee,min_order,is_featured")
+      .eq("status", "approved")
+      .eq("country", region)
+      .order("is_featured", { ascending: false })
+      .order("rating", { ascending: false })
+      .limit(60),
+    supabaseAdmin
+      .from("menu_items")
+      .select("id,name,price,is_available,vendor:vendors!inner(name,type,city,country,status)")
+      .eq("is_available", true)
+      .limit(60),
   ]);
   throwIfError(ordersRes.error, "customer orders");
   throwIfError(conversationsRes.error, "customer conversations");
+  throwIfError(vendorsRes.error, "vendor catalog");
+  throwIfError(dishesRes.error, "dish catalog");
 
   const conversationIds = (conversationsRes.data ?? []).map((c) => c.id);
   const messages = conversationIds.length
@@ -304,14 +323,32 @@ async function buildCustomerContext(userId: string): Promise<ContextBlock> {
     : { data: [], error: null };
   throwIfError(messages.error, "customer messages");
 
+  const catalogVendors = vendorsRes.data ?? [];
+  const catalogDishes = (dishesRes.data ?? []).filter(
+    (d: any) => d.vendor?.country === region && d.vendor?.status === "approved",
+  );
+
   return {
     role: "customer",
-    summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders and ${conversationIds.length} conversations.`,
+    summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, and a live ${region} catalog of ${catalogVendors.length} approved vendors and ${catalogDishes.length} available dishes.`,
     data: {
+      region,
       orderStatusCounts: countBy(ordersRes.data ?? [], "status"),
       recentOrders: (ordersRes.data ?? []).map(compactOrder),
       recentConversations: (conversationsRes.data ?? []).map(compactConversation),
       recentMessageSnippets: (messages.data ?? []).map(compactMessage),
+      catalog: {
+        vendors: catalogVendors.map((v: any) =>
+          pick(v, ["id", "name", "type", "city", "rating", "rating_count", "delivery_fee", "min_order"]),
+        ),
+        dishes: catalogDishes.map((d: any) => ({
+          name: d.name,
+          price: d.price,
+          vendor: d.vendor?.name ?? null,
+          type: d.vendor?.type ?? null,
+          city: d.vendor?.city ?? null,
+        })),
+      },
     },
   };
 }
@@ -461,6 +498,7 @@ function personaInstructions(context: ContextBlock): string {
     ...shared,
     "Persona: a warm Nigerian foodie concierge for a NaijaEats customer.",
     "Focus on discovering dishes and vendors, planning meals, tracking orders, chef bookings, and using the wallet. Be friendly and food-loving, never corporate.",
+    "When the user asks to find or list chefs, restaurants, groceries or dishes, USE data.catalog in the context: filter by city, type (chef | restaurant | grocery) or name and give concrete names with their city and rating. Never say you lack access when the catalog is present. If nothing matches, say so plainly and suggest the closest alternatives.",
   ].join("\n");
 }
 

@@ -341,7 +341,10 @@ async function tryServerReply(userText: string, region: BillingRegion) {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    if (!token) return null;
+    if (!token) {
+      console.warn("[xora] no signed-in session — using local fallback. Log in for full, catalog-aware answers.");
+      return null;
+    }
 
     const response = await fetch("/api/xora", {
       method: "POST",
@@ -351,7 +354,10 @@ async function tryServerReply(userText: string, region: BillingRegion) {
       },
       body: JSON.stringify({ message: userText, region }),
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`[xora] /api/xora responded ${response.status} — using local fallback.`);
+      return null;
+    }
     const payload = (await response.json()) as { reply?: unknown };
     return typeof payload.reply === "string" ? payload.reply : null;
   } catch (err) {
