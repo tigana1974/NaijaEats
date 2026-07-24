@@ -16,11 +16,7 @@ type ContextBlock = {
   vendorType?: string | null;
 };
 
-<<<<<<< HEAD
-const DEFAULT_MODEL = "gpt-4o-mini";
-=======
 const DEFAULT_MODEL = "gpt-5-nano";
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
 const MAX_MESSAGE_LENGTH = 2_000;
 const MAX_OUTPUT_TOKENS = 500;
 
@@ -53,10 +49,6 @@ export const Route = createFileRoute("/api/xora")({
         const region = body?.region === "UK" ? "UK" : "NG";
         try {
           const role = await getPrimaryRole(userId);
-<<<<<<< HEAD
-=======
-          const region = body?.region === "UK" ? "UK" : "NG";
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
           const context = await buildXoraContext(userId, role, region);
           const reply = await askOpenAI({
             apiKey,
@@ -286,11 +278,7 @@ async function buildRiderContext(userId: string): Promise<ContextBlock> {
 }
 
 async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promise<ContextBlock> {
-<<<<<<< HEAD
-  const [ordersRes, conversationsRes, vendorsRes, dishesRes] = await Promise.all([
-=======
-  const [ordersRes, conversationsRes, vendorsRes, chefsRes] = await Promise.all([
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
+  const [ordersRes, conversationsRes, vendorsRes, chefsRes, dishesRes] = await Promise.all([
     supabaseAdmin
       .from("orders")
       .select("id,status,payment_status,total,currency,created_at,customer_note,vendor_id")
@@ -303,34 +291,12 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
       .eq("customer_id", userId)
       .order("last_message_at", { ascending: false })
       .limit(15),
-<<<<<<< HEAD
-    // Live catalog — the whole point of Xora on the customer side is to
-    // search/list what is actually available, so pull approved vendors and
-    // available dishes for this customer's region into the context.
     supabaseAdmin
       .from("vendors")
-      .select("id,name,type,city,country,rating,rating_count,delivery_fee,min_order,is_featured")
+      .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services,min_order,delivery_fee,prep_time_minutes,is_featured")
       .eq("status", "approved")
       .eq("country", region)
       .order("is_featured", { ascending: false })
-      .order("rating", { ascending: false })
-      .limit(60),
-    supabaseAdmin
-      .from("menu_items")
-      .select("id,name,price,is_available,vendor:vendors!inner(name,type,city,country,status)")
-      .eq("is_available", true)
-      .limit(60),
-  ]);
-  throwIfError(ordersRes.error, "customer orders");
-  throwIfError(conversationsRes.error, "customer conversations");
-  throwIfError(vendorsRes.error, "vendor catalog");
-  throwIfError(dishesRes.error, "dish catalog");
-=======
-    supabaseAdmin
-      .from("vendors")
-      .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services,min_order,delivery_fee,prep_time_minutes")
-      .eq("status", "approved")
-      .eq("country", region)
       .order("rating", { ascending: false })
       .limit(60),
     supabaseAdmin
@@ -341,12 +307,17 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
       .eq("type", "chef")
       .order("rating", { ascending: false })
       .limit(40),
+    supabaseAdmin
+      .from("menu_items")
+      .select("id,name,price,is_available,vendor:vendors!inner(name,type,state,city,country,status)")
+      .eq("is_available", true)
+      .limit(60),
   ]);
   throwIfError(ordersRes.error, "customer orders");
   throwIfError(conversationsRes.error, "customer conversations");
   throwIfError(vendorsRes.error, "approved vendors");
   throwIfError(chefsRes.error, "approved chefs");
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
+  throwIfError(dishesRes.error, "dish catalog");
 
   const conversationIds = (conversationsRes.data ?? []).map((c) => c.id);
   const messages = conversationIds.length
@@ -360,44 +331,35 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
   throwIfError(messages.error, "customer messages");
 
   const catalogVendors = vendorsRes.data ?? [];
+  const catalogChefs = chefsRes.data ?? [];
   const catalogDishes = (dishesRes.data ?? []).filter(
     (d: any) => d.vendor?.country === region && d.vendor?.status === "approved",
   );
 
   return {
     role: "customer",
-<<<<<<< HEAD
-    summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, and a live ${region} catalog of ${catalogVendors.length} approved vendors and ${catalogDishes.length} available dishes.`,
-=======
-    summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, ${(vendorsRes.data ?? []).length} approved marketplace vendors, and ${(chefsRes.data ?? []).length} approved chefs in ${region}.`,
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
+    summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, ${catalogVendors.length} approved marketplace vendors, ${catalogChefs.length} approved chefs, and ${catalogDishes.length} available dishes in ${region}.`,
     data: {
       region,
       orderStatusCounts: countBy(ordersRes.data ?? [], "status"),
       recentOrders: (ordersRes.data ?? []).map(compactOrder),
       recentConversations: (conversationsRes.data ?? []).map(compactConversation),
       recentMessageSnippets: (messages.data ?? []).map(compactMessage),
-<<<<<<< HEAD
+      approvedMarketplaceVendors: catalogVendors.map(compactMarketplaceVendor),
+      approvedChefs: catalogChefs.map(compactMarketplaceVendor),
       catalog: {
-        vendors: catalogVendors.map((v: any) =>
-          pick(v, ["id", "name", "type", "city", "rating", "rating_count", "delivery_fee", "min_order"]),
-        ),
         dishes: catalogDishes.map((d: any) => ({
           name: d.name,
           price: d.price,
           vendor: d.vendor?.name ?? null,
           type: d.vendor?.type ?? null,
+          state: d.vendor?.state ?? null,
           city: d.vendor?.city ?? null,
         })),
       },
-=======
-      approvedMarketplaceVendors: (vendorsRes.data ?? []).map(compactMarketplaceVendor),
-      approvedChefs: (chefsRes.data ?? []).map(compactMarketplaceVendor),
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
     },
   };
 }
-
 function throwIfError(error: { message: string } | null, label: string) {
   if (error) throw new Error(`Could not load ${label}: ${error.message}`);
 }
@@ -569,13 +531,9 @@ function personaInstructions(context: ContextBlock): string {
     ...shared,
     "Persona: a warm Nigerian foodie concierge for a NaijaEats customer.",
     "Focus on discovering dishes and vendors, planning meals, tracking orders, chef bookings, and using the wallet. Be friendly and food-loving, never corporate.",
-<<<<<<< HEAD
-    "When the user asks to find or list chefs, restaurants, groceries or dishes, USE data.catalog in the context: filter by city, type (chef | restaurant | grocery) or name and give concrete names with their city and rating. Never say you lack access when the catalog is present. If nothing matches, say so plainly and suggest the closest alternatives.",
-=======
-    "For questions asking for chefs, restaurants, groceries, vendors, locations, cities, or states, use the approvedMarketplaceVendors and approvedChefs data first.",
+    "When the user asks to find or list chefs, restaurants, groceries or dishes, use the approvedMarketplaceVendors, approvedChefs, and catalog data in the context.",
     "For state/location requests, match against state first, then city and address_line.",
     "When listing vendors, include name, type, city/state, rating when available, and a short reason. Do not invent vendors that are not in the provided data.",
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
   ].join("\n");
 }
 

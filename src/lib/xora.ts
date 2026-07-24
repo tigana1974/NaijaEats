@@ -347,14 +347,10 @@ async function tryServerReply(userText: string, region: BillingRegion) {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-<<<<<<< HEAD
     if (!token) {
       console.warn("[xora] no signed-in session — using local fallback. Log in for full, catalog-aware answers.");
-      return null;
+      return { reachedServer: false, reply: null };
     }
-=======
-    if (!token) return { reachedServer: false, reply: null };
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
 
     const response = await fetch("/api/xora", {
       method: "POST",
@@ -364,14 +360,10 @@ async function tryServerReply(userText: string, region: BillingRegion) {
       },
       body: JSON.stringify({ message: userText, region }),
     });
-<<<<<<< HEAD
     if (!response.ok) {
       console.warn(`[xora] /api/xora responded ${response.status} — using local fallback.`);
-      return null;
+      return { reachedServer: true, reply: null };
     }
-=======
-    if (!response.ok) return { reachedServer: true, reply: null };
->>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
     const payload = (await response.json()) as { reply?: unknown };
     return {
       reachedServer: true,
