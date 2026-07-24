@@ -324,8 +324,14 @@ export async function* generateReply(
 ): AsyncGenerator<{ delta?: string; done?: boolean; actions?: { label: string; to: string }[] }> {
   const region = opts?.region ?? getRegion();
   const serverReply = await tryServerReply(userText, region);
-  if (serverReply) {
-    yield* streamContent(serverReply);
+  if (serverReply.reply) {
+    yield* streamContent(serverReply.reply);
+    return;
+  }
+  if (serverReply.reachedServer) {
+    yield* streamContent(
+      "Xora is connected to NaijaEats, but I could not reach the AI service just now. Please try again in a moment.",
+    );
     return;
   }
 
@@ -341,10 +347,14 @@ async function tryServerReply(userText: string, region: BillingRegion) {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
+<<<<<<< HEAD
     if (!token) {
       console.warn("[xora] no signed-in session — using local fallback. Log in for full, catalog-aware answers.");
       return null;
     }
+=======
+    if (!token) return { reachedServer: false, reply: null };
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
 
     const response = await fetch("/api/xora", {
       method: "POST",
@@ -354,15 +364,22 @@ async function tryServerReply(userText: string, region: BillingRegion) {
       },
       body: JSON.stringify({ message: userText, region }),
     });
+<<<<<<< HEAD
     if (!response.ok) {
       console.warn(`[xora] /api/xora responded ${response.status} — using local fallback.`);
       return null;
     }
+=======
+    if (!response.ok) return { reachedServer: true, reply: null };
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
     const payload = (await response.json()) as { reply?: unknown };
-    return typeof payload.reply === "string" ? payload.reply : null;
+    return {
+      reachedServer: true,
+      reply: typeof payload.reply === "string" ? payload.reply : null,
+    };
   } catch (err) {
     console.warn("[xora] server reply unavailable, using local fallback", err);
-    return null;
+    return { reachedServer: false, reply: null };
   }
 }
 

@@ -117,7 +117,7 @@ function AdminStores() {
     queryFn: async () => {
       let q = supabase
         .from("vendors")
-        .select("id,name,type,status,city,country,created_at,address_line,description")
+        .select("id,name,type,status,city,state,country,created_at,address_line,description")
         .order("created_at", { ascending: false });
       if (country) q = q.eq("country", country);
       const { data, error } = await q;
@@ -211,6 +211,7 @@ function AdminStores() {
                 Name: "name",
                 Type: "type",
                 Status: "status",
+                State: (r: any) => r.state ?? "",
                 City: (r: any) => r.city ?? "",
                 Country: (r: any) => r.country ?? "",
                 Onboarded: (r: any) => r.created_at ?? "",
@@ -250,7 +251,7 @@ function AdminStores() {
                       <UberTd className="capitalize text-neutral-700">{v.type || "—"}</UberTd>
                       <UberTd><UberStatus status={v.status} /></UberTd>
                       <UberTd className="text-neutral-600">
-                        {[v.city, v.country].filter(Boolean).join(", ") || "—"}
+                        {[v.city, v.state, v.country].filter(Boolean).join(", ") || "—"}
                       </UberTd>
                       <UberTd className="text-neutral-700">
                         —
@@ -292,7 +293,7 @@ function AdminStores() {
                             <div>
                               <div className="font-medium mb-1">Contact & Location</div>
                               <div className="text-neutral-600">No phone provided (see owner profile)</div>
-                              <div className="text-neutral-600">{[v.address_line, v.city, v.country].filter(Boolean).join(", ") || "No address provided"}</div>
+                              <div className="text-neutral-600">{[v.address_line, v.city, v.state, v.country].filter(Boolean).join(", ") || "No address provided"}</div>
                             </div>
                             <div>
                               <div className="font-medium mb-1">Description</div>

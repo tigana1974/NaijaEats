@@ -128,7 +128,7 @@ function SearchPage() {
         .select("*")
         .eq("status", "approved")
         .eq("country", country)
-        .or(`name.ilike.${like},tagline.ilike.${like},city.ilike.${like},address_line.ilike.${like}`);
+        .or(`name.ilike.${like},tagline.ilike.${like},city.ilike.${like},state.ilike.${like},address_line.ilike.${like}`);
         
       if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
         query = query.eq("type", filter);

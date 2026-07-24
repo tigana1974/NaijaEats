@@ -18,6 +18,7 @@ type Form = {
   description: string;
   type: "restaurant" | "chef" | "grocery";
   country: "NG" | "UK";
+  state: string;
   city: string;
   address_line: string;
   cover_image_url: string;
@@ -35,6 +36,7 @@ const defaultForm: Form = {
   description: "",
   type: "restaurant",
   country: "NG",
+  state: "",
   city: "",
   address_line: "",
   cover_image_url: "",
@@ -121,6 +123,7 @@ function VendorProfilePage() {
         description: existing.description ?? "",
         type: normalizeVendorType(existing.type),
         country: existing.country,
+        state: existing.state ?? "",
         city: existing.city ?? "",
         address_line: existing.address_line ?? "",
         cover_image_url: existing.cover_image_url ?? "",
@@ -259,6 +262,7 @@ function VendorProfilePage() {
         slug,
         currency,
         owner_id: uid,
+        state: form.state.trim() || null,
         hourly_rate: form.hourly_rate > 0 ? form.hourly_rate : null,
         event_services: form.event_services.trim() || null,
       };
@@ -352,13 +356,23 @@ function VendorProfilePage() {
                   <option value="UK">United Kingdom</option>
                 </select>
               </Field>
+              <Field label={form.country === "NG" ? "State" : "County / region"}>
+                <input
+                  className="vinput"
+                  value={form.state}
+                  onChange={(e) => set("state", e.target.value)}
+                  placeholder={form.country === "NG" ? "e.g. Lagos State" : "e.g. Greater London"}
+                />
+              </Field>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
               <Field label="City">
                 <input className="vinput" required value={form.city} onChange={(e) => set("city", e.target.value)} />
               </Field>
+              <Field label="Street address">
+                <input className="vinput" value={form.address_line} onChange={(e) => set("address_line", e.target.value)} />
+              </Field>
             </div>
-            <Field label="Street address">
-              <input className="vinput" value={form.address_line} onChange={(e) => set("address_line", e.target.value)} />
-            </Field>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Cover image">
                 <ImageUpload

@@ -1793,6 +1793,7 @@ export type Database = {
           rating_count: number | null
           slug: string
           status: Database["public"]["Enums"]["vendor_status"]
+          state: string | null
           tagline: string | null
           type: Database["public"]["Enums"]["vendor_type"]
           updated_at: string
@@ -1821,6 +1822,7 @@ export type Database = {
           rating_count?: number | null
           slug: string
           status?: Database["public"]["Enums"]["vendor_status"]
+          state?: string | null
           tagline?: string | null
           type: Database["public"]["Enums"]["vendor_type"]
           updated_at?: string
@@ -1849,6 +1851,7 @@ export type Database = {
           rating_count?: number | null
           slug?: string
           status?: Database["public"]["Enums"]["vendor_status"]
+          state?: string | null
           tagline?: string | null
           type?: Database["public"]["Enums"]["vendor_type"]
           updated_at?: string

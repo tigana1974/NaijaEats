@@ -16,8 +16,13 @@ type ContextBlock = {
   vendorType?: string | null;
 };
 
+<<<<<<< HEAD
 const DEFAULT_MODEL = "gpt-4o-mini";
+=======
+const DEFAULT_MODEL = "gpt-5-nano";
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
 const MAX_MESSAGE_LENGTH = 2_000;
+const MAX_OUTPUT_TOKENS = 500;
 
 export const Route = createFileRoute("/api/xora")({
   server: {
@@ -48,6 +53,10 @@ export const Route = createFileRoute("/api/xora")({
         const region = body?.region === "UK" ? "UK" : "NG";
         try {
           const role = await getPrimaryRole(userId);
+<<<<<<< HEAD
+=======
+          const region = body?.region === "UK" ? "UK" : "NG";
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
           const context = await buildXoraContext(userId, role, region);
           const reply = await askOpenAI({
             apiKey,
@@ -121,7 +130,7 @@ async function buildAdminContext(): Promise<ContextBlock> {
   ] = await Promise.all([
     supabaseAdmin
       .from("vendors")
-      .select("id,name,type,status,country,city,rating,rating_count,created_at")
+      .select("id,name,type,status,country,state,city,rating,rating_count,created_at")
       .order("created_at", { ascending: false })
       .limit(25),
     supabaseAdmin
@@ -190,7 +199,7 @@ async function buildAdminContext(): Promise<ContextBlock> {
 async function buildVendorContext(userId: string): Promise<ContextBlock> {
   const { data: vendors, error: vendorError } = await supabaseAdmin
     .from("vendors")
-    .select("id,name,type,status,country,city,rating,rating_count,currency,created_at")
+    .select("id,name,type,status,country,state,city,rating,rating_count,currency,created_at")
     .eq("owner_id", userId)
     .order("created_at", { ascending: false })
     .limit(10);
@@ -277,7 +286,11 @@ async function buildRiderContext(userId: string): Promise<ContextBlock> {
 }
 
 async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promise<ContextBlock> {
+<<<<<<< HEAD
   const [ordersRes, conversationsRes, vendorsRes, dishesRes] = await Promise.all([
+=======
+  const [ordersRes, conversationsRes, vendorsRes, chefsRes] = await Promise.all([
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
     supabaseAdmin
       .from("orders")
       .select("id,status,payment_status,total,currency,created_at,customer_note,vendor_id")
@@ -290,6 +303,7 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
       .eq("customer_id", userId)
       .order("last_message_at", { ascending: false })
       .limit(15),
+<<<<<<< HEAD
     // Live catalog — the whole point of Xora on the customer side is to
     // search/list what is actually available, so pull approved vendors and
     // available dishes for this customer's region into the context.
@@ -311,6 +325,28 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
   throwIfError(conversationsRes.error, "customer conversations");
   throwIfError(vendorsRes.error, "vendor catalog");
   throwIfError(dishesRes.error, "dish catalog");
+=======
+    supabaseAdmin
+      .from("vendors")
+      .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services,min_order,delivery_fee,prep_time_minutes")
+      .eq("status", "approved")
+      .eq("country", region)
+      .order("rating", { ascending: false })
+      .limit(60),
+    supabaseAdmin
+      .from("vendors")
+      .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services")
+      .eq("status", "approved")
+      .eq("country", region)
+      .eq("type", "chef")
+      .order("rating", { ascending: false })
+      .limit(40),
+  ]);
+  throwIfError(ordersRes.error, "customer orders");
+  throwIfError(conversationsRes.error, "customer conversations");
+  throwIfError(vendorsRes.error, "approved vendors");
+  throwIfError(chefsRes.error, "approved chefs");
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
 
   const conversationIds = (conversationsRes.data ?? []).map((c) => c.id);
   const messages = conversationIds.length
@@ -330,13 +366,18 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
 
   return {
     role: "customer",
+<<<<<<< HEAD
     summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, and a live ${region} catalog of ${catalogVendors.length} approved vendors and ${catalogDishes.length} available dishes.`,
+=======
+    summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, ${(vendorsRes.data ?? []).length} approved marketplace vendors, and ${(chefsRes.data ?? []).length} approved chefs in ${region}.`,
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
     data: {
       region,
       orderStatusCounts: countBy(ordersRes.data ?? [], "status"),
       recentOrders: (ordersRes.data ?? []).map(compactOrder),
       recentConversations: (conversationsRes.data ?? []).map(compactConversation),
       recentMessageSnippets: (messages.data ?? []).map(compactMessage),
+<<<<<<< HEAD
       catalog: {
         vendors: catalogVendors.map((v: any) =>
           pick(v, ["id", "name", "type", "city", "rating", "rating_count", "delivery_fee", "min_order"]),
@@ -349,6 +390,10 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
           city: d.vendor?.city ?? null,
         })),
       },
+=======
+      approvedMarketplaceVendors: (vendorsRes.data ?? []).map(compactMarketplaceVendor),
+      approvedChefs: (chefsRes.data ?? []).map(compactMarketplaceVendor),
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
     },
   };
 }
@@ -366,7 +411,33 @@ function countBy<T extends Record<string, unknown>>(rows: T[], key: keyof T) {
 }
 
 function compactVendor(v: Record<string, unknown>) {
-  return pick(v, ["id", "name", "type", "status", "country", "city", "rating", "rating_count"]);
+  return pick(v, ["id", "name", "type", "status", "country", "state", "city", "rating", "rating_count"]);
+}
+
+function compactMarketplaceVendor(v: Record<string, unknown>) {
+  return {
+    ...pick(v, [
+      "id",
+      "name",
+      "type",
+      "status",
+      "country",
+      "state",
+      "city",
+      "address_line",
+      "slug",
+      "cuisine",
+      "tagline",
+      "rating",
+      "rating_count",
+      "hourly_rate",
+      "event_services",
+      "min_order",
+      "delivery_fee",
+      "prep_time_minutes",
+    ]),
+    description: truncate(String(v.description ?? ""), 220),
+  };
 }
 
 function compactOrder(o: Record<string, unknown>) {
@@ -430,7 +501,7 @@ async function askOpenAI({
         `NaijaEats context JSON:\n${JSON.stringify(context.data, null, 2)}`,
         `User question:\n${message}`,
       ].join("\n\n"),
-      max_output_tokens: 700,
+      max_output_tokens: MAX_OUTPUT_TOKENS,
     }),
   });
 
@@ -498,7 +569,13 @@ function personaInstructions(context: ContextBlock): string {
     ...shared,
     "Persona: a warm Nigerian foodie concierge for a NaijaEats customer.",
     "Focus on discovering dishes and vendors, planning meals, tracking orders, chef bookings, and using the wallet. Be friendly and food-loving, never corporate.",
+<<<<<<< HEAD
     "When the user asks to find or list chefs, restaurants, groceries or dishes, USE data.catalog in the context: filter by city, type (chef | restaurant | grocery) or name and give concrete names with their city and rating. Never say you lack access when the catalog is present. If nothing matches, say so plainly and suggest the closest alternatives.",
+=======
+    "For questions asking for chefs, restaurants, groceries, vendors, locations, cities, or states, use the approvedMarketplaceVendors and approvedChefs data first.",
+    "For state/location requests, match against state first, then city and address_line.",
+    "When listing vendors, include name, type, city/state, rating when available, and a short reason. Do not invent vendors that are not in the provided data.",
+>>>>>>> aa6a6a3 (Improve Xora context and vendor locations)
   ].join("\n");
 }
 
