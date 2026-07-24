@@ -44,6 +44,30 @@ function photoForFoodType(name: string, imageUrl?: string | null): string | null
   return categoryPhotos[slug] ?? categoryPhotos[slug.split("-")[0]] ?? null;
 }
 
+/**
+ * Category rail thumbnail. Shows ONLY the photo when one is available (no
+ * layer behind it); falls back to the emoji only if there is no photo or the
+ * image fails to load.
+ */
+function CategoryThumb({ photo, emoji }: { photo?: string | null; emoji: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!photo || failed) {
+    return <span aria-hidden className="text-2xl leading-none">{emoji}</span>;
+  }
+  return (
+    <img
+      src={photo}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      width={56}
+      height={56}
+      className="absolute inset-0 h-full w-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function DiscoverPage() {
   const { data: profile } = useMyProfile();
   const { addItem } = useCart();
@@ -205,21 +229,7 @@ function DiscoverPage() {
                     active ? "ring-2 ring-[var(--brand-clay)] ring-offset-2 ring-offset-background" : "ring-1 ring-border"
                   }`}
                 >
-                  <span aria-hidden className="text-2xl leading-none">{c.emoji}</span>
-                  {(c as any).photo && (
-                    <img
-                      src={(c as any).photo}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      width={56}
-                      height={56}
-                      className="absolute inset-0 h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  )}
+                  <CategoryThumb photo={(c as any).photo} emoji={c.emoji} />
                 </span>
                 <span className={`text-[11px] font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>
                   {c.label}
