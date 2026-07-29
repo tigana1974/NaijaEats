@@ -320,10 +320,10 @@ Ask me anything — I speak plain English (and a little Pidgin when you do 😉)
  */
 export async function* generateReply(
   userText: string,
-  opts?: { region?: BillingRegion },
+  opts?: { region?: BillingRegion; history?: XoraMessage[] },
 ): AsyncGenerator<{ delta?: string; done?: boolean; actions?: { label: string; to: string }[] }> {
   const region = opts?.region ?? getRegion();
-  const serverReply = await tryServerReply(userText, region);
+  const serverReply = await tryServerReply(userText, region, opts?.history ?? []);
   if (serverReply.reply) {
     yield* streamContent(serverReply.reply);
     return;
@@ -343,7 +343,7 @@ export async function* generateReply(
   yield* streamContent(content, actions);
 }
 
-async function tryServerReply(userText: string, region: BillingRegion) {
+async function tryServerReply(userText: string, region: BillingRegion, history: XoraMessage[]) {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
@@ -358,7 +358,17 @@ async function tryServerReply(userText: string, region: BillingRegion) {
         authorization: `Bearer ${token}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ message: userText, region }),
+      body: JSON.stringify({
+        message: userText,
+        region,
+        history: history
+          .filter((message) => message.content.trim())
+          .slice(-8)
+          .map((message) => ({
+            role: message.role === "xora" ? "assistant" : "user",
+            content: message.content,
+          })),
+      }),
     });
     if (!response.ok) {
       console.warn(`[xora] /api/xora responded ${response.status} — using local fallback.`);

@@ -140,6 +140,7 @@ function XoraChatPage() {
   const send = async (rawText: string) => {
     const text = rawText.trim();
     if (!text || streaming) return;
+    const history = thread.messages.filter((message) => message.content.trim()).slice(-8);
 
     const userMsg: ChatMsg = {
       id: crypto.randomUUID(),
@@ -165,7 +166,7 @@ function XoraChatPage() {
 
     try {
       let acc = "";
-      for await (const chunk of generateReply(text, { region })) {
+      for await (const chunk of generateReply(text, { region, history })) {
         if (chunk.delta) {
           acc += chunk.delta;
           setThread((prev) => ({
