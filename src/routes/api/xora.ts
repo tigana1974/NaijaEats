@@ -540,6 +540,8 @@ async function askOpenAI({
         `User question:\n${message}`,
       ].join("\n\n"),
       max_output_tokens: MAX_OUTPUT_TOKENS,
+      reasoning: { effort: "minimal" },
+      text: { verbosity: "low" },
     }),
   });
 
