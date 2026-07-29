@@ -120,11 +120,7 @@ async function buildAdminContext(): Promise<ContextBlock> {
     vendorDocsRes,
     riderDocsRes,
   ] = await Promise.all([
-    supabaseAdmin
-      .from("vendors")
-      .select("id,name,type,status,country,state,city,rating,rating_count,created_at")
-      .order("created_at", { ascending: false })
-      .limit(25),
+    loadAdminVendors(),
     supabaseAdmin
       .from("orders")
       .select("id,status,payment_status,total,currency,created_at,customer_note,vendor_id")
@@ -189,12 +185,7 @@ async function buildAdminContext(): Promise<ContextBlock> {
 }
 
 async function buildVendorContext(userId: string): Promise<ContextBlock> {
-  const { data: vendors, error: vendorError } = await supabaseAdmin
-    .from("vendors")
-    .select("id,name,type,status,country,state,city,rating,rating_count,currency,created_at")
-    .eq("owner_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const { data: vendors, error: vendorError } = await loadOwnedVendors(userId);
   throwIfError(vendorError, "vendor profile");
 
   const vendorIds = (vendors ?? []).map((v) => v.id);
@@ -291,27 +282,9 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
       .eq("customer_id", userId)
       .order("last_message_at", { ascending: false })
       .limit(15),
-    supabaseAdmin
-      .from("vendors")
-      .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services,min_order,delivery_fee,prep_time_minutes,is_featured")
-      .eq("status", "approved")
-      .eq("country", region)
-      .order("is_featured", { ascending: false })
-      .order("rating", { ascending: false })
-      .limit(60),
-    supabaseAdmin
-      .from("vendors")
-      .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services")
-      .eq("status", "approved")
-      .eq("country", region)
-      .eq("type", "chef")
-      .order("rating", { ascending: false })
-      .limit(40),
-    supabaseAdmin
-      .from("menu_items")
-      .select("id,name,price,is_available,vendor:vendors!inner(name,type,state,city,country,status)")
-      .eq("is_available", true)
-      .limit(60),
+    loadMarketplaceVendors(region),
+    loadMarketplaceChefs(region),
+    loadMarketplaceDishes(),
   ]);
   throwIfError(ordersRes.error, "customer orders");
   throwIfError(conversationsRes.error, "customer conversations");
@@ -341,6 +314,9 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
     summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, ${catalogVendors.length} approved marketplace vendors, ${catalogChefs.length} approved chefs, and ${catalogDishes.length} available dishes in ${region}.`,
     data: {
       region,
+      locationData: vendorsRes.stateAvailable && chefsRes.stateAvailable && dishesRes.stateAvailable
+        ? "state-and-city"
+        : "city-only; the vendor state migration has not been applied",
       orderStatusCounts: countBy(ordersRes.data ?? [], "status"),
       recentOrders: (ordersRes.data ?? []).map(compactOrder),
       recentConversations: (conversationsRes.data ?? []).map(compactConversation),
@@ -360,6 +336,106 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
     },
   };
 }
+
+async function loadAdminVendors() {
+  const result = await supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,state,city,rating,rating_count,created_at")
+    .order("created_at", { ascending: false })
+    .limit(25);
+  if (!isMissingVendorState(result.error)) return result;
+
+  return supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,city,rating,rating_count,created_at")
+    .order("created_at", { ascending: false })
+    .limit(25);
+}
+
+async function loadOwnedVendors(userId: string) {
+  const result = await supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,state,city,rating,rating_count,currency,created_at")
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (!isMissingVendorState(result.error)) return result;
+
+  return supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,city,rating,rating_count,currency,created_at")
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+}
+
+async function loadMarketplaceVendors(region: "NG" | "UK") {
+  const result = await supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services,min_order,delivery_fee,prep_time_minutes,is_featured")
+    .eq("status", "approved")
+    .eq("country", region)
+    .order("is_featured", { ascending: false })
+    .order("rating", { ascending: false })
+    .limit(60);
+  if (!isMissingVendorState(result.error)) return { ...result, stateAvailable: true };
+
+  const fallback = await supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services,min_order,delivery_fee,prep_time_minutes,is_featured")
+    .eq("status", "approved")
+    .eq("country", region)
+    .order("is_featured", { ascending: false })
+    .order("rating", { ascending: false })
+    .limit(60);
+  return { ...fallback, stateAvailable: false };
+}
+
+async function loadMarketplaceChefs(region: "NG" | "UK") {
+  const result = await supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,state,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services")
+    .eq("status", "approved")
+    .eq("country", region)
+    .eq("type", "chef")
+    .order("rating", { ascending: false })
+    .limit(40);
+  if (!isMissingVendorState(result.error)) return { ...result, stateAvailable: true };
+
+  const fallback = await supabaseAdmin
+    .from("vendors")
+    .select("id,name,type,status,country,city,address_line,slug,cuisine,tagline,description,rating,rating_count,hourly_rate,event_services")
+    .eq("status", "approved")
+    .eq("country", region)
+    .eq("type", "chef")
+    .order("rating", { ascending: false })
+    .limit(40);
+  return { ...fallback, stateAvailable: false };
+}
+
+async function loadMarketplaceDishes() {
+  const result = await supabaseAdmin
+    .from("menu_items")
+    .select("id,name,price,is_available,vendor:vendors!inner(name,type,state,city,country,status)")
+    .eq("is_available", true)
+    .limit(60);
+  if (!isMissingVendorState(result.error)) return { ...result, stateAvailable: true };
+
+  const fallback = await supabaseAdmin
+    .from("menu_items")
+    .select("id,name,price,is_available,vendor:vendors!inner(name,type,city,country,status)")
+    .eq("is_available", true)
+    .limit(60);
+  return { ...fallback, stateAvailable: false };
+}
+
+function isMissingVendorState(error: { code?: string; message: string } | null) {
+  if (!error) return false;
+  return error.code === "42703"
+    || error.code === "PGRST204"
+    || /(?:column[^\n]*state|state[^\n]*column)/i.test(error.message);
+}
+
 function throwIfError(error: { message: string } | null, label: string) {
   if (error) throw new Error(`Could not load ${label}: ${error.message}`);
 }
