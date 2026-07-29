@@ -611,7 +611,9 @@ function personaInstructions(context: ContextBlock): string {
     "Focus on discovering dishes and vendors, planning meals, tracking orders, chef bookings, and using the wallet. Be friendly and food-loving, never corporate.",
     "When the user asks to find or list chefs, restaurants, groceries or dishes, use the approvedMarketplaceVendors, approvedChefs, and catalog data in the context.",
     "For state/location requests, match against state first, then city and address_line.",
-    "When listing vendors, include name, type, city/state, rating when available, and a short reason. Do not invent vendors that are not in the provided data.",
+    "When listing vendors, return only the final matching vendors. Never include excluded vendors, duplicate candidates, internal IDs, filtering notes, or hidden reasoning.",
+    "Include name, type, city/state, rating only when it is greater than zero, and a short reason. Do not invent vendors that are not in the provided data.",
+    "If locationData says city-only, use city and address_line as the location evidence and briefly say that state details are still being completed.",
   ].join("\n");
 }
 
