@@ -58,6 +58,10 @@ export const Route = createFileRoute("/api/xora")({
         try {
           const role = await getPrimaryRole(userId);
           const context = await buildXoraContext(userId, role, region, message);
+          const guardedReply = getGuardedCustomerReply(role, message);
+          if (guardedReply) {
+            return json({ reply: guardedReply, role, contextSummary: context.summary });
+          }
           const reply = await askOpenAI({
             apiKey,
             model: process.env.XORA_OPENAI_MODEL || DEFAULT_MODEL,
@@ -405,6 +409,22 @@ function findBudgetLimit(message: string): number | null {
 
 function isDietaryQuestion(message: string) {
   return /\b(?:vegetarian|vegan|halal|kosher|pescatarian|gluten[- ]?free|dairy[- ]?free|allerg(?:y|ies|en|ens)|no[- ]?pork|no[- ]?beef)\b/i.test(message);
+}
+
+function getGuardedCustomerReply(role: AppRole, message: string) {
+  if (role !== "customer") return null;
+  if (isDietaryQuestion(message)) {
+    return "I can't confirm any currently available dish as suitable for a specific diet or allergy because NaijaEats does not yet have verified ingredient and dietary details for these menu items. Please confirm ingredients and preparation directly with the vendor before ordering.";
+  }
+  if (isAdminOnlyCustomerQuestion(message)) {
+    return "That information is restricted to NaijaEats administrators and is not available in customer Xora. I can help with customer-visible information such as approved vendors, available dishes, your own orders, wallet, and support.";
+  }
+  return null;
+}
+
+function isAdminOnlyCustomerQuestion(message: string) {
+  return /(?:platform[- ]wide|total\s+naijaeats|admin[- ]only|admin\s+dashboard|vendor\s+verification|verification\s+documents?|all\s+(?:customer|vendor|order|payout)s?)/i.test(message)
+    && /(?:revenue|verification|documents?|customers?|vendors?|orders?|payouts?|dashboard)/i.test(message);
 }
 
 function findRequestedLocation(
