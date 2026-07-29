@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronLeft, CreditCard, ChevronDown, ChevronUp, Bike, ShoppingCart } from "lucide-react";
+import { ChevronLeft, CreditCard, ChevronDown, ChevronUp, Bike, ShoppingCart, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { loadWallet, walletPayOrder } from "@/lib/wallet";
 import { printHtml } from "@/lib/csv";
@@ -123,6 +123,16 @@ function OrderDetailPage() {
             </div>
           </div>
         </div>
+        {data.vendor_id && (
+          <Link
+            to="/chats/$vendorId"
+            params={{ vendorId: data.vendor_id }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md hover:bg-zinc-50 text-[var(--brand-clay)]"
+            aria-label={`Message ${data.vendor?.name ?? "vendor"}`}
+          >
+            <MessageCircle className="h-5 w-5" />
+          </Link>
+        )}
       </div>
 
       {/* OpenStreetMap attribution (required by tile usage policy) */}

@@ -315,6 +315,13 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
               <p className="text-emerald-50/85 text-sm mt-1 flex items-center gap-1.5">
                 <IoLocation className="h-4 w-4" /> {vendor.city}
               </p>
+              <Link
+                to="/chats/$vendorId"
+                params={{ vendorId: vendor.id }}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-white text-emerald-800 px-5 py-2.5 text-sm font-semibold hover:bg-emerald-50 transition shadow-lg"
+              >
+                <IoChatbubbleEllipses className="h-4 w-4" /> Message store
+              </Link>
             </div>
           </div>
 
