@@ -49,7 +49,7 @@ export const Route = createFileRoute("/api/xora")({
         const region = body?.region === "UK" ? "UK" : "NG";
         try {
           const role = await getPrimaryRole(userId);
-          const context = await buildXoraContext(userId, role, region);
+          const context = await buildXoraContext(userId, role, region, message);
           const reply = await askOpenAI({
             apiKey,
             model: process.env.XORA_OPENAI_MODEL || DEFAULT_MODEL,
@@ -103,11 +103,16 @@ async function getPrimaryRole(userId: string): Promise<AppRole> {
   return "customer";
 }
 
-async function buildXoraContext(userId: string, role: AppRole, region: "NG" | "UK"): Promise<ContextBlock> {
+async function buildXoraContext(
+  userId: string,
+  role: AppRole,
+  region: "NG" | "UK",
+  message: string,
+): Promise<ContextBlock> {
   if (role === "admin") return buildAdminContext();
   if (role === "vendor") return buildVendorContext(userId);
   if (role === "rider") return buildRiderContext(userId);
-  return buildCustomerContext(userId, region);
+  return buildCustomerContext(userId, region, message);
 }
 
 async function buildAdminContext(): Promise<ContextBlock> {
@@ -268,7 +273,7 @@ async function buildRiderContext(userId: string): Promise<ContextBlock> {
   };
 }
 
-async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promise<ContextBlock> {
+async function buildCustomerContext(userId: string, region: "NG" | "UK", message: string): Promise<ContextBlock> {
   const [ordersRes, conversationsRes, vendorsRes, chefsRes, dishesRes] = await Promise.all([
     supabaseAdmin
       .from("orders")
@@ -303,17 +308,25 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
     : { data: [], error: null };
   throwIfError(messages.error, "customer messages");
 
-  const catalogVendors = vendorsRes.data ?? [];
-  const catalogChefs = chefsRes.data ?? [];
+  const allCatalogVendors = vendorsRes.data ?? [];
+  const allCatalogChefs = chefsRes.data ?? [];
+  const requestedLocation = findRequestedLocation(message, [...allCatalogVendors, ...allCatalogChefs]);
+  const catalogVendors = requestedLocation
+    ? allCatalogVendors.filter((vendor) => matchesRequestedLocation(vendor, requestedLocation.query))
+    : allCatalogVendors;
+  const catalogChefs = requestedLocation
+    ? allCatalogChefs.filter((vendor) => matchesRequestedLocation(vendor, requestedLocation.query))
+    : allCatalogChefs;
   const catalogDishes = (dishesRes.data ?? []).filter(
     (d: any) => d.vendor?.country === region && d.vendor?.status === "approved",
-  );
+  ).filter((dish: any) => !requestedLocation || matchesRequestedLocation(dish.vendor, requestedLocation.query));
 
   return {
     role: "customer",
     summary: `Customer context: ${(ordersRes.data ?? []).length} recent orders, ${conversationIds.length} conversations, ${catalogVendors.length} approved marketplace vendors, ${catalogChefs.length} approved chefs, and ${catalogDishes.length} available dishes in ${region}.`,
     data: {
       region,
+      locationFilter: requestedLocation?.label ?? null,
       locationData: vendorsRes.stateAvailable && chefsRes.stateAvailable && dishesRes.stateAvailable
         ? "state-and-city"
         : "city-only; the vendor state migration has not been applied",
@@ -335,6 +348,59 @@ async function buildCustomerContext(userId: string, region: "NG" | "UK"): Promis
       },
     },
   };
+}
+
+function findRequestedLocation(
+  message: string,
+  vendors: Array<{ state?: string | null; city?: string | null }>,
+) {
+  const normalizedMessage = normalizeLocation(message);
+  const candidates = new Map<string, string>();
+
+  for (const vendor of vendors) {
+    for (const value of [vendor.state, vendor.city]) {
+      if (!value) continue;
+      const normalized = normalizeLocation(value);
+      if (normalized.length < 3) continue;
+      candidates.set(normalized, value.trim());
+      const withoutState = normalized.replace(/\s+state$/, "");
+      if (withoutState.length >= 3) candidates.set(withoutState, value.trim());
+    }
+  }
+
+  const match = [...candidates.entries()]
+    .sort(([a], [b]) => b.length - a.length)
+    .find(([candidate]) => containsLocation(normalizedMessage, candidate));
+
+  return match ? { query: match[0], label: match[1] } : null;
+}
+
+function matchesRequestedLocation(
+  vendor: { state?: string | null; city?: string | null } | null | undefined,
+  query: string,
+) {
+  if (!vendor) return false;
+  return [vendor.state, vendor.city].some((value) => {
+    const normalized = normalizeLocation(value ?? "");
+    if (!normalized) return false;
+    const withoutState = normalized.replace(/\s+state$/, "");
+    return containsLocation(normalized, query)
+      || containsLocation(query, normalized)
+      || containsLocation(withoutState, query)
+      || containsLocation(query, withoutState);
+  });
+}
+
+function normalizeLocation(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function containsLocation(value: string, candidate: string) {
+  return ` ${value} `.includes(` ${candidate} `);
 }
 
 async function loadAdminVendors() {
