@@ -46,7 +46,6 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
 DECLARE
   v_user UUID := auth.uid();
-  v_conversation public.conversations;
   v_owner UUID;
   v_currency TEXT;
   v_code TEXT;
@@ -56,8 +55,8 @@ BEGIN
   IF v_user IS NULL THEN RAISE EXCEPTION 'Not signed in'; END IF;
   IF p_amount IS NULL OR p_amount <= 0 THEN RAISE EXCEPTION 'Amount must be greater than zero'; END IF;
 
-  SELECT c, v.owner_id, COALESCE(v.currency, 'NGN')
-    INTO v_conversation, v_owner, v_currency
+  SELECT v.owner_id, COALESCE(v.currency, 'NGN')
+    INTO v_owner, v_currency
   FROM public.conversations c
   JOIN public.vendors v ON v.id = c.vendor_id
   WHERE c.id = p_conversation_id;
