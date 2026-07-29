@@ -1,9 +1,11 @@
 /**
- * Free, no-API-key geo helpers for the rider map:
- * - Geocoding via OpenStreetMap Nominatim (results cached in localStorage —
- *   the same vendor address gets looked up once, ever, per device).
- * - Driving routes via the public OSRM demo server, which returns the real
- *   road polyline plus distance and duration.
+ * Geo helpers for the rider / customer maps.
+ *
+ * Primary provider is Google (via our own server proxies at /api/geocode and
+ * /api/directions, so the API key stays server-side). When Google isn't
+ * configured or a call fails, we fall back to the free OpenStreetMap stack —
+ * Nominatim for geocoding and the public OSRM server for routing — so the map
+ * keeps working with no key. Geocoding results are cached in localStorage.
  */
 
 export type LatLng = [number, number];
@@ -28,6 +30,28 @@ export async function geocodeAddress(
     /* corrupt cache entry — fall through to a fresh lookup */
   }
 
+  // 1) Google (via our server proxy) — best accuracy, key stays server-side.
+  try {
+    const gp = new URLSearchParams({ q: query });
+    if (countryCodes) gp.set("country", countryCodes);
+    const gres = await fetch(`/api/geocode?${gp.toString()}`);
+    if (gres.ok) {
+      const gj = (await gres.json()) as { lat?: number; lng?: number };
+      if (typeof gj.lat === "number" && typeof gj.lng === "number") {
+        const point: LatLng = [gj.lat, gj.lng];
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(point));
+        } catch {
+          /* storage full — lookup still succeeded */
+        }
+        return point;
+      }
+    }
+  } catch {
+    /* fall through to Nominatim */
+  }
+
+  // 2) Fallback: OpenStreetMap Nominatim (free, no key).
   const params = new URLSearchParams({ format: "json", limit: "1", q: query });
   if (countryCodes) params.set("countrycodes", countryCodes);
   try {
@@ -73,6 +97,27 @@ export async function fetchDrivingRoute(
   to: LatLng,
   withSteps = false,
 ): Promise<DrivingRoute | null> {
+  // 1) Google Directions (via our server proxy). Already returns [lat, lng].
+  try {
+    const gp = new URLSearchParams({ from: `${from[0]},${from[1]}`, to: `${to[0]},${to[1]}` });
+    if (withSteps) gp.set("steps", "1");
+    const gres = await fetch(`/api/directions?${gp.toString()}`);
+    if (gres.ok) {
+      const gj = (await gres.json()) as DrivingRoute & { coords?: LatLng[] };
+      if (Array.isArray(gj.coords) && gj.coords.length > 0) {
+        return {
+          coords: gj.coords,
+          distanceKm: gj.distanceKm,
+          durationMin: gj.durationMin,
+          steps: gj.steps,
+        };
+      }
+    }
+  } catch {
+    /* fall through to OSRM */
+  }
+
+  // 2) Fallback: public OSRM demo server (free, no key).
   try {
     const res = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson${withSteps ? "&steps=true" : ""}`,

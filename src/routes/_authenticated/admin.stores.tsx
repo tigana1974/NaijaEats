@@ -111,13 +111,16 @@ function AdminStores() {
     }
   });
 
-  const { data: vendors, isLoading } = useQuery({
+  const { data: vendors, isLoading, error: vendorsError } = useQuery({
     queryKey: ["admin-stores-full", region],
     staleTime: 30_000,
     queryFn: async () => {
+      // Select "*" rather than a fixed column list so a single missing/optional
+      // column (e.g. from a migration that hasn't been applied yet) can't error
+      // the whole request and silently zero out the store list.
       let q = supabase
         .from("vendors")
-        .select("id,name,type,status,city,state,country,created_at,address_line,description")
+        .select("*")
         .order("created_at", { ascending: false });
       if (country) q = q.eq("country", country);
       const { data, error } = await q;
@@ -235,6 +238,12 @@ function AdminStores() {
               {isLoading ? (
                 <UberTr>
                   <UberTd colSpan={10} className="py-8 text-center text-neutral-500">Loading stores…</UberTd>
+                </UberTr>
+              ) : vendorsError ? (
+                <UberTr>
+                  <UberTd colSpan={10} className="py-8 text-center text-red-600">
+                    Couldn't load stores: {(vendorsError as Error).message}. If this mentions a permission or missing column, the admin role or a database migration may need attention.
+                  </UberTd>
                 </UberTr>
               ) : filtered.length === 0 ? (
                 <UberTr>

@@ -17,6 +17,7 @@ type Form = {
   tagline: string;
   description: string;
   type: "restaurant" | "chef" | "grocery";
+  cuisine: string;
   country: "NG" | "UK";
   state: string;
   city: string;
@@ -35,6 +36,7 @@ const defaultForm: Form = {
   tagline: "",
   description: "",
   type: "restaurant",
+  cuisine: "",
   country: "NG",
   state: "",
   city: "",
@@ -57,6 +59,43 @@ const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Required vendor category. Kept as a curated list (saved to vendors.cuisine)
+ * so Xora and the customer search/filters get clean, consistent values rather
+ * than free-text. Grocery stores get a produce-focused list; chefs and
+ * restaurants get a cuisine list.
+ */
+const FOOD_CATEGORIES = [
+  "Nigerian",
+  "West African",
+  "Continental",
+  "Caribbean",
+  "Chinese",
+  "Indian",
+  "Italian",
+  "Fast Food",
+  "Grill & BBQ",
+  "Seafood",
+  "Vegetarian & Vegan",
+  "Bakery & Desserts",
+  "Breakfast & Brunch",
+  "Drinks & Smoothies",
+] as const;
+
+const GROCERY_CATEGORIES = [
+  "African Groceries",
+  "General Groceries",
+  "Butcher & Meat",
+  "Fresh Produce",
+  "Frozen Foods",
+  "Bakery",
+  "Drinks & Beverages",
+] as const;
+
+function categoriesForType(type: Form["type"]): readonly string[] {
+  return type === "grocery" ? GROCERY_CATEGORIES : FOOD_CATEGORIES;
 }
 
 function normalizeVendorType(type: unknown): Form["type"] {
@@ -122,6 +161,7 @@ function VendorProfilePage() {
         tagline: existing.tagline ?? "",
         description: existing.description ?? "",
         type: normalizeVendorType(existing.type),
+        cuisine: existing.cuisine ?? "",
         country: existing.country,
         state: existing.state ?? "",
         city: existing.city ?? "",
@@ -256,6 +296,9 @@ function VendorProfilePage() {
       const uid = userData.user?.id;
       if (!uid) throw new Error("Not signed in");
       const slug = form.slug.trim() || slugify(form.name);
+      if (!form.cuisine.trim()) {
+        throw new Error("Please choose a category for your shop — it's required so customers and Xora can find you.");
+      }
       const currency = form.country === "UK" ? "GBP" : "NGN";
       const payload = {
         ...form,
@@ -336,6 +379,23 @@ function VendorProfilePage() {
                       <option value="chef">Chef</option>
                     </>
                   )}
+                </select>
+              </Field>
+              <Field label="Category" hint="required — helps customers and Xora find you">
+                <select
+                  className="vinput"
+                  required
+                  value={form.cuisine}
+                  onChange={(e) => set("cuisine", e.target.value)}
+                >
+                  <option value="" disabled>
+                    Choose a category…
+                  </option>
+                  {categoriesForType(form.type).map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </Field>
             </div>
