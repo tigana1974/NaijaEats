@@ -20,6 +20,7 @@ import {
 } from "@/lib/xora";
 import { useMyRole } from "@/hooks/useMyRole";
 import { XoraAvatar } from "@/components/naija/XoraAvatar";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -203,11 +204,19 @@ function XoraChatPage() {
     setThread(t);
   };
 
+  // Frame Xora inside each account type's shell so it inherits the correct
+  // desktop chrome: customers keep the fixed left sidebar (offset the chat by
+  // it), while admins/vendors/riders keep the top header (offset the chat below
+  // it). Replaces the old hard-coded `lg:left-60`, which assumed the customer
+  // sidebar for everyone and left a dead 15rem gap on the admin desktop.
+  const framedBeside = !role || role === "customer";
   return (
-    /* On desktop the chat sits beside the sidebar (left-60) and its content
-       is centred at a comfortable reading width instead of spanning the
-       whole monitor. */
-    <div className="fixed inset-0 lg:left-60 z-30 flex flex-col bg-background">
+    <RoleShell hideBottomNav containerClassName="min-h-0">
+      <div
+        className={`fixed inset-0 z-30 flex flex-col bg-background ${
+          framedBeside ? "lg:left-60" : "lg:top-14"
+        }`}
+      >
       {/* ─── Header ─── */}
       <div className="shrink-0 flex items-center gap-2 px-3 py-2.5 border-b border-border bg-card/95 backdrop-blur lg:px-[max(0.75rem,calc((100%-48rem)/2))]">
         <button
@@ -339,7 +348,8 @@ function XoraChatPage() {
           Xora is an assistant — always double-check delivery times and prices with the vendor.
         </div>
       </form>
-    </div>
+      </div>
+    </RoleShell>
   );
 }
 

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatThread } from "@/components/naija/ChatThread";
 import { useMyRole } from "@/hooks/useMyRole";
+import { RoleShell } from "@/components/naija/RoleShell";
 import { ArrowLeft, Info, MoreHorizontal, Trash } from "lucide-react";
 import {
   DropdownMenu,
@@ -52,11 +53,12 @@ function VendorConversation() {
   if (!roleLoading && role !== "vendor") return <Navigate to="/" replace />;
 
   return (
-    // Bypass AppShell entirely — this is a full-viewport dedicated chat
-    // screen. Using `fixed inset-0 flex flex-col` guarantees ChatThread's flex-1
-    // messages scroller has real vertical space to grow into, and prevents iOS Safari
-    // bounce/shake bugs when the keyboard opens.
-    <div className="fixed inset-0 w-full flex flex-col bg-[oklch(0.985_0.005_90)]">
+    // Framed by the vendor's shell so the desktop top-nav stays visible; on
+    // desktop the chat sits below the header (lg:top-14). Stays full-screen on
+    // mobile so ChatThread's flex-1 scroller keeps real height and avoids iOS
+    // Safari keyboard bounce.
+    <RoleShell hideBottomNav containerClassName="min-h-0">
+      <div className="fixed inset-0 w-full flex flex-col bg-[oklch(0.985_0.005_90)] lg:top-14">
       {/* Header */}
       <div className="shrink-0 px-3 py-2.5 bg-white/95 backdrop-blur border-b border-black/5 flex items-center gap-2">
         <Link
@@ -133,6 +135,7 @@ function VendorConversation() {
           isVendor={true}
         />
       )}
-    </div>
+      </div>
+    </RoleShell>
   );
 }
