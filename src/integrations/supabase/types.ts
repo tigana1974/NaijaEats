@@ -330,6 +330,69 @@ export type Database = {
           },
         ]
       }
+      chat_invoices: {
+        Row: {
+          amount: number
+          code: string
+          conversation_id: string
+          created_at: string
+          currency: string
+          id: string
+          issuer_id: string
+          message_id: string | null
+          note: string
+          paid_at: string | null
+          payer_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          code: string
+          conversation_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          issuer_id: string
+          message_id?: string | null
+          note?: string
+          paid_at?: string | null
+          payer_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          code?: string
+          conversation_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          issuer_id?: string
+          message_id?: string | null
+          note?: string
+          paid_at?: string | null
+          payer_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_invoices_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_invoices_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -2093,6 +2156,16 @@ export type Database = {
     Functions: {
       apply_referral_code: { Args: { p_code: string }; Returns: undefined }
       cancel_premium: { Args: never; Returns: undefined }
+      chat_invoice_create: {
+        Args: { p_amount: number; p_conversation_id: string; p_note?: string }
+        Returns: Json
+      }
+      chat_invoice_lookup: { Args: { p_code: string }; Returns: Json }
+      chat_invoice_pay: { Args: { p_code: string }; Returns: Json }
+      chat_invoice_share: {
+        Args: { p_code: string; p_username: string }
+        Returns: Json
+      }
       chef_busy_slots: {
         Args: { p_chef_id: string; p_date: string }
         Returns: Json

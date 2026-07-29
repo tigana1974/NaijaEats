@@ -161,7 +161,7 @@ function VendorProfilePage() {
         tagline: existing.tagline ?? "",
         description: existing.description ?? "",
         type: normalizeVendorType(existing.type),
-        cuisine: existing.cuisine ?? "",
+        cuisine: existing.cuisine?.[0] ?? "",
         country: existing.country,
         state: existing.state ?? "",
         city: existing.city ?? "",
@@ -302,6 +302,7 @@ function VendorProfilePage() {
       const currency = form.country === "UK" ? "GBP" : "NGN";
       const payload = {
         ...form,
+        cuisine: [form.cuisine],
         slug,
         currency,
         owner_id: uid,

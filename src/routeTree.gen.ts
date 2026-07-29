@@ -15,6 +15,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorSlugRouteImport } from './routes/vendor.$slug'
 import { Route as ApiXoraRouteImport } from './routes/api/xora'
+import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
+import { Route as ApiDirectionsRouteImport } from './routes/api/directions'
 import { Route as AuthenticatedXoraRouteImport } from './routes/_authenticated/xora'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -52,6 +54,7 @@ import { Route as AuthenticatedRiderDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedRiderAvailableRouteImport } from './routes/_authenticated/rider.available'
 import { Route as AuthenticatedPayCodeRouteImport } from './routes/_authenticated/pay.$code'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
+import { Route as AuthenticatedInvoiceCodeRouteImport } from './routes/_authenticated/invoice.$code'
 import { Route as AuthenticatedChatsVendorIdRouteImport } from './routes/_authenticated/chats.$vendorId'
 import { Route as AuthenticatedBookBuildRouteImport } from './routes/_authenticated/book.build'
 import { Route as AuthenticatedAdminWebshopRouteImport } from './routes/_authenticated/admin.webshop'
@@ -120,6 +123,16 @@ const VendorSlugRoute = VendorSlugRouteImport.update({
 const ApiXoraRoute = ApiXoraRouteImport.update({
   id: '/api/xora',
   path: '/api/xora',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGeocodeRoute = ApiGeocodeRouteImport.update({
+  id: '/api/geocode',
+  path: '/api/geocode',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDirectionsRoute = ApiDirectionsRouteImport.update({
+  id: '/api/directions',
+  path: '/api/directions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedXoraRoute = AuthenticatedXoraRouteImport.update({
@@ -325,6 +338,12 @@ const AuthenticatedOrdersOrderIdRoute =
     id: '/$orderId',
     path: '/$orderId',
     getParentRoute: () => AuthenticatedOrdersRoute,
+  } as any)
+const AuthenticatedInvoiceCodeRoute =
+  AuthenticatedInvoiceCodeRouteImport.update({
+    id: '/invoice/$code',
+    path: '/invoice/$code',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedChatsVendorIdRoute =
   AuthenticatedChatsVendorIdRouteImport.update({
@@ -581,6 +600,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/xora': typeof AuthenticatedXoraRoute
+  '/api/directions': typeof ApiDirectionsRoute
+  '/api/geocode': typeof ApiGeocodeRoute
   '/api/xora': typeof ApiXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -620,6 +641,7 @@ export interface FileRoutesByFullPath {
   '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/book/build': typeof AuthenticatedBookBuildRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
+  '/invoice/$code': typeof AuthenticatedInvoiceCodeRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/pay/$code': typeof AuthenticatedPayCodeRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -665,6 +687,8 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/xora': typeof AuthenticatedXoraRoute
+  '/api/directions': typeof ApiDirectionsRoute
+  '/api/geocode': typeof ApiGeocodeRoute
   '/api/xora': typeof ApiXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -704,6 +728,7 @@ export interface FileRoutesByTo {
   '/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/book/build': typeof AuthenticatedBookBuildRoute
   '/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
+  '/invoice/$code': typeof AuthenticatedInvoiceCodeRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/pay/$code': typeof AuthenticatedPayCodeRoute
   '/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -751,6 +776,8 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/xora': typeof AuthenticatedXoraRoute
+  '/api/directions': typeof ApiDirectionsRoute
+  '/api/geocode': typeof ApiGeocodeRoute
   '/api/xora': typeof ApiXoraRoute
   '/vendor/$slug': typeof VendorSlugRouteWithChildren
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -790,6 +817,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/webshop': typeof AuthenticatedAdminWebshopRoute
   '/_authenticated/book/build': typeof AuthenticatedBookBuildRoute
   '/_authenticated/chats/$vendorId': typeof AuthenticatedChatsVendorIdRoute
+  '/_authenticated/invoice/$code': typeof AuthenticatedInvoiceCodeRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/_authenticated/pay/$code': typeof AuthenticatedPayCodeRoute
   '/_authenticated/rider/available': typeof AuthenticatedRiderAvailableRoute
@@ -837,6 +865,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/subscription'
     | '/xora'
+    | '/api/directions'
+    | '/api/geocode'
     | '/api/xora'
     | '/vendor/$slug'
     | '/admin/access'
@@ -876,6 +906,7 @@ export interface FileRouteTypes {
     | '/admin/webshop'
     | '/book/build'
     | '/chats/$vendorId'
+    | '/invoice/$code'
     | '/orders/$orderId'
     | '/pay/$code'
     | '/rider/available'
@@ -921,6 +952,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/subscription'
     | '/xora'
+    | '/api/directions'
+    | '/api/geocode'
     | '/api/xora'
     | '/vendor/$slug'
     | '/admin/access'
@@ -960,6 +993,7 @@ export interface FileRouteTypes {
     | '/admin/webshop'
     | '/book/build'
     | '/chats/$vendorId'
+    | '/invoice/$code'
     | '/orders/$orderId'
     | '/pay/$code'
     | '/rider/available'
@@ -1006,6 +1040,8 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/subscription'
     | '/_authenticated/xora'
+    | '/api/directions'
+    | '/api/geocode'
     | '/api/xora'
     | '/vendor/$slug'
     | '/_authenticated/admin/access'
@@ -1045,6 +1081,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/webshop'
     | '/_authenticated/book/build'
     | '/_authenticated/chats/$vendorId'
+    | '/_authenticated/invoice/$code'
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/pay/$code'
     | '/_authenticated/rider/available'
@@ -1076,6 +1113,8 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiDirectionsRoute: typeof ApiDirectionsRoute
+  ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiXoraRoute: typeof ApiXoraRoute
   VendorSlugRoute: typeof VendorSlugRouteWithChildren
   ApiWebhooksPaystackRoute: typeof ApiWebhooksPaystackRoute
@@ -1124,6 +1163,20 @@ declare module '@tanstack/react-router' {
       path: '/api/xora'
       fullPath: '/api/xora'
       preLoaderRoute: typeof ApiXoraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/geocode': {
+      id: '/api/geocode'
+      path: '/api/geocode'
+      fullPath: '/api/geocode'
+      preLoaderRoute: typeof ApiGeocodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/directions': {
+      id: '/api/directions'
+      path: '/api/directions'
+      fullPath: '/api/directions'
+      preLoaderRoute: typeof ApiDirectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/xora': {
@@ -1384,6 +1437,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/orders/$orderId'
       preLoaderRoute: typeof AuthenticatedOrdersOrderIdRouteImport
       parentRoute: typeof AuthenticatedOrdersRoute
+    }
+    '/_authenticated/invoice/$code': {
+      id: '/_authenticated/invoice/$code'
+      path: '/invoice/$code'
+      fullPath: '/invoice/$code'
+      preLoaderRoute: typeof AuthenticatedInvoiceCodeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/chats/$vendorId': {
       id: '/_authenticated/chats/$vendorId'
@@ -1743,6 +1803,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminWebshopRoute: typeof AuthenticatedAdminWebshopRoute
   AuthenticatedChatsVendorIdRoute: typeof AuthenticatedChatsVendorIdRoute
+  AuthenticatedInvoiceCodeRoute: typeof AuthenticatedInvoiceCodeRoute
   AuthenticatedPayCodeRoute: typeof AuthenticatedPayCodeRoute
   AuthenticatedRiderAvailableRoute: typeof AuthenticatedRiderAvailableRoute
   AuthenticatedRiderDashboardRoute: typeof AuthenticatedRiderDashboardRoute
@@ -1820,6 +1881,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminWebshopRoute: AuthenticatedAdminWebshopRoute,
   AuthenticatedChatsVendorIdRoute: AuthenticatedChatsVendorIdRoute,
+  AuthenticatedInvoiceCodeRoute: AuthenticatedInvoiceCodeRoute,
   AuthenticatedPayCodeRoute: AuthenticatedPayCodeRoute,
   AuthenticatedRiderAvailableRoute: AuthenticatedRiderAvailableRoute,
   AuthenticatedRiderDashboardRoute: AuthenticatedRiderDashboardRoute,
@@ -1863,6 +1925,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiDirectionsRoute: ApiDirectionsRoute,
+  ApiGeocodeRoute: ApiGeocodeRoute,
   ApiXoraRoute: ApiXoraRoute,
   VendorSlugRoute: VendorSlugRouteWithChildren,
   ApiWebhooksPaystackRoute: ApiWebhooksPaystackRoute,
