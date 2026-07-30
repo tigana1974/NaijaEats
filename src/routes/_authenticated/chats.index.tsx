@@ -12,7 +12,7 @@ import {
   PiPaperclipDuotone,
   PiChefHatDuotone,
   PiStorefrontDuotone,
-  PiShoppingBasketDuotone,
+  PiBasketDuotone,
 } from "react-icons/pi";
 import { messagePreview, type PreviewIcon } from "@/lib/chatPreview";
 
@@ -185,7 +185,7 @@ function ChatRow({ convo }: { convo: any }) {
   const initial = (v?.name ?? "C").charAt(0).toUpperCase();
   const preview = messagePreview(convo.last_message, false);
   const kindLabel = v?.type === "grocery" ? "Grocery" : v?.type === "chef" ? "Chef" : "Restaurant";
-  const KindIcon = v?.type === "grocery" ? PiShoppingBasketDuotone : v?.type === "chef" ? PiChefHatDuotone : PiStorefrontDuotone;
+  const KindIcon = v?.type === "grocery" ? PiBasketDuotone : v?.type === "chef" ? PiChefHatDuotone : PiStorefrontDuotone;
 
   return (
     <li>
