@@ -21,6 +21,7 @@ import { Route as AuthenticatedXoraRouteImport } from './routes/_authenticated/x
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedRestaurantsRouteImport } from './routes/_authenticated/restaurants'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
 import { Route as AuthenticatedPersonalInfoRouteImport } from './routes/_authenticated/personal-info'
 import { Route as AuthenticatedPaymentMethodsRouteImport } from './routes/_authenticated/payment-methods'
@@ -29,6 +30,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedGroceriesRouteImport } from './routes/_authenticated/groceries'
 import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
+import { Route as AuthenticatedChefsRouteImport } from './routes/_authenticated/chefs'
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedBookRouteImport } from './routes/_authenticated/book'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
@@ -156,6 +158,12 @@ const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRestaurantsRoute =
+  AuthenticatedRestaurantsRouteImport.update({
+    id: '/restaurants',
+    path: '/restaurants',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
   id: '/referrals',
   path: '/referrals',
@@ -197,6 +205,11 @@ const AuthenticatedGroceriesRoute = AuthenticatedGroceriesRouteImport.update({
 const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
   id: '/discover',
   path: '/discover',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChefsRoute = AuthenticatedChefsRouteImport.update({
+  id: '/chefs',
+  path: '/chefs',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCartRoute = AuthenticatedCartRouteImport.update({
@@ -588,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/addresses': typeof AuthenticatedAddressesRoute
   '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
+  '/chefs': typeof AuthenticatedChefsRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/groceries': typeof AuthenticatedGroceriesRoute
   '/help': typeof AuthenticatedHelpRoute
@@ -596,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/payment-methods': typeof AuthenticatedPaymentMethodsRoute
   '/personal-info': typeof AuthenticatedPersonalInfoRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/restaurants': typeof AuthenticatedRestaurantsRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -675,6 +690,7 @@ export interface FileRoutesByTo {
   '/addresses': typeof AuthenticatedAddressesRoute
   '/book': typeof AuthenticatedBookRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
+  '/chefs': typeof AuthenticatedChefsRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/groceries': typeof AuthenticatedGroceriesRoute
   '/help': typeof AuthenticatedHelpRoute
@@ -683,6 +699,7 @@ export interface FileRoutesByTo {
   '/payment-methods': typeof AuthenticatedPaymentMethodsRoute
   '/personal-info': typeof AuthenticatedPersonalInfoRoute
   '/referrals': typeof AuthenticatedReferralsRoute
+  '/restaurants': typeof AuthenticatedRestaurantsRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -764,6 +781,7 @@ export interface FileRoutesById {
   '/_authenticated/addresses': typeof AuthenticatedAddressesRoute
   '/_authenticated/book': typeof AuthenticatedBookRouteWithChildren
   '/_authenticated/cart': typeof AuthenticatedCartRoute
+  '/_authenticated/chefs': typeof AuthenticatedChefsRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/groceries': typeof AuthenticatedGroceriesRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
@@ -772,6 +790,7 @@ export interface FileRoutesById {
   '/_authenticated/payment-methods': typeof AuthenticatedPaymentMethodsRoute
   '/_authenticated/personal-info': typeof AuthenticatedPersonalInfoRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
+  '/_authenticated/restaurants': typeof AuthenticatedRestaurantsRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
@@ -853,6 +872,7 @@ export interface FileRouteTypes {
     | '/addresses'
     | '/book'
     | '/cart'
+    | '/chefs'
     | '/discover'
     | '/groceries'
     | '/help'
@@ -861,6 +881,7 @@ export interface FileRouteTypes {
     | '/payment-methods'
     | '/personal-info'
     | '/referrals'
+    | '/restaurants'
     | '/search'
     | '/settings'
     | '/subscription'
@@ -940,6 +961,7 @@ export interface FileRouteTypes {
     | '/addresses'
     | '/book'
     | '/cart'
+    | '/chefs'
     | '/discover'
     | '/groceries'
     | '/help'
@@ -948,6 +970,7 @@ export interface FileRouteTypes {
     | '/payment-methods'
     | '/personal-info'
     | '/referrals'
+    | '/restaurants'
     | '/search'
     | '/settings'
     | '/subscription'
@@ -1028,6 +1051,7 @@ export interface FileRouteTypes {
     | '/_authenticated/addresses'
     | '/_authenticated/book'
     | '/_authenticated/cart'
+    | '/_authenticated/chefs'
     | '/_authenticated/discover'
     | '/_authenticated/groceries'
     | '/_authenticated/help'
@@ -1036,6 +1060,7 @@ export interface FileRouteTypes {
     | '/_authenticated/payment-methods'
     | '/_authenticated/personal-info'
     | '/_authenticated/referrals'
+    | '/_authenticated/restaurants'
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/_authenticated/subscription'
@@ -1207,6 +1232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSearchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/restaurants': {
+      id: '/_authenticated/restaurants'
+      path: '/restaurants'
+      fullPath: '/restaurants'
+      preLoaderRoute: typeof AuthenticatedRestaurantsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/referrals': {
       id: '/_authenticated/referrals'
       path: '/referrals'
@@ -1261,6 +1293,13 @@ declare module '@tanstack/react-router' {
       path: '/discover'
       fullPath: '/discover'
       preLoaderRoute: typeof AuthenticatedDiscoverRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chefs': {
+      id: '/_authenticated/chefs'
+      path: '/chefs'
+      fullPath: '/chefs'
+      preLoaderRoute: typeof AuthenticatedChefsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cart': {
@@ -1755,6 +1794,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddressesRoute: typeof AuthenticatedAddressesRoute
   AuthenticatedBookRoute: typeof AuthenticatedBookRouteWithChildren
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
+  AuthenticatedChefsRoute: typeof AuthenticatedChefsRoute
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
   AuthenticatedGroceriesRoute: typeof AuthenticatedGroceriesRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
@@ -1763,6 +1803,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPaymentMethodsRoute: typeof AuthenticatedPaymentMethodsRoute
   AuthenticatedPersonalInfoRoute: typeof AuthenticatedPersonalInfoRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
+  AuthenticatedRestaurantsRoute: typeof AuthenticatedRestaurantsRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
@@ -1831,6 +1872,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddressesRoute: AuthenticatedAddressesRoute,
   AuthenticatedBookRoute: AuthenticatedBookRouteWithChildren,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
+  AuthenticatedChefsRoute: AuthenticatedChefsRoute,
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
   AuthenticatedGroceriesRoute: AuthenticatedGroceriesRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
@@ -1839,6 +1881,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPaymentMethodsRoute: AuthenticatedPaymentMethodsRoute,
   AuthenticatedPersonalInfoRoute: AuthenticatedPersonalInfoRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
+  AuthenticatedRestaurantsRoute: AuthenticatedRestaurantsRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,

@@ -10,15 +10,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export type WalletTxnType =
-  | "topup"
-  | "bonus"
-  | "send"
-  | "receive"
-  | "request"
-  | "order"
-  | "referral"
-  | "premium";
+export type WalletTxnType = "topup" | "bonus" | "send" | "receive" | "request" | "order" | "invoice" | "referral" | "premium";
 
 export type WalletTxn = {
   id: string;
@@ -178,9 +170,7 @@ export async function claimIncomingTransfers(): Promise<number> {
   const state = await refreshWallet();
   const inbound = state.txns.filter(
     (t) =>
-      t.amount > 0 &&
-      (t.type === "receive" || t.type === "request" || t.type === "referral") &&
-      new Date(t.createdAt).getTime() > prev,
+      t.amount > 0 && (t.type === "receive" || t.type === "request" || t.type === "referral") && new Date(t.createdAt).getTime() > prev,
   );
   localStorage.setItem(seenKey(), String(Date.now()));
   return prev === 0 ? 0 : inbound.length;
@@ -191,11 +181,7 @@ export async function claimIncomingTransfers(): Promise<number> {
 export function subscribeIncomingTransfers(onEvent: () => void): () => void {
   const channel = supabase
     .channel("wallet-ledger-inbox")
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "wallet_ledger" },
-      () => onEvent(),
-    )
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "wallet_ledger" }, () => onEvent())
     .subscribe();
   return () => {
     supabase.removeChannel(channel);
@@ -218,27 +204,28 @@ export function loadContacts(): Contact[] {
 }
 
 export function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((s) => s[0]?.toUpperCase() ?? "")
-    .join("") || "?";
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((s) => s[0]?.toUpperCase() ?? "")
+      .join("") || "?"
+  );
 }
 
-export function upsertContact(input: {
-  name: string;
-  handle?: string;
-  tone?: Contact["tone"];
-  userId?: string;
-}): Contact {
+export function upsertContact(input: { name: string; handle?: string; tone?: Contact["tone"]; userId?: string }): Contact {
   const list = loadContacts();
-  const handle = input.handle?.trim() || "@" + input.name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 12);
+  const handle =
+    input.handle?.trim() ||
+    "@" +
+      input.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "")
+        .slice(0, 12);
   const existing =
     (input.userId ? list.find((c) => c.userId === input.userId) : undefined) ??
-    list.find(
-      (c) => c.handle.toLowerCase() === handle.toLowerCase() || c.name.toLowerCase() === input.name.toLowerCase(),
-    );
+    list.find((c) => c.handle.toLowerCase() === handle.toLowerCase() || c.name.toLowerCase() === input.name.toLowerCase());
   const contact: Contact = existing ?? {
     id: crypto.randomUUID(),
     name: input.name.trim(),
@@ -320,7 +307,10 @@ export async function createRequest(input: { amount: number; reason: string; fro
  */
 export async function markRequest(id: string, status: MoneyRequest["status"]): Promise<MoneyRequest | null> {
   const serverStatus = status === "paid" ? "settled" : "cancelled";
-  const { error } = await (supabase as any).rpc("wallet_request_mark", { p_id: id, p_status: serverStatus });
+  const { error } = await (supabase as any).rpc("wallet_request_mark", {
+    p_id: id,
+    p_status: serverStatus,
+  });
   if (error) throw new Error(error.message);
   const list = await refreshRequests();
   return list.find((r) => r.id === id) ?? null;
