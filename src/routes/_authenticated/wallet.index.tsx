@@ -176,7 +176,7 @@ function WalletPage() {
           </div>
 
           {/* Quick actions */}
-          <div className="relative mt-5 grid grid-cols-4 gap-2 sm:gap-3">
+          <div className="relative mt-5 grid grid-cols-5 gap-2 sm:gap-3">
             <Link
               to="/wallet/top-up"
               className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white text-foreground shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
@@ -213,32 +213,16 @@ function WalletPage() {
               </span>
               <span className="text-xs font-semibold">Split bill</span>
             </Link>
+            <Link
+              to="/referrals"
+              className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl py-3.5 bg-white/10 text-white border border-white/10 backdrop-blur hover:bg-white/15 transition-all duration-200"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 group-hover:scale-105 transition-transform duration-200">
+                <PiUsersThreeDuotone className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-semibold">Referral</span>
+            </Link>
           </div>
-        </div>
-
-        {/* Rewards / perks strip */}
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <PerkCard
-            Icon={Sparkles}
-            title="10% Gold bonus"
-            body="Top up ₦20,000 or more and we add 10% instantly."
-            to="/wallet/top-up"
-            tone="gold"
-          />
-          <PerkCard
-            Icon={PiUsersThreeDuotone}
-            title="Refer & feast"
-            body="Invite 5 friends who order — earn up to ₦40,000."
-            to="/referrals"
-            tone="clay"
-          />
-          <PerkCard
-            Icon={PiForkKnifeDuotone}
-            title="Wallet at checkout"
-            body="Pay any restaurant instantly — no cards, no fees."
-            to="/discover"
-            tone="forest"
-          />
         </div>
 
         {/* Activity */}
@@ -293,41 +277,6 @@ function WalletPage() {
         </div>
       </div>
     </RoleShell>
-  );
-}
-
-function PerkCard({
-  Icon,
-  title,
-  body,
-  to,
-  tone,
-}: {
-  Icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  body: string;
-  to: string;
-  tone: "gold" | "clay" | "forest";
-}) {
-  const styles =
-    tone === "gold"
-      ? "from-[oklch(0.96_0.05_90)] to-[oklch(0.98_0.03_90)] text-[oklch(0.62_0.13_75)] border-[oklch(0.85_0.10_85)]/40"
-      : tone === "clay"
-        ? "from-[oklch(0.97_0.03_25)] to-[oklch(0.99_0.01_25)] text-[var(--brand-clay)] border-[oklch(0.85_0.10_25)]/40"
-        : "from-[oklch(0.96_0.04_145)] to-[oklch(0.99_0.02_145)] text-[oklch(0.42_0.14_145)] border-[oklch(0.85_0.10_145)]/40";
-  return (
-    <Link
-      to={to}
-      className={`group rounded-3xl border bg-gradient-to-br ${styles} p-5 transition-all duration-200 hover:shadow-[var(--shadow-soft)] hover:-translate-y-0.5`}
-    >
-      <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/70 backdrop-blur">
-          <Icon className="h-5 w-5" />
-        </span>
-        <div className="text-sm font-semibold">{title}</div>
-      </div>
-      <p className="mt-3 text-xs leading-relaxed text-black/70">{body}</p>
-    </Link>
   );
 }
 

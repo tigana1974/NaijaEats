@@ -237,10 +237,39 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length]);
 
+  // Mark the thread read whenever it's open. The previous version fired the
+  // update and invalidated the cache in the same tick, so the inbox refetched
+  // BEFORE the write landed and kept showing the old unread badge. Await the
+  // write first, then invalidate. Also re-run when the tab regains focus so a
+  // thread left open doesn't linger as unread.
   useEffect(() => {
-    const patch = unreadField === "customer_unread" ? { customer_unread: 0 } : { vendor_unread: 0 };
-    void supabase.from("conversations").update(patch).eq("id", conversationId);
-    qc.invalidateQueries({ queryKey: ["conversations"] });
+    let cancelled = false;
+    const markRead = async () => {
+      const patch = unreadField === "customer_unread" ? { customer_unread: 0 } : { vendor_unread: 0 };
+      const { error } = await supabase
+        .from("conversations")
+        .update(patch)
+        .eq("id", conversationId);
+      if (cancelled) return;
+      if (error) {
+        console.warn("[chat] could not mark conversation read", error.message);
+        return;
+      }
+      await qc.invalidateQueries({ queryKey: ["conversations"] });
+      await qc.invalidateQueries({ queryKey: ["unread-notifications"] });
+    };
+    void markRead();
+
+    const onFocus = () => {
+      if (document.visibilityState === "visible") void markRead();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
   }, [conversationId, unreadField, messages.length, qc]);
 
   useEffect(() => {

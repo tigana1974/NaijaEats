@@ -220,14 +220,31 @@ function OrderDetailPage() {
               )}
 
               <section>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">Items</h3>
-                <ul className="divide-y divide-zinc-100 rounded-2xl bg-zinc-50/50 ring-1 ring-zinc-100">
+                <div className="mb-2.5 flex items-baseline justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-zinc-500">
+                    What you ordered
+                  </h3>
+                  <span className="text-[11px] font-semibold text-zinc-400">
+                    {(data.order_items ?? []).reduce((n: number, it: any) => n + Number(it.quantity || 0), 0)} item
+                    {(data.order_items ?? []).reduce((n: number, it: any) => n + Number(it.quantity || 0), 0) === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <ul className="space-y-2">
                   {(data.order_items ?? []).map((it: any) => (
-                    <li key={it.id} className="flex justify-between px-4 py-2.5 text-sm">
-                      <span className="truncate pr-2">
-                        {it.quantity}× {it.name}
+                    <li
+                      key={it.id}
+                      className="flex items-center gap-3 rounded-2xl bg-white ring-1 ring-zinc-100 px-3 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+                    >
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] text-sm font-extrabold tabular-nums">
+                        {it.quantity}×
                       </span>
-                      <span className="text-zinc-600 font-semibold tabular-nums">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold text-zinc-900">{it.name}</div>
+                        <div className="mt-0.5 text-[11px] text-zinc-500 tabular-nums">
+                          {fmt(Number(it.price), data.currency)} each
+                        </div>
+                      </div>
+                      <span className="shrink-0 text-sm font-extrabold tabular-nums text-zinc-900">
                         {fmt(Number(it.subtotal), data.currency)}
                       </span>
                     </li>
