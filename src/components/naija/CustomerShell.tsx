@@ -7,7 +7,7 @@ import {
   IoCart, IoCartOutline,
   IoPersonCircle, IoPersonCircleOutline,
   IoNotifications, IoWalletOutline,
-  IoReceiptOutline, IoChatbubblesOutline, IoSearch,
+  IoReceiptOutline, IoChatbubbles, IoChatbubblesOutline, IoSearch,
   IoHelpCircleOutline
 } from "react-icons/io5";
 import { useHideOnScroll } from "@/hooks/useHideOnScroll";
@@ -396,18 +396,18 @@ function CustomerBottomNav() {
       matchPaths: ["/", "/discover"],
     },
     { 
-      to: "/groceries", 
-      label: "Groceries", 
-      IconActive: IoBagHandle,
-      IconInactive: IoBagHandleOutline,
-    },
-    { 
       to: "/book", 
       label: "Book", 
       IconActive: IoCalendar,
       IconInactive: IoCalendarOutline,
     },
     { to: "/cart", label: "Cart", IconActive: IoCart, IconInactive: IoCartOutline, badge: itemCount },
+    { 
+      to: "/chats", 
+      label: "Messages", 
+      IconActive: IoChatbubbles,
+      IconInactive: IoChatbubblesOutline,
+    },
     { to: "/account", label: "Account", IconActive: IoPersonCircle, IconInactive: IoPersonCircleOutline, avatarUrl: profile?.avatar_url },
   ];
 

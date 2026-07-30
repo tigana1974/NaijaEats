@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { IoSearch, IoStar, IoTimeOutline, IoBicycleOutline } from "react-icons/io5";
+import { PiChefHatDuotone, PiStorefrontDuotone, PiBasketDuotone } from "react-icons/pi";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import {
@@ -239,32 +240,24 @@ function DiscoverPage() {
           })}
         </div>
 
-        {/* ─── 3 · Filter chips ─── */}
-        <div className="-mx-3 sm:-mx-5 px-3 sm:px-5 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* ─── 3 · Browse by vendor type ─── */}
+        <div className="-mx-3 sm:-mx-5 px-3 sm:px-5 grid grid-cols-3 gap-2 sm:gap-3">
           {(
             [
-              { id: "top", label: "Highest rated" },
-              { id: "fast", label: "Under 30 min" },
-              { id: "freeDelivery", label: "Free delivery" },
-            ] as { id: Exclude<QuickFilter, null>; label: string }[]
-          ).map((f) => {
-            const active = quickFilter === f.id;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setQuickFilter(active ? null : f.id)}
-                className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold transition ${
-                  active
-                    ? "bg-foreground text-background"
-                    : "bg-muted/70 text-foreground hover:bg-muted"
-                }`}
-                aria-pressed={active}
-              >
-                {f.label}
-              </button>
-            );
-          })}
+              { to: "/chefs", label: "Chefs", Icon: PiChefHatDuotone },
+              { to: "/restaurants", label: "Restaurants", Icon: PiStorefrontDuotone },
+              { to: "/groceries", label: "Groceries", Icon: PiBasketDuotone },
+            ] as const
+          ).map((b) => (
+            <Link
+              key={b.to}
+              to={b.to}
+              className="group flex items-center justify-center gap-2 rounded-2xl bg-muted/70 hover:bg-muted px-3 py-3 text-[13px] font-bold text-foreground transition"
+            >
+              <b.Icon className="h-4 w-4 text-[var(--brand-clay)] transition-transform group-hover:scale-110" />
+              <span className="truncate">{b.label}</span>
+            </Link>
+          ))}
         </div>
 
         {/* ─── 4 · Promo banner carousel ─── */}
