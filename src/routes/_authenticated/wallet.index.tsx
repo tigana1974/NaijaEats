@@ -197,7 +197,7 @@ function WalletPage() {
               <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">
                 Wallet ID
               </div>
-              <div className="mt-2 truncate font-mono text-xl font-semibold tracking-wide text-[#f2cc72]">
+              <div className="mt-2 truncate font-mono text-sm font-semibold tracking-wide text-[#f2cc72]">
                 @{profile?.username || "username"}
               </div>
             </div>
