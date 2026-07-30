@@ -5,8 +5,6 @@ import {
   ArrowDownLeft,
   ArrowRight,
   ArrowUpRight,
-  Eye,
-  EyeOff,
   Gift,
   Plus,
   Receipt,
@@ -25,6 +23,7 @@ import {
 import { toast } from "sonner";
 
 import { RoleShell } from "@/components/naija/RoleShell";
+import { useMyProfile } from "@/hooks/useMyProfile";
 import {
   claimIncomingTransfers,
   loadWallet,
@@ -131,25 +130,11 @@ const ACTIONS: Array<{
 
 function WalletPage() {
   const wallet = useWallet();
+  const { data: profile } = useMyProfile();
   useIncomingTransfers();
   const [hidden, setHidden] = useState(false);
   const [filter, setFilter] = useState<"all" | "in" | "out">("all");
   const [query, setQuery] = useState("");
-
-  const stats = useMemo(() => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    let credit = 0;
-    let debit = 0;
-
-    for (const transaction of wallet.txns) {
-      if (new Date(transaction.createdAt).getTime() < monthStart) continue;
-      if (transaction.amount >= 0) credit += transaction.amount;
-      else debit += Math.abs(transaction.amount);
-    }
-
-    return { credit, debit };
-  }, [wallet.txns]);
 
   const filtered = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -185,52 +170,35 @@ function WalletPage() {
           </div>
         </header>
 
-        <section className="mt-6 overflow-hidden rounded-lg bg-[#171714] text-white shadow-[0_24px_70px_-38px_rgba(0,0,0,0.7)]">
-          <div className="grid lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)]">
-            <div className="p-5 sm:p-8 lg:p-10">
+        <section className="mt-6 rounded-lg bg-[#171714] p-5 text-white shadow-[0_24px_70px_-38px_rgba(0,0,0,0.7)] sm:p-8 lg:p-10">
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/60">
                 <PiWalletDuotone className="h-5 w-5 text-[#e9b949]" /> Available balance
               </div>
-              <div className="mt-5 flex min-w-0 items-center gap-3">
-                <div className="min-w-0 font-display text-[2.65rem] font-semibold leading-none tracking-tight sm:text-6xl lg:text-7xl">
-                  {hidden ? "*****" : fmt(wallet.balance)}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setHidden((value) => !value)}
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/15 bg-white/5 transition hover:bg-white/10"
-                  aria-label={hidden ? "Show balance" : "Hide balance"}
+              <button
+                type="button"
+                onClick={() => setHidden((value) => !value)}
+                className="mt-5 block max-w-full cursor-pointer text-left"
+                aria-label={hidden ? "Reveal wallet balance" : "Blur wallet balance"}
+                aria-pressed={hidden}
+              >
+                <span
+                  className={`block max-w-full font-display text-[2.65rem] font-semibold leading-none tracking-tight transition duration-200 sm:text-6xl lg:text-7xl ${
+                    hidden ? "select-none blur-[7px]" : ""
+                  }`}
                 >
-                  {hidden ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                </button>
-              </div>
-              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/70">
-                <span>Ready for instant checkout</span>
-                <span className="hidden h-1 w-1 rounded-full bg-[#e9b949] sm:block" />
-                <span>No transfer fees inside NaijaEats</span>
-              </div>
+                  {fmt(wallet.balance)}
+                </span>
+              </button>
             </div>
 
-            <div className="border-t border-white/10 bg-white/[0.04] p-5 sm:p-8 lg:border-l lg:border-t-0">
-              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">
-                This month
+            <div className="border-t border-white/10 pt-5 sm:min-w-56 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
+              <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">
+                Wallet ID
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-5 lg:grid-cols-1">
-                <MonthlyMetric
-                  Icon={ArrowDownLeft}
-                  label="Money in"
-                  value={stats.credit}
-                  iconClass="bg-emerald-400/15 text-emerald-300"
-                />
-                <MonthlyMetric
-                  Icon={ArrowUpRight}
-                  label="Money out"
-                  value={stats.debit}
-                  iconClass="bg-[#e9b949]/15 text-[#f2cc72]"
-                />
-              </div>
-              <div className="mt-6 border-t border-white/10 pt-5 text-xs text-white/50">
-                Wallet ID ending in {(wallet.txns[0]?.id ?? "0000").slice(-4).toUpperCase()}
+              <div className="mt-2 truncate font-mono text-xl font-semibold tracking-wide text-[#f2cc72]">
+                @{profile?.username || "username"}
               </div>
             </div>
           </div>
@@ -351,30 +319,6 @@ function WalletPage() {
         </div>
       </div>
     </RoleShell>
-  );
-}
-
-function MonthlyMetric({
-  Icon,
-  label,
-  value,
-  iconClass,
-}: {
-  Icon: ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  iconClass: string;
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-3">
-      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${iconClass}`}>
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0">
-        <div className="text-xs text-white/50">{label}</div>
-        <div className="truncate font-display text-xl font-semibold tabular-nums">{fmt(value)}</div>
-      </div>
-    </div>
   );
 }
 
