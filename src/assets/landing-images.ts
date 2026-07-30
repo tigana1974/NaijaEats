@@ -19,7 +19,9 @@ export const dishExtra = "/landing/dish5.jpg";
 
 /** Chef / people */
 export const chefPortrait = u("1577219491135-ce391730fb2c", 640); // African chef portrait
-export const offerPlatter = u("1546793665-c74683f339c1", 1400);   // festive food platter
+export const offerPlatter = u("1546793665-c74683f339c1", 1400); // festive food platter
+export const restaurantDining = u("1517248135467-4c7edcad34c4", 1400);
+export const groceryMarket = u("1542838132-92c53300491e", 1400);
 
 /** Testimonial avatars — natural portraits */
 export const avatarTunde = u("1507003211169-0a1dd7228f2d", 200);
@@ -45,16 +47,16 @@ export const illusChef = "/landing/cooked-culture.jpg";
 const cat = (id: string) => u(id, 96, 70);
 
 export const categoryPhotos: Record<string, string> = {
-  all: cat("1512621776951-a57141f2eefd"),        // colourful bowls spread
-  jollof: "/landing/categories/jollof.png",      // local generated jollof image
-  suya: "/landing/categories/suya.png",          // local generated suya image
-  soups: "/landing/categories/soups.png",        // local generated soup image
-  swallow: "/landing/categories/swallow.png",    // local generated swallow image
-  rice: "/landing/categories/rice.png",          // local generated rice image
-  grills: "/landing/categories/grills.png",      // local generated grills image
-  snacks: "/landing/categories/snacks.png",      // local generated snacks image
-  drinks: cat("1551024709-8f23befc6f87"),          // iced drinks
-  grocery: cat("1542838132-92c53300491e"),         // fresh market produce
-  chefs: cat("1577219491135-ce391730fb2c"),        // chef at work
-  restaurants: cat("1517248135467-4c7edcad34c4"),  // restaurant tables
+  all: cat("1512621776951-a57141f2eefd"), // colourful bowls spread
+  jollof: "/landing/categories/jollof.png", // local generated jollof image
+  suya: "/landing/categories/suya.png", // local generated suya image
+  soups: "/landing/categories/soups.png", // local generated soup image
+  swallow: "/landing/categories/swallow.png", // local generated swallow image
+  rice: "/landing/categories/rice.png", // local generated rice image
+  grills: "/landing/categories/grills.png", // local generated grills image
+  snacks: "/landing/categories/snacks.png", // local generated snacks image
+  drinks: cat("1551024709-8f23befc6f87"), // iced drinks
+  grocery: cat("1542838132-92c53300491e"), // fresh market produce
+  chefs: cat("1577219491135-ce391730fb2c"), // chef at work
+  restaurants: cat("1517248135467-4c7edcad34c4"), // restaurant tables
 };

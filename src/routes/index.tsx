@@ -39,9 +39,19 @@ import {
   illusRider,
   illusOrder,
   illusChef,
+  groceryMarket,
+  restaurantDining,
 } from "@/assets/landing-images";
 import { Logo } from "@/components/naija/Logo";
-import { useState, useEffect, useRef, createContext, useContext, type ReactNode, type FormEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  createContext,
+  useContext,
+  type ReactNode,
+  type FormEvent,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, queryOptions } from "@tanstack/react-query";
@@ -52,7 +62,9 @@ const landingItemsQuery = queryOptions({
   queryFn: async () => {
     const { data } = await supabase
       .from("menu_items")
-      .select("id, name, price, currency, image_url, description, vendors!inner(name, city, status)")
+      .select(
+        "id, name, price, currency, image_url, description, vendors!inner(name, city, status)",
+      )
       .eq("is_available", true)
       .eq("vendors.status", "approved")
       .not("image_url", "is", null)
@@ -62,14 +74,21 @@ const landingItemsQuery = queryOptions({
   staleTime: 1000 * 60 * 15,
 });
 
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Naija Eats: The Home of African & Authentic Food, Delivered" },
-      { name: "description", content: "Order from chefs, African & Caribbean restaurants, and ethnic grocers. Cooked with culture, delivered fresh." },
+      {
+        name: "description",
+        content:
+          "Order from chefs, African & Caribbean restaurants, and ethnic grocers. Cooked with culture, delivered fresh.",
+      },
       { property: "og:title", content: "Naija Eats: Cooked with Culture, Delivered Fresh" },
-      { property: "og:description", content: "The food ecosystem for African & authentic cuisine. Chefs, restaurants, and groceries." },
+      {
+        property: "og:description",
+        content:
+          "The food ecosystem for African & authentic cuisine. Chefs, restaurants, and groceries.",
+      },
     ],
   }),
   // If the visitor already has a Supabase session, skip the marketing site and
@@ -112,22 +131,561 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-clip">
+    <div className="min-h-screen overflow-x-clip bg-[#f6f4ee] text-[#171714]">
       <SearchProvider>
-        <Nav />
-        <Hero />
+        <PremiumLandingNav />
+        <PremiumLandingHero />
       </SearchProvider>
-      <Story />
-      <SpecialDishes />
-      <WhyUs />
-      <MenuCarousel />
-      <OfferBanner />
-      <ServePromise />
-      <Testimonials />
-      <StartOrderingCTA />
-      <Footer />
-      <BrandWordmark />
+      <PremiumTrustStrip />
+      <PremiumMarketplace />
+      <PremiumPopularMenu />
+      <PremiumExperience />
+      <PremiumVendorStory />
+      <PremiumVoices />
+      <PremiumClosing />
+      <PremiumLandingFooter />
     </div>
+  );
+}
+
+function PremiumLandingNav() {
+  const search = useSearchModal();
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f6f4ee]/95 backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6">
+        <a href="#top" className="flex items-center gap-2.5" aria-label="NaijaEats home">
+          <Logo className="h-9 w-9" />
+          <span className="font-display text-lg font-bold tracking-normal">
+            Naija<span className="text-[#e34a2f]">Eats</span>
+          </span>
+        </a>
+
+        <nav className="hidden items-center gap-8 text-sm font-semibold text-black/60 md:flex">
+          <a href="#marketplace" className="transition hover:text-black">
+            Explore
+          </a>
+          <a href="#how-it-works" className="transition hover:text-black">
+            How it works
+          </a>
+          <a href="#for-vendors" className="transition hover:text-black">
+            For vendors
+          </a>
+        </nav>
+
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={search.open}
+            className="grid h-10 w-10 place-items-center rounded-full text-black/65 transition hover:bg-black/5 hover:text-black"
+            aria-label="Search NaijaEats"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+          <Link
+            to="/auth"
+            search={{ mode: "signin" }}
+            className="hidden px-2 py-2 text-sm font-bold sm:block"
+          >
+            Sign in
+          </Link>
+          <Link
+            to="/auth"
+            search={{ mode: "signup" }}
+            className="rounded-lg bg-[#171714] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-black"
+          >
+            Join NaijaEats
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function PremiumLandingHero() {
+  const search = useSearchModal();
+  const { setInitialQuery } = useContext(SearchSeedContext);
+  const [query, setQuery] = useState("");
+
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    setInitialQuery(query.trim());
+    search.open();
+  };
+
+  return (
+    <section
+      id="top"
+      className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#171714] text-white"
+    >
+      <img
+        src={dishJollof}
+        alt="A generous platter of jollof rice and grilled chicken"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+        fetchPriority="high"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,10,8,0.9)_0%,rgba(10,10,8,0.68)_44%,rgba(10,10,8,0.12)_78%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(10,10,8,0.55)_0%,transparent_42%)]" />
+
+      <div className="relative mx-auto flex min-h-[calc(100svh-72px)] max-w-7xl items-end px-4 pb-10 pt-20 sm:px-6 sm:pb-14 lg:items-center lg:pb-16 lg:pt-16">
+        <div className="max-w-3xl">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] backdrop-blur-md">
+            <Star className="h-3.5 w-3.5 fill-[#f0bd43] text-[#f0bd43]" />
+            Nigeria and the United Kingdom
+          </div>
+          <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[0.98] tracking-normal sm:text-6xl lg:text-[76px]">
+            African food,
+            <br />
+            delivered with care.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-7 text-white/78 sm:text-lg">
+            Discover independent chefs, trusted restaurants, and specialist grocers bringing
+            authentic flavour closer to home.
+          </p>
+
+          <form
+            onSubmit={submitSearch}
+            className="mt-8 flex max-w-2xl flex-col gap-2 rounded-lg bg-white p-2 shadow-2xl sm:flex-row"
+          >
+            <label className="flex min-w-0 flex-1 items-center gap-3 px-3 text-[#171714]">
+              <Search className="h-5 w-5 shrink-0 text-[#e34a2f]" />
+              <span className="sr-only">Search dishes or vendors</span>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search jollof, suya, chefs or groceries"
+                className="h-12 min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-black/45"
+              />
+            </label>
+            <button
+              type="submit"
+              className="h-12 rounded-lg bg-[#e34a2f] px-6 text-sm font-bold text-white transition hover:bg-[#c93d26]"
+            >
+              Find food
+            </button>
+          </form>
+
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-white/75">
+            <span className="inline-flex items-center gap-2">
+              <ChefHat className="h-4 w-4 text-[#f0bd43]" /> Local chefs
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Truck className="h-4 w-4 text-[#f0bd43]" /> Live delivery
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <ShoppingBasket className="h-4 w-4 text-[#f0bd43]" /> Specialist groceries
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumTrustStrip() {
+  const points = [
+    ["Curated kitchens", "Approved chefs and food businesses"],
+    ["Made authentically", "Food rooted in culture and craft"],
+    ["Tracked to your door", "Clear updates from kitchen to delivery"],
+  ];
+
+  return (
+    <section className="border-b border-black/10 bg-white">
+      <div className="mx-auto grid max-w-7xl divide-y divide-black/10 px-4 sm:px-6 md:grid-cols-3 md:divide-x md:divide-y-0">
+        {points.map(([title, copy]) => (
+          <div key={title} className="py-5 md:px-7 md:first:pl-0 md:last:pr-0">
+            <div className="text-sm font-extrabold">{title}</div>
+            <div className="mt-1 text-sm text-black/55">{copy}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PremiumMarketplace() {
+  const paths = [
+    {
+      title: "Restaurants",
+      copy: "Beloved kitchens and neighbourhood favourites.",
+      image: restaurantDining,
+      Icon: Store,
+    },
+    {
+      title: "Independent chefs",
+      copy: "Signature dishes cooked by chefs near you.",
+      image: illusChef,
+      Icon: ChefHat,
+    },
+    {
+      title: "African groceries",
+      copy: "Pantry staples, fresh produce, and hard-to-find ingredients.",
+      image: groceryMarket,
+      Icon: ShoppingBasket,
+    },
+  ];
+
+  return (
+    <section id="marketplace" className="py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#e34a2f]">
+              One food marketplace
+            </div>
+            <h2 className="mt-3 max-w-2xl font-display text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+              Everything authentic food should feel like.
+            </h2>
+          </div>
+          <p className="max-w-md text-sm leading-6 text-black/55 sm:text-right">
+            From tonight's dinner to tomorrow's pantry, explore food made and sold by people who
+            understand it.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          {paths.map((path) => (
+            <Link
+              key={path.title}
+              to="/auth"
+              search={{ mode: "signup" }}
+              className="group relative min-h-[390px] overflow-hidden rounded-lg bg-[#171714] text-white"
+            >
+              <img
+                src={path.image}
+                alt={path.title}
+                className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(8,8,7,0.9)_0%,rgba(8,8,7,0.08)_72%)]" />
+              <div className="absolute inset-x-0 bottom-0 p-6">
+                <path.Icon className="mb-4 h-6 w-6 text-[#f0bd43]" />
+                <h3 className="font-display text-3xl font-semibold tracking-normal">
+                  {path.title}
+                </h3>
+                <p className="mt-2 max-w-sm text-sm leading-6 text-white/70">{path.copy}</p>
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold">
+                  Explore <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumPopularMenu() {
+  const { data: liveItems } = useQuery(landingItemsQuery);
+  const fallback = [
+    {
+      id: "jollof",
+      name: "Smoky party jollof",
+      price: 8500,
+      currency: "NGN",
+      image_url: dishJollof,
+      vendor: "NaijaEats kitchen",
+    },
+    {
+      id: "rice",
+      name: "Coconut rice and chicken",
+      price: 7200,
+      currency: "NGN",
+      image_url: dishSuya,
+      vendor: "Made with culture",
+    },
+    {
+      id: "soup",
+      name: "Native soup and rice",
+      price: 9000,
+      currency: "NGN",
+      image_url: dishEgusi,
+      vendor: "Chef selected",
+    },
+    {
+      id: "platter",
+      name: "Celebration jollof platter",
+      price: 12000,
+      currency: "NGN",
+      image_url: dishPuffpuff,
+      vendor: "Weekend favourite",
+    },
+  ];
+  const items = liveItems?.length
+    ? liveItems.slice(0, 4).map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        currency: item.currency,
+        image_url: item.image_url,
+        vendor: item.vendors.name,
+      }))
+    : fallback;
+  const money = (value: number, currency: string) =>
+    `${currency === "GBP" ? "\u00a3" : "\u20a6"}${Number(value).toLocaleString()}`;
+
+  return (
+    <section className="border-y border-black/10 bg-white py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#e34a2f]">
+              Taste what is nearby
+            </div>
+            <h2 className="mt-3 font-display text-4xl font-semibold tracking-normal sm:text-5xl">
+              Popular right now
+            </h2>
+          </div>
+          <Link
+            to="/auth"
+            search={{ mode: "signup" }}
+            className="hidden items-center gap-2 text-sm font-bold sm:inline-flex"
+          >
+            See the full menu <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {items.map((item) => {
+            return (
+              <article key={item.id} className="min-w-0">
+                <div className="aspect-[4/5] overflow-hidden rounded-lg bg-[#ece8de]">
+                  <img
+                    src={item.image_url || dishExtra}
+                    alt={item.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition duration-700 hover:scale-105"
+                  />
+                </div>
+                <div className="mt-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-extrabold sm:text-base">{item.name}</h3>
+                    <p className="mt-1 truncate text-xs text-black/50">{item.vendor}</p>
+                  </div>
+                  <span className="shrink-0 text-sm font-extrabold text-[#e34a2f]">
+                    {money(item.price, item.currency)}
+                  </span>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumExperience() {
+  const steps = [
+    {
+      number: "01",
+      title: "Choose your craving",
+      copy: "Search dishes, chefs, restaurants, or ingredients in your area.",
+      Icon: Search,
+    },
+    {
+      number: "02",
+      title: "Order with confidence",
+      copy: "See clear pricing, ratings, preparation times, and delivery details.",
+      Icon: ShoppingBag,
+    },
+    {
+      number: "03",
+      title: "Follow every step",
+      copy: "Get updates from the kitchen until your order reaches your door.",
+      Icon: Truck,
+    },
+  ];
+
+  return (
+    <section id="how-it-works" className="py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
+          <div>
+            <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#e34a2f]">
+              Beautifully simple
+            </div>
+            <h2 className="mt-3 font-display text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+              Good food without the guesswork.
+            </h2>
+            <p className="mt-5 max-w-md text-sm leading-7 text-black/55">
+              NaijaEats keeps discovery, payment, and delivery in one calm experience.
+            </p>
+          </div>
+          <div className="divide-y divide-black/10 border-y border-black/10">
+            {steps.map((step) => (
+              <div
+                key={step.number}
+                className="grid gap-4 py-7 sm:grid-cols-[64px_48px_1fr] sm:items-center"
+              >
+                <span className="text-xs font-extrabold tracking-[0.16em] text-black/35">
+                  {step.number}
+                </span>
+                <step.Icon className="h-6 w-6 text-[#e34a2f]" />
+                <div>
+                  <h3 className="text-lg font-extrabold">{step.title}</h3>
+                  <p className="mt-1 text-sm leading-6 text-black/55">{step.copy}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumVendorStory() {
+  return (
+    <section id="for-vendors" className="bg-[#173f35] text-white">
+      <div className="mx-auto grid max-w-7xl lg:grid-cols-2">
+        <div className="min-h-[380px] lg:min-h-[560px]">
+          <img
+            src={illusChef}
+            alt="A chef preparing authentic food"
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <div className="flex items-center px-5 py-14 sm:px-10 lg:px-16">
+          <div className="max-w-lg">
+            <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#f0bd43]">
+              Built for food businesses
+            </div>
+            <h2 className="mt-4 font-display text-4xl font-semibold leading-tight tracking-normal sm:text-5xl">
+              Your food deserves a bigger table.
+            </h2>
+            <p className="mt-5 text-base leading-7 text-white/70">
+              Run your menu, receive orders, speak with customers, and grow your audience from one
+              dedicated vendor workspace.
+            </p>
+            <Link
+              to="/auth"
+              search={{ mode: "signup" }}
+              className="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-extrabold text-[#173f35]"
+            >
+              Become a vendor <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumVoices() {
+  const quotes = [
+    [
+      "The jollof tastes like the kind of food you plan your weekend around.",
+      "Tunde",
+      "Customer in Lagos",
+    ],
+    [
+      "NaijaEats gave my kitchen a storefront and customers who value what I cook.",
+      "Rahim",
+      "Independent chef in London",
+    ],
+    [
+      "I can finally find the ingredients and dishes I grew up with in one place.",
+      "Emily",
+      "Customer in Manchester",
+    ],
+  ];
+
+  return (
+    <section className="bg-white py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#e34a2f]">
+          Loved across two countries
+        </div>
+        <h2 className="mt-3 font-display text-4xl font-semibold tracking-normal sm:text-5xl">
+          Food that feels familiar.
+        </h2>
+        <div className="mt-10 grid gap-px overflow-hidden rounded-lg border border-black/10 bg-black/10 lg:grid-cols-3">
+          {quotes.map(([quote, name, role]) => (
+            <figure key={name} className="bg-white p-7 sm:p-8">
+              <div className="flex gap-1 text-[#f0bd43]">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Star key={index} className="h-4 w-4 fill-current" />
+                ))}
+              </div>
+              <blockquote className="mt-6 font-display text-2xl leading-snug">"{quote}"</blockquote>
+              <figcaption className="mt-8 text-sm">
+                <strong>{name}</strong>
+                <span className="ml-2 text-black/45">{role}</span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumClosing() {
+  return (
+    <section className="relative min-h-[520px] overflow-hidden bg-[#171714] text-white">
+      <img
+        src={dishExtra}
+        alt="An authentic African meal ready to order"
+        loading="lazy"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/70" />
+      <div className="relative mx-auto flex min-h-[520px] max-w-7xl items-center justify-center px-4 py-20 text-center sm:px-6">
+        <div className="max-w-3xl">
+          <h2 className="font-display text-5xl font-semibold leading-none tracking-normal sm:text-6xl">
+            Come hungry.
+            <br />
+            We will handle the rest.
+          </h2>
+          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/70">
+            Create your account and discover what chefs, restaurants, and grocers are serving near
+            you.
+          </p>
+          <Link
+            to="/auth"
+            search={{ mode: "signup" }}
+            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#e34a2f] px-6 py-3.5 text-sm font-extrabold text-white"
+          >
+            Start ordering <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumLandingFooter() {
+  return (
+    <footer className="bg-[#171714] text-white">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <div className="flex flex-col gap-8 border-b border-white/10 pb-9 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2.5">
+            <Logo className="h-9 w-9" />
+            <span className="font-display text-lg font-bold">NaijaEats</span>
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/65">
+            <a href="#marketplace" className="hover:text-white">
+              Explore
+            </a>
+            <a href="#how-it-works" className="hover:text-white">
+              How it works
+            </a>
+            <a href="#for-vendors" className="hover:text-white">
+              For vendors
+            </a>
+            <Link to="/auth" search={{ mode: "signin" }} className="hover:text-white">
+              Sign in
+            </Link>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 pt-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <span>© {new Date().getFullYear()} NaijaEats. Cooked with culture.</span>
+          <span>Nigeria · United Kingdom</span>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -176,7 +734,8 @@ function LandingDebugBanner() {
     message = `Query failed: ${probeError}`;
   } else if (count === 0) {
     state = "empty";
-    message = "Query ran but returned 0 rows. No approved vendor has an available menu item with an image_url in this database.";
+    message =
+      "Query ran but returned 0 rows. No approved vendor has an available menu item with an image_url in this database.";
   } else {
     state = "ok";
     message = `Live DB · ${count} vendor item${count === 1 ? "" : "s"} returned (${withImage} with image_url). Landing page is showing real uploads.`;
@@ -193,7 +752,9 @@ function LandingDebugBanner() {
     <div className={`relative z-40 border-b ${tone} text-xs`}>
       <div className="mx-auto max-w-7xl px-6 py-2 flex items-center gap-2 justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-bold uppercase tracking-widest text-[10px] shrink-0">Landing diagnostic</span>
+          <span className="font-bold uppercase tracking-widest text-[10px] shrink-0">
+            Landing diagnostic
+          </span>
           <span className="truncate">{message}</span>
         </div>
         <span className="hidden sm:inline shrink-0 opacity-60">
@@ -242,7 +803,13 @@ function useDebounced<T>(value: T, ms = 250): T {
   return v;
 }
 
-function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function SearchDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const { initialQuery } = useContext(SearchSeedContext);
   const [q, setQ] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -285,7 +852,11 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
   });
 
   const fmt = (n: number, c: string) => `${c === "GBP" ? "£" : "₦"}${Number(n).toLocaleString()}`;
-  const empty = term.length >= 2 && !isFetching && (data?.vendors.length ?? 0) === 0 && (data?.items.length ?? 0) === 0;
+  const empty =
+    term.length >= 2 &&
+    !isFetching &&
+    (data?.vendors.length ?? 0) === 0 &&
+    (data?.items.length ?? 0) === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -305,13 +876,15 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
         <div className="max-h-[60vh] overflow-y-auto">
           {term.length < 2 && (
             <div className="p-6 text-sm text-muted-foreground">
-              Type at least 2 letters to search across dishes, chefs and restaurants in Nigeria and the UK.
+              Type at least 2 letters to search across dishes, chefs and restaurants in Nigeria and
+              the UK.
             </div>
           )}
 
           {empty && (
             <div className="p-6 text-sm text-muted-foreground text-center">
-              No matches for "<span className="text-foreground">{term}</span>". Try a different word.
+              No matches for "<span className="text-foreground">{term}</span>". Try a different
+              word.
             </div>
           )}
 
@@ -373,7 +946,9 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
                       {it.vendors.name} · {it.vendors.city}
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-primary shrink-0">{fmt(it.price, it.currency)}</div>
+                  <div className="text-sm font-bold text-primary shrink-0">
+                    {fmt(it.price, it.currency)}
+                  </div>
                 </Link>
               ))}
             </div>
@@ -381,7 +956,9 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v:
         </div>
 
         <div className="border-t border-border bg-muted/40 px-4 py-3 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Sign in to order, save favourites and track delivery.</span>
+          <span className="text-muted-foreground">
+            Sign in to order, save favourites and track delivery.
+          </span>
           <Link
             to="/auth"
             onClick={() => onOpenChange(false)}
@@ -405,17 +982,8 @@ function Leaf({ className = "", rotate = 0 }: { className?: string; rotate?: num
       style={{ transform: `rotate(${rotate}deg)` }}
       aria-hidden
     >
-      <path
-        d="M8 56C8 28 28 8 56 8c0 28-20 48-48 48Z"
-        fill="currentColor"
-      />
-      <path
-        d="M14 50 50 14"
-        stroke="white"
-        strokeOpacity="0.45"
-        strokeWidth="1.5"
-        fill="none"
-      />
+      <path d="M8 56C8 28 28 8 56 8c0 28-20 48-48 48Z" fill="currentColor" />
+      <path d="M14 50 50 14" stroke="white" strokeOpacity="0.45" strokeWidth="1.5" fill="none" />
     </svg>
   );
 }
@@ -457,11 +1025,21 @@ function Nav() {
           </span>
         </a>
         <nav className="hidden md:flex items-center gap-8 text-[13px] font-medium text-foreground/70">
-          <a href="#top" className="text-foreground">Home</a>
-          <a href="#menu" className="hover:text-foreground transition">Menu</a>
-          <a href="#story" className="hover:text-foreground transition">About</a>
-          <a href="#why" className="hover:text-foreground transition">Vendors</a>
-          <a href="#contact" className="hover:text-foreground transition">Contact</a>
+          <a href="#top" className="text-foreground">
+            Home
+          </a>
+          <a href="#menu" className="hover:text-foreground transition">
+            Menu
+          </a>
+          <a href="#story" className="hover:text-foreground transition">
+            About
+          </a>
+          <a href="#why" className="hover:text-foreground transition">
+            Vendors
+          </a>
+          <a href="#contact" className="hover:text-foreground transition">
+            Contact
+          </a>
         </nav>
         <div className="flex items-center gap-2.5">
           <button
@@ -518,7 +1096,6 @@ function Hero() {
       <div className="relative mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-14 lg:gap-20 items-center">
         {/* Left */}
         <div className="relative z-10">
-          
           <h1 className="mt-6 font-display text-[42px] md:text-6xl lg:text-[76px] font-semibold leading-[0.98] tracking-[-0.03em] text-foreground">
             Everything food.
             <br />
@@ -527,7 +1104,8 @@ function Hero() {
             <span className="italic font-light text-primary">marketplace.</span>
           </h1>
           <p className="mt-7 text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed">
-            Restaurant meals, private chefs, ethnic groceries and same‑day delivery, from a platform built around African food culture.
+            Restaurant meals, private chefs, ethnic groceries and same‑day delivery, from a platform
+            built around African food culture.
           </p>
           <form
             onSubmit={(e) => {
@@ -574,8 +1152,6 @@ function Hero() {
               <ArrowRight className="h-3.5 w-3.5 opacity-60" />
             </Link>
           </div>
-
-
         </div>
 
         {/* Right — editorial portrait card */}
@@ -585,8 +1161,8 @@ function Hero() {
               <div className="absolute inset-0 bg-muted animate-pulse" />
             ) : (
               <img
-                 src={heroItem ? heroItem.image_url : heroJollof}
-                 alt={heroItem ? heroItem.name : "Delicious African food"}
+                src={heroItem ? heroItem.image_url : heroJollof}
+                alt={heroItem ? heroItem.name : "Delicious African food"}
                 width={1280}
                 height={1600}
                 className="h-full w-full object-cover"
@@ -616,8 +1192,13 @@ function Hero() {
                     className="h-11 w-11 rounded-full object-cover ring-2 ring-white/80"
                   />
                   <div className="min-w-0">
-                    <div className="text-[13px] font-semibold leading-tight text-white">{heroItem?.vendors ? heroItem.vendors.name : "Chef Amaka"}</div>
-                    <div className="text-[10.5px] uppercase tracking-[0.14em] text-white/70 leading-tight mt-0.5">{heroItem ? heroItem.name : "Signature dish"} · {heroItem?.vendors ? heroItem.vendors.city : "Lagos"}</div>
+                    <div className="text-[13px] font-semibold leading-tight text-white">
+                      {heroItem?.vendors ? heroItem.vendors.name : "Chef Amaka"}
+                    </div>
+                    <div className="text-[10.5px] uppercase tracking-[0.14em] text-white/70 leading-tight mt-0.5">
+                      {heroItem ? heroItem.name : "Signature dish"} ·{" "}
+                      {heroItem?.vendors ? heroItem.vendors.city : "Lagos"}
+                    </div>
                   </div>
                 </>
               )}
@@ -646,9 +1227,17 @@ function Hero() {
                   className="h-12 w-12 rounded-xl object-cover"
                 />
                 <div>
-                  <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trending</div>
-                  <div className="text-sm font-semibold text-foreground leading-tight">{cardItem ? cardItem.name : "Suya Skewers"}</div>
-                  <div className="text-primary font-bold text-[13px] leading-tight mt-0.5">{cardItem ? `${cardItem.currency === 'GBP' ? '£' : '₦'}${Number(cardItem.price).toLocaleString()}` : "₦7,490"}</div>
+                  <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Trending
+                  </div>
+                  <div className="text-sm font-semibold text-foreground leading-tight">
+                    {cardItem ? cardItem.name : "Suya Skewers"}
+                  </div>
+                  <div className="text-primary font-bold text-[13px] leading-tight mt-0.5">
+                    {cardItem
+                      ? `${cardItem.currency === "GBP" ? "£" : "₦"}${Number(cardItem.price).toLocaleString()}`
+                      : "₦7,490"}
+                  </div>
                 </div>
               </>
             )}
@@ -685,12 +1274,17 @@ function Story() {
     <section id="story" className="relative py-20 md:py-28 bg-background">
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Our story</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Our story
+          </div>
           <h2 className="mt-5 font-display text-3xl md:text-[52px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground text-left">
-            Crafted with love, <span className="italic font-light text-primary">spiced with passion</span>, and made to satisfy every craving.
+            Crafted with love,{" "}
+            <span className="italic font-light text-primary">spiced with passion</span>, and made to
+            satisfy every craving.
           </h2>
           <p className="mt-6 text-[15px] text-muted-foreground max-w-md leading-relaxed">
-            A network of chefs, restaurants and grocers united by one belief: African food deserves the world's finest delivery experience.
+            A network of chefs, restaurants and grocers united by one belief: African food deserves
+            the world's finest delivery experience.
           </p>
         </div>
 
@@ -700,14 +1294,28 @@ function Story() {
               {isLoading ? (
                 <div className="h-full w-full animate-pulse bg-muted-foreground/10" />
               ) : (
-                <img src={collageA?.image_url ?? dishJollof} alt={collageA?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+                <img
+                  src={collageA?.image_url ?? dishJollof}
+                  alt={collageA?.name ?? "Vendor dish"}
+                  width={1024}
+                  height={768}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
               )}
             </div>
             <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
               {isLoading ? (
                 <div className="h-full w-full animate-pulse bg-muted-foreground/10" />
               ) : (
-                <img src={collageB?.image_url ?? dishSuya} alt={collageB?.name ?? "Vendor dish"} width={1024} height={768} loading="lazy" className="h-full w-full object-cover" />
+                <img
+                  src={collageB?.image_url ?? dishSuya}
+                  alt={collageB?.name ?? "Vendor dish"}
+                  width={1024}
+                  height={768}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
               )}
             </div>
           </div>
@@ -715,7 +1323,14 @@ function Story() {
             {isLoading ? (
               <div className="h-full w-full animate-pulse bg-muted-foreground/10" />
             ) : (
-              <img src={collageWide?.image_url ?? offerPlatter} alt={collageWide?.name ?? "A platter of African dishes"} width={1024} height={448} loading="lazy" className="h-full w-full object-cover" />
+              <img
+                src={collageWide?.image_url ?? offerPlatter}
+                alt={collageWide?.name ?? "A platter of African dishes"}
+                width={1024}
+                height={448}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
             )}
           </div>
 
@@ -797,20 +1412,23 @@ function SpecialDishes() {
     <section className="relative py-20 md:py-24 bg-background overflow-x-clip">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center max-w-2xl mx-auto">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Signature dishes</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Signature dishes
+          </div>
           <h2 className="mt-4 font-display text-3xl md:text-[44px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground">
             Special dishes from <span className="italic font-light text-primary">our kitchens</span>
           </h2>
           <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
-            Bestsellers cooked by chefs and African restaurants across Lagos, Abuja, London and Manchester.
+            Bestsellers cooked by chefs and African restaurants across Lagos, Abuja, London and
+            Manchester.
           </p>
         </div>
       </div>
 
       <div className="relative mt-16">
         <div className="flex w-max pt-14 pb-4 px-4 hover:[animation-play-state:paused] animate-marquee-ltr gap-6">
-            {isLoading ? (
-              Array.from({ length: 8 }).map((_, i) => (
+          {isLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="group relative w-64 shrink-0">
                   <div className="aspect-square rounded-full sm:rounded-[2rem] bg-muted animate-pulse" />
                   <div className="mt-5 text-center px-2">
@@ -819,17 +1437,25 @@ function SpecialDishes() {
                   </div>
                 </div>
               ))
-            ) : (
-              marqueeItems.map((d, idx) => (
+            : marqueeItems.map((d, idx) => (
                 <article
                   key={d.name + "-" + idx}
                   className="relative w-64 shrink-0 rounded-3xl bg-card border border-border pt-16 pb-6 px-5 text-center shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-card)] hover:-translate-y-1 transition-all"
                 >
                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-24 rounded-full overflow-hidden ring-4 ring-background shadow-[var(--shadow-warm)]">
-                    <img src={d.img} alt={d.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
+                    <img
+                      src={d.img}
+                      alt={d.name}
+                      width={256}
+                      height={256}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="text-xs font-bold text-primary">{d.price}</div>
-                  <h3 className="mt-1 font-semibold text-foreground text-base leading-tight truncate">{d.name}</h3>
+                  <h3 className="mt-1 font-semibold text-foreground text-base leading-tight truncate">
+                    {d.name}
+                  </h3>
                   <div className="mt-2 flex items-center justify-center gap-0.5 text-accent">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star key={i} className="h-3.5 w-3.5 fill-current" />
@@ -840,8 +1466,7 @@ function SpecialDishes() {
                     Order Now
                   </button>
                 </article>
-              ))
-            )}
+              ))}
         </div>
       </div>
     </section>
@@ -853,9 +1478,21 @@ function SpecialDishes() {
 function WhyUs() {
   const tiles = [
     { icon: ChefHat, title: "Chefs", copy: "Authentic recipes from grandmothers and aunties." },
-    { icon: Utensils, title: "African Restaurants", copy: "From Lagos buka to Caribbean roti, at your door." },
-    { icon: ShoppingBasket, title: "Ethnic Grocery", copy: "Egusi, palm oil, plantains and scotch bonnets." },
-    { icon: CalendarHeart, title: "Chef Booking", copy: "Book a chef for your dinner or celebration." },
+    {
+      icon: Utensils,
+      title: "African Restaurants",
+      copy: "From Lagos buka to Caribbean roti, at your door.",
+    },
+    {
+      icon: ShoppingBasket,
+      title: "Ethnic Grocery",
+      copy: "Egusi, palm oil, plantains and scotch bonnets.",
+    },
+    {
+      icon: CalendarHeart,
+      title: "Chef Booking",
+      copy: "Book a chef for your dinner or celebration.",
+    },
   ];
   return (
     <section id="why" className="relative py-20 md:py-28 bg-muted/50">
@@ -863,12 +1500,16 @@ function WhyUs() {
       <Sparkle className="absolute bottom-16 left-[40%] h-4 w-4 text-accent/70" />
       <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-12 items-center">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">The difference</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            The difference
+          </div>
           <h2 className="mt-4 font-display text-3xl md:text-[52px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground">
             Why <span className="italic font-light text-primary">Naija Eats</span>
           </h2>
           <p className="mt-6 text-[15px] text-muted-foreground max-w-md leading-relaxed">
-            We are more than delivery. We are a food ecosystem that connects the people who cook with culture to the people who crave it. Verified chefs, fair pricing, and stories behind every dish.
+            We are more than delivery. We are a food ecosystem that connects the people who cook
+            with culture to the people who crave it. Verified chefs, fair pricing, and stories
+            behind every dish.
           </p>
           <Link
             to="/discover"
@@ -935,14 +1576,27 @@ function MenuCarousel() {
           </h2>
         </div>
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 relative">
-          <button className="hidden md:grid absolute -left-5 top-1/2 -translate-y-1/2 place-items-center h-10 w-10 rounded-full bg-card border border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition shadow-[var(--shadow-soft)]" aria-label="Previous">
+          <button
+            className="hidden md:grid absolute -left-5 top-1/2 -translate-y-1/2 place-items-center h-10 w-10 rounded-full bg-card border border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition shadow-[var(--shadow-soft)]"
+            aria-label="Previous"
+          >
             <ChevronLeft className="h-4 w-4" />
           </button>
           {displayItems.map((d, idx) => (
-            <article key={d.name + idx} className="relative rounded-3xl bg-card border border-border p-5 shadow-[var(--shadow-soft)]">
+            <article
+              key={d.name + idx}
+              className="relative rounded-3xl bg-card border border-border p-5 shadow-[var(--shadow-soft)]"
+            >
               <div className="relative">
                 <div className="aspect-square rounded-full overflow-hidden mx-auto w-32 h-32 ring-4 ring-background shadow-[var(--shadow-warm)]">
-                  <img src={d.img} alt={d.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
+                  <img
+                    src={d.img}
+                    alt={d.name}
+                    width={256}
+                    height={256}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <span className="absolute -top-1 right-2 text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground px-2 py-1 rounded-full">
                   {d.tag}
@@ -952,7 +1606,10 @@ function MenuCarousel() {
               <div className="mt-1 text-center text-primary font-bold text-xl">{d.price}</div>
             </article>
           ))}
-          <button className="hidden md:grid absolute -right-5 top-1/2 -translate-y-1/2 place-items-center h-10 w-10 rounded-full bg-primary text-primary-foreground hover:opacity-95 transition shadow-[var(--shadow-warm)]" aria-label="Next">
+          <button
+            className="hidden md:grid absolute -right-5 top-1/2 -translate-y-1/2 place-items-center h-10 w-10 rounded-full bg-primary text-primary-foreground hover:opacity-95 transition shadow-[var(--shadow-warm)]"
+            aria-label="Next"
+          >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -969,9 +1626,15 @@ function OfferBanner() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="relative rounded-3xl overflow-hidden bg-accent/40 grid md:grid-cols-2 items-center">
           <div className="p-8 md:p-12">
-            <div className="text-xs font-bold uppercase tracking-widest text-primary">Special Offer</div>
+            <div className="text-xs font-bold uppercase tracking-widest text-primary">
+              Special Offer
+            </div>
             <h2 className="mt-3 font-display text-3xl md:text-4xl font-bold leading-tight text-foreground">
-              Tasty Fare,<br />Refreshing Drinks,<br />Joyful Company.
+              Tasty Fare,
+              <br />
+              Refreshing Drinks,
+              <br />
+              Joyful Company.
             </h2>
             <p className="mt-4 text-sm text-foreground/70 max-w-sm">
               Order our weekend festive platter of suya, jollof, grilled fish and plantain. Feeds 4.
@@ -999,7 +1662,9 @@ function OfferBanner() {
               className="absolute inset-0 h-full w-full object-cover"
             />
             <span className="absolute top-4 right-4 grid place-items-center h-16 w-16 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-[var(--shadow-warm)]">
-              50%<br />OFF
+              50%
+              <br />
+              OFF
             </span>
           </div>
         </div>
@@ -1012,10 +1677,33 @@ function OfferBanner() {
 
 function Testimonials() {
   const cards = [
-    { name: "Tunde Bakare", role: "Foodie · Lagos", avatar: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=150&h=150&fit=crop&q=80", text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave chefs a stage." },
-    { name: "Rahim Hassan", role: "Chef · London", avatar: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=150&h=150&fit=crop&q=80", text: "I started cooking from my kitchen in Peckham. Within a month, I had 80 regulars ordering my egusi every weekend." },
-    { name: "Emily Carter", role: "Customer · Manchester", avatar: "https://images.unsplash.com/photo-1618085222100-93f0eecad0aa?w=150&h=150&fit=crop&q=80", text: "I found African chefs I never knew existed in my city. The chef booking made my birthday unforgettable." },
-    { name: "Sade Ojo", role: "Foodie · Abuja", avatar: "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=150&h=150&fit=crop&q=80", text: "Fast delivery, real flavour, and stories about every dish. This is more than an app." },
+    {
+      name: "Tunde Bakare",
+      role: "Foodie · Lagos",
+      avatar:
+        "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=150&h=150&fit=crop&q=80",
+      text: "The jollof from Mama Ngozi tastes exactly like home. Naija Eats finally gave chefs a stage.",
+    },
+    {
+      name: "Rahim Hassan",
+      role: "Chef · London",
+      avatar: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=150&h=150&fit=crop&q=80",
+      text: "I started cooking from my kitchen in Peckham. Within a month, I had 80 regulars ordering my egusi every weekend.",
+    },
+    {
+      name: "Emily Carter",
+      role: "Customer · Manchester",
+      avatar:
+        "https://images.unsplash.com/photo-1618085222100-93f0eecad0aa?w=150&h=150&fit=crop&q=80",
+      text: "I found African chefs I never knew existed in my city. The chef booking made my birthday unforgettable.",
+    },
+    {
+      name: "Sade Ojo",
+      role: "Foodie · Abuja",
+      avatar:
+        "https://images.unsplash.com/photo-1523824921871-d6f1a15151f1?w=150&h=150&fit=crop&q=80",
+      text: "Fast delivery, real flavour, and stories about every dish. This is more than an app.",
+    },
   ];
   return (
     <section className="py-20 md:py-24 bg-background">
@@ -1079,16 +1767,28 @@ function Testimonials() {
 function ServePromise() {
   const items = [
     { img: illusOrder, title: "Easy To Order", copy: "Browse, pick and order in just a few taps." },
-    { img: illusRider, title: "Fastest Delivery", copy: "Hot meals at your door, tracked end to end." },
-    { img: illusChef, title: "Cooked with Culture", copy: "Recipes from real African kitchens, every order." },
+    {
+      img: illusRider,
+      title: "Fastest Delivery",
+      copy: "Hot meals at your door, tracked end to end.",
+    },
+    {
+      img: illusChef,
+      title: "Cooked with Culture",
+      copy: "Recipes from real African kitchens, every order.",
+    },
   ];
   return (
     <section className="py-20 md:py-24 bg-background">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
-          <div className="text-xs font-bold uppercase tracking-widest text-primary">What We Serve</div>
+          <div className="text-xs font-bold uppercase tracking-widest text-primary">
+            What We Serve
+          </div>
           <h2 className="mt-3 font-display text-3xl md:text-4xl font-bold text-foreground">
-            Your Favourite African<br />Food Delivery Partner
+            Your Favourite African
+            <br />
+            Food Delivery Partner
           </h2>
         </div>
         <div className="mt-14 grid md:grid-cols-3 gap-6 md:gap-8">
@@ -1110,7 +1810,9 @@ function ServePromise() {
                 </span>
               </div>
               <h3 className="mt-5 font-display text-lg font-bold text-foreground">{it.title}</h3>
-              <p className="mt-1.5 text-xs text-muted-foreground max-w-[240px] mx-auto leading-relaxed">{it.copy}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground max-w-[240px] mx-auto leading-relaxed">
+                {it.copy}
+              </p>
             </div>
           ))}
         </div>
@@ -1144,12 +1846,15 @@ function StartOrderingCTA() {
                 Ready when you are
               </div>
               <h2 className="font-display text-3xl sm:text-4xl md:text-[52px] font-semibold tracking-[-0.02em] mt-5 leading-[1.02]">
-                Start ordering now.<br />
-                <span className="italic font-light text-[var(--brand-gold)]">Eat happy in minutes.</span>
+                Start ordering now.
+                <br />
+                <span className="italic font-light text-[var(--brand-gold)]">
+                  Eat happy in minutes.
+                </span>
               </h2>
               <p className="mt-4 text-sm sm:text-base text-white/80 max-w-md leading-relaxed">
-                Pick from real chefs, African restaurants, and ethnic groceries near you.
-                Delivered hot, tracked live, cooked with culture on every single order.
+                Pick from real chefs, African restaurants, and ethnic groceries near you. Delivered
+                hot, tracked live, cooked with culture on every single order.
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -1174,7 +1879,8 @@ function StartOrderingCTA() {
                   <Truck className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Fast delivery
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Star className="h-3.5 w-3.5 text-[var(--brand-gold)] fill-current" /> 4.9 average rating
+                  <Star className="h-3.5 w-3.5 text-[var(--brand-gold)] fill-current" /> 4.9 average
+                  rating
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <ChefHat className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> 500+ chefs
@@ -1196,11 +1902,7 @@ function StartOrderingCTA() {
 
               {/* Floating chef chip */}
               <div className="absolute -bottom-4 -left-4 sm:-left-6 flex items-center gap-2.5 rounded-2xl !bg-white/95 backdrop-blur pl-2 pr-4 py-2 shadow-xl border border-white/60">
-                <img
-                  src={chefPortrait}
-                  alt="Chef"
-                  className="h-9 w-9 rounded-full object-cover"
-                />
+                <img src={chefPortrait} alt="Chef" className="h-9 w-9 rounded-full object-cover" />
                 <div className="text-left">
                   <div className="text-xs font-bold !text-[#1a0e0a]">Cooking now</div>
                   <div className="text-[10px] !text-zinc-500">15 chefs online</div>
@@ -1256,11 +1958,31 @@ function Footer() {
           <div className="lg:col-span-2">
             <div className="text-sm font-semibold text-white">Customer</div>
             <ul className="mt-5 space-y-3 text-sm text-white/60">
-              <li><a href="#" className="hover:text-white transition">FAQ</a></li>
-              <li><a href="#" className="hover:text-white transition">Contact</a></li>
-              <li><a href="#" className="hover:text-white transition">Our Journey</a></li>
-              <li><a href="#" className="hover:text-white transition">Returns</a></li>
-              <li><a href="#" className="hover:text-white transition">Privacy</a></li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  FAQ
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Contact
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Our Journey
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Returns
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Privacy
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -1268,11 +1990,31 @@ function Footer() {
           <div className="lg:col-span-2">
             <div className="text-sm font-semibold text-white">Verticals</div>
             <ul className="mt-5 space-y-3 text-sm text-white/60">
-              <li><a href="#" className="hover:text-white transition">Restaurants</a></li>
-              <li><a href="#" className="hover:text-white transition">Chefs</a></li>
-              <li><a href="#" className="hover:text-white transition">Grocery</a></li>
-              <li><a href="#" className="hover:text-white transition">Chef Booking</a></li>
-              <li><a href="#" className="hover:text-white transition">Affiliate</a></li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Restaurants
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Chefs
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Grocery
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Chef Booking
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Affiliate
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -1293,9 +2035,15 @@ function Footer() {
         <div className="mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <p>© {new Date().getFullYear()} Naija Eats. Cooked with culture.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition">Terms</a>
-            <a href="#" className="hover:text-white transition">Privacy</a>
-            <a href="#" className="hover:text-white transition">Cookies</a>
+            <a href="#" className="hover:text-white transition">
+              Terms
+            </a>
+            <a href="#" className="hover:text-white transition">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-white transition">
+              Cookies
+            </a>
           </div>
         </div>
       </div>
@@ -1329,7 +2077,10 @@ function FooterNewsletter() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-5 flex items-center gap-2 rounded-full bg-white/10 p-1.5 pl-4 ring-1 ring-white/10 focus-within:ring-primary/60 transition">
+    <form
+      onSubmit={onSubmit}
+      className="mt-5 flex items-center gap-2 rounded-full bg-white/10 p-1.5 pl-4 ring-1 ring-white/10 focus-within:ring-primary/60 transition"
+    >
       <input
         type="email"
         required

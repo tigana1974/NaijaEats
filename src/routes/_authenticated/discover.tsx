@@ -1,17 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { IoSearch, IoStar, IoTimeOutline, IoBicycleOutline } from "react-icons/io5";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { IoAdd, IoSearch, IoStar, IoTimeOutline, IoBicycleOutline } from "react-icons/io5";
 import { PiChefHatDuotone, PiStorefrontDuotone, PiBasketDuotone } from "react-icons/pi";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { CustomerLocationHeader, CustomerShell } from "@/components/naija/CustomerShell";
 import {
-  CustomerLocationHeader,
-  CustomerShell,
-} from "@/components/naija/CustomerShell";
-import { FoodCard } from "@/components/naija/customer-ui";
-import { categoryPhotos } from "@/assets/landing-images";
+  categoryPhotos,
+  dishEgusi,
+  dishJollof,
+  dishSuya,
+  groceryMarket,
+  illusChef,
+  restaurantDining,
+} from "@/assets/landing-images";
 import { useCart } from "@/hooks/useCart";
 import { useCountry, hasStoredCountry } from "@/hooks/useCountry";
 import { toast } from "sonner";
@@ -41,7 +45,11 @@ type QuickFilter = "top" | "fast" | "freeDelivery" | null;
  *  with graceful fallbacks so tiles never render blank. */
 function photoForFoodType(name: string, imageUrl?: string | null): string | null {
   if (imageUrl) return imageUrl;
-  const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const slug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   return categoryPhotos[slug] ?? categoryPhotos[slug.split("-")[0]] ?? null;
 }
 
@@ -53,7 +61,11 @@ function photoForFoodType(name: string, imageUrl?: string | null): string | null
 function CategoryThumb({ photo, emoji }: { photo?: string | null; emoji: string }) {
   const [failed, setFailed] = useState(false);
   if (!photo || failed) {
-    return <span aria-hidden className="text-2xl leading-none">{emoji}</span>;
+    return (
+      <span aria-hidden className="text-2xl leading-none">
+        {emoji}
+      </span>
+    );
   }
   return (
     <img
@@ -80,7 +92,7 @@ function DiscoverPage() {
     if (profile?.country && !hasStoredCountry()) {
       setCountry(profile.country as "NG" | "UK");
     }
-  }, [profile?.country]);
+  }, [profile?.country, setCountry]);
 
   const [category, setCategory] = useState("all");
   const [quickFilter, setQuickFilter] = useState<QuickFilter>(null);
@@ -88,7 +100,11 @@ function DiscoverPage() {
   const { data: foodTypes } = useQuery({
     queryKey: ["global_food_types"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("global_food_types").select("*").eq("is_approved", true).order("name");
+      const { data, error } = await supabase
+        .from("global_food_types")
+        .select("*")
+        .eq("is_approved", true)
+        .order("name");
       if (error) throw error;
       return data ?? [];
     },
@@ -96,7 +112,7 @@ function DiscoverPage() {
 
   const CATEGORIES = useMemo(() => {
     const base: any[] = [{ id: "all", label: "All", emoji: "🍽️", photo: categoryPhotos.all }];
-    const dynamic = (foodTypes ?? []).map(ft => ({
+    const dynamic = (foodTypes ?? []).map((ft) => ({
       id: ft.id,
       label: ft.name,
       emoji: ft.emoji || "🍲",
@@ -106,9 +122,21 @@ function DiscoverPage() {
       photo: photoForFoodType(ft.name, ft.image_url),
     }));
     const vendors: any[] = [
-      { id: "grocery", label: "Grocery", emoji: "🥬", kind: "grocery", photo: categoryPhotos.grocery },
+      {
+        id: "grocery",
+        label: "Grocery",
+        emoji: "🥬",
+        kind: "grocery",
+        photo: categoryPhotos.grocery,
+      },
       { id: "chefs", label: "Chefs", emoji: "👨🏾‍🍳", kind: "chef", photo: categoryPhotos.chefs },
-      { id: "restaurants", label: "Restaurants", emoji: "🏪", kind: "restaurant", photo: categoryPhotos.restaurants },
+      {
+        id: "restaurants",
+        label: "Restaurants",
+        emoji: "🏪",
+        kind: "restaurant",
+        photo: categoryPhotos.restaurants,
+      },
     ];
     return [...base, ...dynamic, ...vendors];
   }, [foodTypes]);
@@ -152,7 +180,7 @@ function DiscoverPage() {
       } else {
         q = q.limit(32);
       }
-      
+
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []).filter(
@@ -166,18 +194,24 @@ function DiscoverPage() {
   const filteredVendors = useMemo(() => {
     let list = vendors ?? [];
     if (quickFilter === "top") list = list.filter((v: any) => Number(v.rating ?? 0) >= 4.5);
-    if (quickFilter === "fast") list = list.filter((v: any) => Number(v.prep_time_minutes ?? 999) <= 30);
-    if (quickFilter === "freeDelivery") list = list.filter((v: any) => Number(v.delivery_fee ?? 0) === 0);
+    if (quickFilter === "fast")
+      list = list.filter((v: any) => Number(v.prep_time_minutes ?? 999) <= 30);
+    if (quickFilter === "freeDelivery")
+      list = list.filter((v: any) => Number(v.delivery_fee ?? 0) === 0);
     return list;
   }, [vendors, quickFilter]);
 
   const filteredItems = useMemo(() => {
-    let list = featuredItems ?? [];
+    const list = featuredItems ?? [];
     return list;
   }, [featuredItems]);
 
   const featuredVendors = useMemo(
-    () => filteredVendors.filter((v: any) => v.is_featured).concat(filteredVendors.filter((v: any) => !v.is_featured)).slice(0, 8),
+    () =>
+      filteredVendors
+        .filter((v: any) => v.is_featured)
+        .concat(filteredVendors.filter((v: any) => !v.is_featured))
+        .slice(0, 8),
     [filteredVendors],
   );
 
@@ -186,17 +220,35 @@ function DiscoverPage() {
   return (
     <CustomerShell
       topBar={<CustomerLocationHeader />}
-      containerClassName="mx-auto w-full max-w-6xl px-3 sm:px-5 pb-28 lg:pb-12"
+      containerClassName="mx-auto w-full max-w-7xl px-4 pb-28 sm:px-6 lg:pb-16"
     >
-      <div className="pt-2 space-y-6">
+      <div className="space-y-10 pt-5 sm:pt-7">
+        <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.17em] text-[var(--brand-clay)]">
+              {profile?.full_name
+                ? `Welcome back, ${profile.full_name.split(" ")[0]}`
+                : "Welcome to NaijaEats"}
+            </p>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
+              What are you craving today?
+            </h1>
+          </div>
+          <p className="max-w-sm text-sm leading-6 text-muted-foreground sm:text-right">
+            Authentic meals, trusted local kitchens, and specialist groceries near you.
+          </p>
+        </header>
         {/* ─── 1 · Search + country (mobile only — the desktop top bar holds
             both the global search and the NG/UK switch) ─── */}
         <div className="flex items-center gap-3 lg:hidden">
           <form
-            className="relative flex-1 lg:hidden"
+            className="relative flex-1"
             onSubmit={(e) => {
               e.preventDefault();
-              navigate({ to: "/search", search: searchDraft.trim() ? { q: searchDraft.trim() } : {} });
+              navigate({
+                to: "/search",
+                search: searchDraft.trim() ? { q: searchDraft.trim() } : {},
+              });
             }}
           >
             <IoSearch className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
@@ -205,60 +257,120 @@ function DiscoverPage() {
               onChange={(e) => setSearchDraft(e.target.value)}
               placeholder="Search Naija Eats"
               aria-label="Search Naija Eats"
-              className="w-full rounded-full bg-muted/60 ring-1 ring-border pl-12 pr-4 py-3.5 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[var(--brand-clay)]/40 focus:bg-card transition"
+              className="w-full rounded-lg border border-border bg-card py-3.5 pl-12 pr-4 text-sm font-medium text-foreground outline-none transition placeholder:text-muted-foreground focus:border-[var(--brand-clay)]"
             />
           </form>
           <CountryToggle value={country} onChange={setCountry} />
         </div>
 
         {/* ─── 2 · Category icon rail ─── */}
-        <div className="-mx-3 sm:-mx-5 px-3 sm:px-5 flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {CATEGORIES.map((c) => {
-            const active = category === c.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setCategory(active ? "all" : c.id)}
-                className={`flex flex-col items-center gap-1.5 shrink-0 px-3 py-2 rounded-2xl transition ${
-                  active ? "bg-foreground/5" : "hover:bg-muted/60"
-                }`}
-                aria-pressed={active}
-              >
-                <span
-                  className={`relative grid place-items-center h-14 w-14 rounded-full overflow-hidden transition ${
-                    active ? "ring-2 ring-[var(--brand-clay)] ring-offset-2 ring-offset-background" : "ring-1 ring-border"
-                  }`}
+        <section className="border-y border-border py-6">
+          <RailHeader title="Explore by craving" />
+          <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
+            {CATEGORIES.map((c) => {
+              const active = category === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCategory(active ? "all" : c.id)}
+                  className="flex shrink-0 flex-col items-center gap-2 px-2 py-1 transition"
+                  aria-pressed={active}
                 >
-                  <CategoryThumb photo={(c as any).photo} emoji={c.emoji} />
-                </span>
-                <span className={`text-[11px] font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>
-                  {c.label}
-                </span>
+                  <span
+                    className={`relative grid h-16 w-16 place-items-center overflow-hidden rounded-full transition sm:h-[72px] sm:w-[72px] ${
+                      active
+                        ? "ring-2 ring-[var(--brand-clay)] ring-offset-2 ring-offset-background"
+                        : "ring-1 ring-border"
+                    }`}
+                  >
+                    <CategoryThumb photo={(c as any).photo} emoji={c.emoji} />
+                  </span>
+                  <span
+                    className={`max-w-[84px] truncate text-xs font-bold ${active ? "text-foreground" : "text-muted-foreground"}`}
+                  >
+                    {c.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-5 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {(
+              [
+                ["top", "Top rated"],
+                ["fast", "Under 30 min"],
+                ["freeDelivery", "Free delivery"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setQuickFilter((current) => (current === value ? null : value))}
+                aria-pressed={quickFilter === value}
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold transition ${
+                  quickFilter === value
+                    ? "border-[#171714] bg-[#171714] text-white"
+                    : "border-border bg-card hover:border-foreground/35"
+                }`}
+              >
+                {label}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        </section>
 
         {/* ─── 3 · Browse by vendor type ─── */}
-        <div className="-mx-3 sm:-mx-5 px-3 sm:px-5 grid grid-cols-3 gap-2 sm:gap-3">
-          {(
-            [
-              { to: "/chefs", label: "Chefs", Icon: PiChefHatDuotone },
-              { to: "/restaurants", label: "Restaurants", Icon: PiStorefrontDuotone },
-              { to: "/groceries", label: "Groceries", Icon: PiBasketDuotone },
-            ] as const
-          ).map((b) => (
-            <Link
-              key={b.to}
-              to={b.to}
-              className="group flex items-center justify-center gap-2 rounded-2xl bg-muted/70 hover:bg-muted px-3 py-3 text-[13px] font-bold text-foreground transition"
-            >
-              <b.Icon className="h-4 w-4 text-[var(--brand-clay)] transition-transform group-hover:scale-110" />
-              <span className="truncate">{b.label}</span>
-            </Link>
-          ))}
-        </div>
+        <section>
+          <RailHeader title="Choose how you want to eat" />
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-4">
+            {(
+              [
+                {
+                  to: "/chefs",
+                  label: "Chefs",
+                  detail: "Home-style and private dining",
+                  image: illusChef,
+                  Icon: PiChefHatDuotone,
+                },
+                {
+                  to: "/restaurants",
+                  label: "Restaurants",
+                  detail: "Local favourites, delivered",
+                  image: restaurantDining,
+                  Icon: PiStorefrontDuotone,
+                },
+                {
+                  to: "/groceries",
+                  label: "Groceries",
+                  detail: "Stock the pantry",
+                  image: groceryMarket,
+                  Icon: PiBasketDuotone,
+                },
+              ] as const
+            ).map((entry) => (
+              <Link
+                key={entry.to}
+                to={entry.to}
+                className="group relative flex min-h-[132px] items-end overflow-hidden rounded-lg bg-zinc-900 p-3 text-white sm:min-h-[190px] sm:p-5"
+              >
+                <img
+                  src={entry.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <div className="relative min-w-0">
+                  <entry.Icon className="mb-2 h-5 w-5 text-[#f0bd43]" />
+                  <span className="block truncate text-sm font-extrabold sm:text-lg">
+                    {entry.label}
+                  </span>
+                  <span className="mt-1 hidden text-xs text-white/65 sm:block">{entry.detail}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* ─── 4 · Promo banner carousel ─── */}
         <PromoCarousel country={country} />
@@ -273,24 +385,30 @@ function DiscoverPage() {
         />
 
         {/* ─── 6 · Category / Items Grid ─── */}
-        <section className="mt-12">
-          <RailHeader title={isFoodType ? `${activeCategory.label} near you` : "Popular near you"} />
+        <section>
+          <RailHeader
+            title={isFoodType ? `${activeCategory.label} near you` : "Popular near you"}
+          />
           {itemsLoading ? (
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="h-[280px] w-full rounded-3xl bg-muted animate-pulse" />
-              <div className="h-[280px] w-full rounded-3xl bg-muted animate-pulse" />
-              <div className="h-[280px] w-full rounded-3xl bg-muted animate-pulse" />
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-[280px] w-full rounded-lg bg-muted animate-pulse" />
+              ))}
             </div>
           ) : filteredItems.length === 0 ? (
             <EmptyState
               icon={IoStar}
-              title={isFoodType ? `No ${activeCategory.label.toLowerCase()} dishes right now` : "No items available right now"}
+              title={
+                isFoodType
+                  ? `No ${activeCategory.label.toLowerCase()} dishes right now`
+                  : "No items available right now"
+              }
               hint="Try another category, or check back soon."
             />
           ) : (
-            <div className="mt-3 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
               {filteredItems.slice(0, 12).map((it: any) => (
-                <FoodCard
+                <HomeFoodCard
                   key={it.id}
                   vendorSlug={it.vendor.slug}
                   itemId={it.id}
@@ -326,7 +444,7 @@ function DiscoverPage() {
 
         {/* ─── 7 · All vendors Grid ─── */}
         {!isFoodType && (
-          <section className="mt-12 mb-20">
+          <section className="mb-20">
             <RailHeader
               title={
                 typeFilter
@@ -339,7 +457,7 @@ function DiscoverPage() {
             {vendorsLoading ? (
               <div className="mt-3 grid gap-x-4 gap-y-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="aspect-[16/10] rounded-2xl bg-muted animate-pulse" />
+                  <div key={i} className="aspect-[16/10] rounded-lg bg-muted animate-pulse" />
                 ))}
               </div>
             ) : filteredVendors.length === 0 ? (
@@ -363,58 +481,147 @@ function DiscoverPage() {
 
 /* ─── Promo banner carousel — colourful cards like the Uber Eats strip ─── */
 
+function HomeFoodCard({
+  vendorSlug,
+  itemId,
+  name,
+  imageUrl,
+  priceLabel,
+  vendorName,
+  badge,
+  onAdd,
+}: {
+  vendorSlug: string;
+  itemId: string;
+  name: string;
+  imageUrl?: string | null;
+  priceLabel: string;
+  vendorName: string;
+  badge?: string;
+  onAdd: () => void;
+}) {
+  return (
+    <Link
+      to="/vendor/$slug/item/$itemId"
+      params={{ slug: vendorSlug, itemId }}
+      className="group min-w-0"
+    >
+      <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <img src={dishJollof} alt={name} className="h-full w-full object-cover opacity-70" />
+        )}
+        {badge ? (
+          <span className="absolute left-3 top-3 rounded-md bg-white/95 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-zinc-900 shadow-sm">
+            {badge}
+          </span>
+        ) : null}
+        <button
+          type="button"
+          aria-label={`Add ${name} to cart`}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onAdd();
+          }}
+          className="absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-white text-[var(--brand-clay)] shadow-lg transition hover:bg-[var(--brand-clay)] hover:text-white"
+        >
+          <IoAdd className="h-5 w-5" />
+        </button>
+      </div>
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-extrabold text-foreground sm:text-base">{name}</h3>
+          <p className="mt-1 truncate text-xs text-muted-foreground">{vendorName}</p>
+        </div>
+        <span className="shrink-0 text-sm font-extrabold text-[var(--brand-clay)]">
+          {priceLabel}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 function PromoCarousel({ country }: { country: "NG" | "UK" }) {
   const banners = [
     {
       id: "book",
-      title: "Plan your whole week of meals",
-      body: "Breakfast, lunch and dinner booked in one go.",
-      cta: "Book now",
+      eyebrow: "Meal planning",
+      title: "A full week of good food, sorted.",
+      body: "Build breakfast, lunch, and dinner around your routine.",
+      cta: "Plan meals",
       to: "/book",
-      bg: "linear-gradient(120deg, oklch(0.9 0.09 85), oklch(0.85 0.12 70))",
-      fg: "#3a2a08",
+      image: dishJollof,
+      className: "text-white",
     },
     {
       id: "xora",
-      title: "Ask Xora what to eat",
-      body: country === "NG" ? "Your AI foodie wey sabi the best spots." : "Your AI foodie that knows the best spots.",
-      cta: "Chat with Xora",
+      eyebrow: "Xora AI",
+      title: "Not sure what to eat? Ask Xora.",
+      body:
+        country === "NG"
+          ? "Your AI foodie wey sabi the best spots."
+          : "Your AI foodie that knows the best spots.",
+      cta: "Ask Xora",
       to: "/xora",
-      bg: "linear-gradient(120deg, oklch(0.62 0.19 25), oklch(0.5 0.2 30))",
-      fg: "#ffffff",
+      image: dishEgusi,
+      className: "text-white",
     },
     {
       id: "wallet",
-      title: "Pay friends with your wallet",
-      body: "Send and receive funds by username.",
+      eyebrow: "NaijaEats Wallet",
+      title: "Pay, request, or split the bill.",
+      body: "Move money instantly with a NaijaEats username.",
       cta: "Open wallet",
       to: "/wallet",
-      bg: "linear-gradient(120deg, oklch(0.55 0.13 150), oklch(0.42 0.12 160))",
-      fg: "#ffffff",
+      image: dishSuya,
+      className: "text-white",
     },
   ];
   return (
-    <div className="-mx-3 sm:-mx-5 px-3 sm:px-5 flex gap-3 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {banners.map((b) => (
-        <Link
-          key={b.id}
-          to={b.to}
-          className="snap-start shrink-0 w-[85%] sm:w-[420px] rounded-2xl p-5 sm:p-6 flex flex-col justify-between min-h-[150px] transition hover:opacity-95"
-          style={{ background: b.bg, color: b.fg }}
-        >
-          <div>
-            <div className="font-display text-lg sm:text-xl font-bold leading-tight">{b.title}</div>
-            <div className="mt-1 text-[13px] opacity-80">{b.body}</div>
-          </div>
-          <span
-            className="mt-4 inline-flex w-fit items-center rounded-full px-4 py-1.5 text-[12px] font-bold"
-            style={{ background: b.fg, color: b.fg === "#ffffff" ? "#1a1a1a" : "#fff" }}
+    <section>
+      <div className="flex items-end justify-between gap-3">
+        <RailHeader title="Made for your day" />
+        <span className="hidden text-xs font-semibold text-muted-foreground sm:block">
+          Swipe to explore
+        </span>
+      </div>
+      <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
+        {banners.map((banner) => (
+          <Link
+            key={banner.id}
+            to={banner.to}
+            className={`group relative flex min-h-[210px] w-[88%] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-lg p-5 sm:w-[440px] sm:p-6 ${banner.className}`}
           >
-            {b.cta}
-          </span>
-        </Link>
-      ))}
-    </div>
+            <img
+              src={banner.image}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/5" />
+            <div className="relative">
+              <div className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#f0bd43]">
+                {banner.eyebrow}
+              </div>
+              <div className="mt-2 max-w-sm font-display text-2xl font-semibold leading-tight">
+                {banner.title}
+              </div>
+              <div className="mt-2 max-w-sm text-xs leading-5 text-white/70">{banner.body}</div>
+              <span className="mt-5 inline-flex items-center gap-2 text-xs font-extrabold">
+                {banner.cta}{" "}
+                <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -465,7 +672,10 @@ function VendorRail({
       {loading ? (
         <div className="mt-3 flex gap-4 overflow-hidden">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="shrink-0 w-[280px] aspect-[16/10] rounded-2xl bg-muted animate-pulse" />
+            <div
+              key={i}
+              className="shrink-0 w-[280px] aspect-[16/10] rounded-lg bg-muted animate-pulse"
+            />
           ))}
         </div>
       ) : vendors.length === 0 ? (
@@ -476,10 +686,10 @@ function VendorRail({
       ) : (
         <div
           ref={railRef}
-          className="mt-3 -mx-3 sm:-mx-5 px-3 sm:px-5 flex gap-4 overflow-x-auto snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mt-4 -mx-4 flex gap-4 overflow-x-auto snap-x px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
         >
           {vendors.map((v: any) => (
-            <div key={v.id} className="snap-start shrink-0 w-[280px] sm:w-[320px]">
+            <div key={v.id} className="snap-start shrink-0 w-[290px] sm:w-[350px]">
               <UberVendorCard v={v} symbol={symbol} />
             </div>
           ))}
@@ -493,14 +703,11 @@ function VendorRail({
 
 export function UberVendorCard({ v, symbol }: { v: any; symbol: (c: string) => string }) {
   const fee = Number(v.delivery_fee ?? 0);
-  const feeLabel = fee === 0 ? "Free delivery" : `${symbol(v.currency)}${fee.toLocaleString()} delivery`;
+  const feeLabel =
+    fee === 0 ? "Free delivery" : `${symbol(v.currency)}${fee.toLocaleString()} delivery`;
   return (
-    <Link
-      to="/vendor/$slug"
-      params={{ slug: v.slug }}
-      className="group block"
-    >
-      <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-muted">
+    <Link to="/vendor/$slug" params={{ slug: v.slug }} className="group block">
+      <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-muted">
         {v.cover_image_url ? (
           <img
             src={v.cover_image_url}
@@ -512,7 +719,7 @@ export function UberVendorCard({ v, symbol }: { v: any; symbol: (c: string) => s
           <div className="h-full w-full bg-gradient-to-br from-orange-200 via-amber-100 to-rose-200" />
         )}
         {v.is_featured && (
-          <span className="absolute top-3 left-3 rounded-lg bg-white/95 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-zinc-900 shadow">
+          <span className="absolute top-3 left-3 rounded-md bg-white/95 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-zinc-900 shadow">
             Featured
           </span>
         )}
@@ -549,7 +756,11 @@ export function UberVendorCard({ v, symbol }: { v: any; symbol: (c: string) => s
 }
 
 function RailHeader({ title }: { title: string }) {
-  return <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground">{title}</h2>;
+  return (
+    <h2 className="font-display text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
+      {title}
+    </h2>
+  );
 }
 
 function EmptyState({
@@ -562,7 +773,7 @@ function EmptyState({
   icon?: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="mt-3 rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center">
+    <div className="mt-4 rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center">
       {Icon && <Icon className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />}
       <p className="font-bold text-foreground">{title}</p>
       <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{hint}</p>
@@ -570,7 +781,13 @@ function EmptyState({
   );
 }
 
-function CountryToggle({ value, onChange }: { value: "NG" | "UK"; onChange: (v: "NG" | "UK") => void }) {
+function CountryToggle({
+  value,
+  onChange,
+}: {
+  value: "NG" | "UK";
+  onChange: (v: "NG" | "UK") => void;
+}) {
   return (
     <div className="relative inline-flex h-11 w-[100px] shrink-0 items-center rounded-full bg-muted p-1 shadow-inner">
       <div
@@ -582,7 +799,11 @@ function CountryToggle({ value, onChange }: { value: "NG" | "UK"; onChange: (v: 
         className={`relative z-10 flex flex-1 items-center justify-center rounded-full transition-opacity duration-300 ${value === "NG" ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
         aria-label="Switch to Nigeria"
       >
-        <img src="https://flagcdn.com/w40/ng.png" alt="NG" className="h-[18px] w-[26px] rounded-sm object-cover shadow-sm ring-1 ring-black/5" />
+        <img
+          src="https://flagcdn.com/w40/ng.png"
+          alt="NG"
+          className="h-[18px] w-[26px] rounded-sm object-cover shadow-sm ring-1 ring-black/5"
+        />
       </button>
       <button
         type="button"
@@ -590,7 +811,11 @@ function CountryToggle({ value, onChange }: { value: "NG" | "UK"; onChange: (v: 
         className={`relative z-10 flex flex-1 items-center justify-center rounded-full transition-opacity duration-300 ${value === "UK" ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
         aria-label="Switch to United Kingdom"
       >
-        <img src="https://flagcdn.com/w40/gb.png" alt="UK" className="h-[18px] w-[26px] rounded-sm object-cover shadow-sm ring-1 ring-black/5" />
+        <img
+          src="https://flagcdn.com/w40/gb.png"
+          alt="UK"
+          className="h-[18px] w-[26px] rounded-sm object-cover shadow-sm ring-1 ring-black/5"
+        />
       </button>
     </div>
   );
