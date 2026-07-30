@@ -299,7 +299,24 @@ export function ChatThread({ conversationId, meId, otherName, otherAvatar, unrea
       const ext = file.name.split(".").pop() ?? "bin";
       const filename = `${meId}-${Date.now()}.${ext}`;
       const bucket = "chat-images";
-      const { error: upErr } = await supabase.storage.from(bucket).upload(filename, file);
+      // IMPORTANT: forward the real MIME type. Supabase defaults uploads to
+      // application/octet-stream, which makes browsers refuse to play <audio>
+      // — that's why voice notes just showed a broken/unplayable clip. Fall
+      // back to a sane audio MIME by extension if the File somehow has none.
+      const contentType =
+        file.type ||
+        (ext === "m4a"
+          ? "audio/mp4"
+          : ext === "ogg"
+            ? "audio/ogg"
+            : ext === "webm"
+              ? "audio/webm"
+              : ext === "mp3"
+                ? "audio/mpeg"
+                : "application/octet-stream");
+      const { error: upErr } = await supabase.storage
+        .from(bucket)
+        .upload(filename, file, { contentType, cacheControl: "3600", upsert: false });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filename);
       const body =
@@ -1195,13 +1212,64 @@ function AttachTile({
 }
 
 function AudioMessage({ src, mine }: { src: string | null; mine: boolean }) {
+  // Some historical voice notes were uploaded before the MIME fix, so the
+  // storage object still has content-type application/octet-stream — browsers
+  // won't play <audio> in that case. If the direct URL fails, we re-fetch the
+  // bytes, force a real audio MIME, and hand back a blob: URL that plays.
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(src);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setResolvedSrc(src);
+    setFailed(false);
+  }, [src]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let blobUrl: string | null = null;
+    const rescue = async () => {
+      if (!src) return;
+      try {
+        const res = await fetch(src);
+        if (!res.ok) throw new Error(String(res.status));
+        const raw = await res.blob();
+        const ext = (src.split("?")[0].split(".").pop() || "").toLowerCase();
+        const type =
+          ext === "m4a"
+            ? "audio/mp4"
+            : ext === "ogg"
+              ? "audio/ogg"
+              : ext === "mp3"
+                ? "audio/mpeg"
+                : "audio/webm";
+        const fixed = new Blob([raw], { type });
+        blobUrl = URL.createObjectURL(fixed);
+        if (!cancelled) setResolvedSrc(blobUrl);
+      } catch {
+        /* leave the error UI in place */
+      }
+    };
+    if (failed) void rescue();
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [failed, src]);
+
   if (!src) return null;
   return (
     <div className={`min-w-[220px] rounded-xl px-3 py-2 ${mine ? "bg-white/15" : "bg-white/80"}`}>
       <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider opacity-75">
         <PiMicrophoneDuotone className="h-4 w-4" /> Voice note
       </div>
-      <audio controls preload="metadata" src={src} className="h-9 w-full max-w-[280px]" />
+      <audio
+        key={resolvedSrc}
+        controls
+        preload="metadata"
+        src={resolvedSrc ?? undefined}
+        onError={() => setFailed(true)}
+        className="h-9 w-full max-w-[280px]"
+      />
     </div>
   );
 }
