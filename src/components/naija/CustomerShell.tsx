@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronLeft, MessagesSquare } from "lucide-react";
 import {
+import { useHideOnScroll } from "@/hooks/useHideOnScroll";
   IoHome, IoHomeOutline,
   IoBagHandle, IoBagHandleOutline,
   IoCalendar, IoCalendarOutline,
@@ -359,6 +360,7 @@ export function CustomerLocationHeader() {
  * Home | Groceries | Book | Cart | Account
  */
 function CustomerBottomNav() {
+  const visible = useHideOnScroll();
   const location = useRouterState({ select: (s) => s.location });
   const pathname = location.pathname;
   const searchObj = location.search as Record<string, unknown>;
@@ -429,8 +431,14 @@ function CustomerBottomNav() {
   };
 
   return (
-    /* Mobile-only bottom nav — on desktop the fixed sidebar handles navigation */
-    <div data-bottom-nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none">
+    /* Mobile-only bottom nav — on desktop the fixed sidebar handles navigation.
+       Hides on scroll further into the page, reappears on scroll back up. */
+    <div
+      data-bottom-nav
+      className={`lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-4 pointer-events-none transition-transform duration-300 will-change-transform ${
+        visible ? "translate-y-0" : "translate-y-[150%]"
+      }`}
+    >
       <nav className="pointer-events-auto w-full mx-auto max-w-md flex items-stretch bg-card rounded-full px-2 py-1.5 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.18)] ring-1 ring-border backdrop-blur-md bg-card/95">
         {items.map((item) => (
           <BottomNavButton key={item.to} item={item} active={checkActive(item)} />
