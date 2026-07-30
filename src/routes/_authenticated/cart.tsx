@@ -1,7 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Trash2, ShoppingCart, MapPin, StickyNote, Store, ShieldCheck, CreditCard, TicketPercent, Check, CalendarClock } from "lucide-react";
+import {
+  Trash2,
+  ShoppingCart,
+  MapPin,
+  StickyNote,
+  Store,
+  ShieldCheck,
+  CreditCard,
+  TicketPercent,
+  Check,
+  CalendarClock,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, type Cart } from "@/hooks/useCart";
 import { loadWallet, walletPayOrder } from "@/lib/wallet";
@@ -38,7 +49,7 @@ function CartPage() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
-  
+
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleTime, setScheduleTime] = useState("");
 
@@ -65,16 +76,24 @@ function CartPage() {
         .from("vendors")
         .select("id, logo_url, cover_image_url, offers_free_delivery")
         .in("id", vendorIds);
-      const byId: Record<string, { logo_url: string | null; cover_image_url: string | null; offers_free_delivery: boolean }> = {};
+      const byId: Record<
+        string,
+        { logo_url: string | null; cover_image_url: string | null; offers_free_delivery: boolean }
+      > = {};
       for (const v of data ?? []) {
-        byId[v.id] = { logo_url: v.logo_url, cover_image_url: v.cover_image_url, offers_free_delivery: v.offers_free_delivery };
+        byId[v.id] = {
+          logo_url: v.logo_url,
+          cover_image_url: v.cover_image_url,
+          offers_free_delivery: v.offers_free_delivery,
+        };
       }
       return byId;
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  const formatAddress = (a: any) => [a.line1, a.line2, a.city, a.postcode].filter(Boolean).join(", ");
+  const formatAddress = (a: any) =>
+    [a.line1, a.line2, a.city, a.postcode].filter(Boolean).join(", ");
 
   const resolvedAddress =
     selectedAddressId === "custom"
@@ -92,8 +111,8 @@ function CartPage() {
     (s, c) => s + c.items.reduce((si, i) => si + i.price * i.quantity, 0),
     0,
   );
-  
-  const getStandardDeliveryFee = (currency: string) => (currency === "GBP" ? 3.50 : 1500);
+
+  const getStandardDeliveryFee = (currency: string) => (currency === "GBP" ? 3.5 : 1500);
 
   const grandDelivery = vendorCarts.reduce((s, c) => {
     const isFree = vendorMeta?.[c.vendorId]?.offers_free_delivery;
@@ -106,7 +125,8 @@ function CartPage() {
   const couponDiscount = (() => {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.kind === "flat") return Math.min(appliedCoupon.value, grandSubtotal);
-    if (appliedCoupon.kind === "percent") return Math.round((grandSubtotal * appliedCoupon.value) / 100);
+    if (appliedCoupon.kind === "percent")
+      return Math.round((grandSubtotal * appliedCoupon.value) / 100);
     if (appliedCoupon.kind === "free_delivery") return grandDelivery;
     return 0;
   })();
@@ -148,7 +168,9 @@ function CartPage() {
     if (!resolvedAddress) return toast.error("Please enter a delivery address");
     if (failingVendors.length > 0) {
       const v = failingVendors[0];
-      return toast.error(`${v.vendorName} needs a minimum order of ${fmtWith(v.minOrder, v.currency)}`);
+      return toast.error(
+        `${v.vendorName} needs a minimum order of ${fmtWith(v.minOrder, v.currency)}`,
+      );
     }
 
     setPlacing(true);
@@ -176,7 +198,8 @@ function CartPage() {
           p_items: cart.items.map((i) => ({ menu_item_id: i.menuItemId, quantity: i.quantity })),
           p_delivery_address: resolvedAddress,
           p_customer_note: note.trim() || undefined,
-          p_scheduled_for: isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : undefined,
+          p_scheduled_for:
+            isScheduled && scheduleTime ? new Date(scheduleTime).toISOString() : undefined,
           p_calculated_delivery_fee: getStandardDeliveryFee(cart.currency),
         });
         if (error) throw error;
@@ -193,7 +216,7 @@ function CartPage() {
         await walletPayOrder(orderId);
       }
 
-      toast.success(`${orderIds.length} order${orderIds.length > 1 ? 's' : ''} paid from wallet`);
+      toast.success(`${orderIds.length} order${orderIds.length > 1 ? "s" : ""} paid from wallet`);
       navigate({ to: "/orders" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place order");
@@ -208,86 +231,118 @@ function CartPage() {
       topBar={<h1 className="font-display text-lg font-bold">Your cart</h1>}
       showBack
       backTo="/discover"
+      containerClassName="mx-auto w-full max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:pb-16"
     >
       {vendorCarts.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-dashed border-border bg-muted/30 p-10 text-center">
+        <div className="mx-auto mt-12 max-w-2xl rounded-lg border border-dashed border-border bg-muted/30 p-10 text-center">
           <ShoppingCart className="mx-auto h-10 w-10 text-muted-foreground" />
           <h2 className="font-display text-xl mt-3">Your cart is empty</h2>
-          <p className="text-sm text-muted-foreground mt-1">Browse vendors and add something delicious.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Browse vendors and add something delicious.
+          </p>
           <Link
             to="/discover"
-            className="inline-block mt-4 rounded-full bg-[var(--brand-clay)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_6px_18px_-4px_rgba(255,77,77,0.6)] hover:opacity-95"
+            className="mt-5 inline-block rounded-lg bg-[#171714] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
           >
             Browse vendors
           </Link>
         </div>
       ) : (
-        <div className="space-y-4 pt-3 sm:pt-4 pb-52 sm:pb-44">
-          <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight">Your cart</h1>
-          {/* ─── Foods grouped by vendor ─── */}
-          {vendorCarts.map((cart) => {
-            const fmt = (n: number) => fmtWith(n, cart.currency);
-            const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
-            const belowMinimum = subtotal < cart.minOrder;
-            const meta = vendorMeta?.[cart.vendorId];
-            const logoSrc = meta?.logo_url || meta?.cover_image_url || null;
+        <div className="grid gap-6 pb-44 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)] lg:items-start lg:pb-8">
+          <header className="border-b border-border pb-5 lg:col-span-2">
+            <div className="text-xs font-extrabold uppercase tracking-[0.17em] text-[var(--brand-clay)]">
+              Checkout
+            </div>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <h1 className="font-display text-3xl font-semibold tracking-normal sm:text-4xl">
+                Your cart, ready when you are.
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {vendorCarts.length} vendor{vendorCarts.length === 1 ? "" : "s"} ·{" "}
+                {vendorCarts.reduce((count, cart) => count + cart.items.length, 0)} item types
+              </p>
+            </div>
+          </header>
+          <div className="space-y-4 lg:col-start-1 lg:row-start-2">
+            {/* ─── Foods grouped by vendor ─── */}
+            {vendorCarts.map((cart) => {
+              const fmt = (n: number) => fmtWith(n, cart.currency);
+              const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
+              const belowMinimum = subtotal < cart.minOrder;
+              const meta = vendorMeta?.[cart.vendorId];
+              const logoSrc = meta?.logo_url || meta?.cover_image_url || null;
 
-            return (
-              <section
-                key={cart.vendorId}
-                className="rounded-3xl bg-card ring-1 ring-border shadow-[0_4px_18px_-8px_rgba(0,0,0,0.12)] overflow-hidden"
-              >
-                {/* Vendor header — real logo + name */}
-                <div className="bg-muted/40 border-b border-border px-4 py-3 flex items-center justify-between gap-3">
-                  <Link
-                    to="/vendor/$slug"
-                    params={{ slug: cart.vendorSlug }}
-                    className="flex items-center gap-2.5 min-w-0 group"
-                  >
-                    <span className="h-10 w-10 shrink-0 rounded-full overflow-hidden ring-1 ring-border bg-muted grid place-items-center">
-                      {logoSrc ? (
-                        <img
-                          src={logoSrc}
-                          alt={cart.vendorName}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <span className="grid h-full w-full place-items-center bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]">
-                          <Store className="h-4 w-4" />
-                        </span>
-                      )}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        From
-                      </div>
-                      <div className="font-bold text-sm text-foreground truncate group-hover:underline">
-                        {cart.vendorName}
-                      </div>
-                    </div>
-                  </Link>
-                  <button
-                    onClick={() => clearVendorCart(cart.vendorId)}
-                    className="text-xs font-semibold text-red-500 hover:text-red-700 shrink-0"
-                  >
-                    Clear
-                  </button>
-                </div>
-
-                {/* Items */}
-                <div className="divide-y divide-border">
-                  {cart.items.map((item) => (
-                    <div key={item.menuItemId} className="flex items-center gap-3 p-3.5 sm:p-4">
-                      <div className="h-14 w-14 shrink-0 rounded-2xl bg-muted overflow-hidden ring-1 ring-border">
-                        {item.imageUrl && (
-                          <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+              return (
+                <section
+                  key={cart.vendorId}
+                  className="overflow-hidden rounded-lg bg-card ring-1 ring-border shadow-[0_16px_35px_-30px_rgba(0,0,0,0.5)]"
+                >
+                  {/* Vendor header — real logo + name */}
+                  <div className="bg-muted/40 border-b border-border px-4 py-3 flex items-center justify-between gap-3">
+                    <Link
+                      to="/vendor/$slug"
+                      params={{ slug: cart.vendorSlug }}
+                      className="flex items-center gap-2.5 min-w-0 group"
+                    >
+                      <span className="h-10 w-10 shrink-0 rounded-full overflow-hidden ring-1 ring-border bg-muted grid place-items-center">
+                        {logoSrc ? (
+                          <img
+                            src={logoSrc}
+                            alt={cart.vendorName}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="grid h-full w-full place-items-center bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]">
+                            <Store className="h-4 w-4" />
+                          </span>
                         )}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          From
+                        </div>
+                        <div className="font-bold text-sm text-foreground truncate group-hover:underline">
+                          {cart.vendorName}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold line-clamp-1">{item.name}</div>
-                        <div className="text-xs text-muted-foreground">{fmt(item.price)} each</div>
-                        <div className="mt-1.5 sm:hidden">
+                    </Link>
+                    <button
+                      onClick={() => clearVendorCart(cart.vendorId)}
+                      className="text-xs font-semibold text-red-500 hover:text-red-700 shrink-0"
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  {/* Items */}
+                  <div className="divide-y divide-border">
+                    {cart.items.map((item) => (
+                      <div key={item.menuItemId} className="flex items-center gap-3 p-3.5 sm:p-4">
+                        <div className="h-16 w-16 shrink-0 rounded-lg bg-muted overflow-hidden ring-1 ring-border">
+                          {item.imageUrl && (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.name}
+                              className="h-full w-full object-cover"
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold line-clamp-1">{item.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {fmt(item.price)} each
+                          </div>
+                          <div className="mt-1.5 sm:hidden">
+                            <QuantityStepper
+                              value={item.quantity}
+                              onChange={(next) => setQuantity(cart.vendorId, item.menuItemId, next)}
+                              min={1}
+                              size="sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="hidden sm:block">
                           <QuantityStepper
                             value={item.quantity}
                             onChange={(next) => setQuantity(cart.vendorId, item.menuItemId, next)}
@@ -295,243 +350,257 @@ function CartPage() {
                             size="sm"
                           />
                         </div>
+                        <div className="w-20 text-right text-sm font-bold tabular-nums">
+                          {fmt(item.price * item.quantity)}
+                        </div>
+                        <button
+                          onClick={() => removeItem(cart.vendorId, item.menuItemId)}
+                          className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                      <div className="hidden sm:block">
-                        <QuantityStepper
-                          value={item.quantity}
-                          onChange={(next) => setQuantity(cart.vendorId, item.menuItemId, next)}
-                          min={1}
-                          size="sm"
-                        />
-                      </div>
-                      <div className="w-20 text-right text-sm font-bold tabular-nums">
-                        {fmt(item.price * item.quantity)}
-                      </div>
-                      <button
-                        onClick={() => removeItem(cart.vendorId, item.menuItemId)}
-                        className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-600"
-                        aria-label={`Remove ${item.name}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                {/* Vendor mini-summary — inline, no checkout button */}
-                <div className="bg-muted/20 px-4 py-3 text-xs flex flex-wrap items-center justify-between gap-2 border-t border-border">
-                  <span className="text-muted-foreground">
-                    Subtotal <span className="font-semibold text-foreground">{fmt(subtotal)}</span>
-                    <span className="mx-2 opacity-40">·</span>
-                    Delivery{" "}
-                    {vendorMeta?.[cart.vendorId]?.offers_free_delivery ? (
-                      <span className="font-semibold text-foreground">
-                        <span className="line-through text-muted-foreground mr-1.5">{fmt(getStandardDeliveryFee(cart.currency))}</span>
-                        Free
-                      </span>
-                    ) : (
-                      <span className="font-semibold text-foreground">{fmt(getStandardDeliveryFee(cart.currency))}</span>
-                    )}
-                  </span>
-                  {belowMinimum && (
-                    <span className="rounded-full bg-amber-100 text-amber-900 px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
-                      Add {fmt(cart.minOrder - subtotal)} to hit minimum
+                  {/* Vendor mini-summary — inline, no checkout button */}
+                  <div className="bg-muted/20 px-4 py-3 text-xs flex flex-wrap items-center justify-between gap-2 border-t border-border">
+                    <span className="text-muted-foreground">
+                      Subtotal{" "}
+                      <span className="font-semibold text-foreground">{fmt(subtotal)}</span>
+                      <span className="mx-2 opacity-40">·</span>
+                      Delivery{" "}
+                      {vendorMeta?.[cart.vendorId]?.offers_free_delivery ? (
+                        <span className="font-semibold text-foreground">
+                          <span className="line-through text-muted-foreground mr-1.5">
+                            {fmt(getStandardDeliveryFee(cart.currency))}
+                          </span>
+                          Free
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-foreground">
+                          {fmt(getStandardDeliveryFee(cart.currency))}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </div>
-              </section>
-            );
-          })}
+                    {belowMinimum && (
+                      <span className="rounded-full bg-amber-100 text-amber-900 px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
+                        Add {fmt(cart.minOrder - subtotal)} to hit minimum
+                      </span>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
 
-          {/* ─── Delivery Address (BELOW the foods) ─── */}
-          <section className="rounded-3xl bg-card ring-1 ring-border p-4 sm:p-5 space-y-3 shadow-sm">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[var(--brand-clay)]" />
-              <h2 className="font-semibold text-sm">Delivery address</h2>
-            </div>
-            {addresses && addresses.length > 0 && (
-              <select
-                className="w-full rounded-2xl bg-muted/40 ring-1 ring-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
-                value={selectedAddressId}
-                onChange={(e) => setSelectedAddressId(e.target.value)}
-              >
-                {addresses.map((a: any) => (
-                  <option key={a.id} value={a.id}>
-                    {a.label ? `${a.label} — ` : ""}
-                    {formatAddress(a)}
-                  </option>
-                ))}
-                <option value="custom">Enter a different address</option>
-              </select>
-            )}
-            {(selectedAddressId === "custom" || !addresses?.length) && (
-              <input
-                className="w-full rounded-2xl bg-muted/40 ring-1 ring-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
-                placeholder="Street address, city"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            )}
-            <div className="flex items-center gap-2 pt-2">
-              <StickyNote className="h-4 w-4 text-muted-foreground" />
-              <h2 className="font-semibold text-sm">Order note (optional)</h2>
-            </div>
-            <textarea
-              className="w-full rounded-2xl bg-muted/40 ring-1 ring-border px-4 py-3 text-sm min-h-[70px] focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
-              placeholder="Allergies, extra instructions…"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </section>
-
-          {/* ─── Coupon / promo code ─── */}
-          <section className="rounded-3xl bg-card ring-1 ring-border p-4 sm:p-5 space-y-3 shadow-sm">
-            <div className="flex items-center gap-2">
-              <TicketPercent className="h-4 w-4 text-[var(--brand-clay)]" />
-              <h2 className="font-semibold text-sm">Have a coupon?</h2>
-            </div>
-            {appliedCoupon ? (
-              <div className="flex items-center gap-3 rounded-2xl border border-[var(--brand-forest)]/30 bg-[var(--brand-forest)]/10 px-4 py-3">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--brand-forest)] text-white shrink-0">
-                  <Check className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-bold tabular-nums text-foreground">{appliedCoupon.code}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{appliedCoupon.label}</div>
-                </div>
-                <button
-                  onClick={removeCoupon}
-                  className="text-xs font-semibold text-muted-foreground hover:text-red-600"
+            {/* ─── Delivery Address (BELOW the foods) ─── */}
+          </div>
+          <aside className="space-y-4 lg:col-start-2 lg:row-start-2 lg:sticky lg:top-24">
+            <section className="rounded-lg bg-card ring-1 ring-border p-4 sm:p-5 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-[var(--brand-clay)]" />
+                <h2 className="font-semibold text-sm">Delivery address</h2>
+              </div>
+              {addresses && addresses.length > 0 && (
+                <select
+                  className="w-full rounded-lg bg-muted/40 ring-1 ring-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
+                  value={selectedAddressId}
+                  onChange={(e) => setSelectedAddressId(e.target.value)}
                 >
-                  Remove
+                  {addresses.map((a: any) => (
+                    <option key={a.id} value={a.id}>
+                      {a.label ? `${a.label} — ` : ""}
+                      {formatAddress(a)}
+                    </option>
+                  ))}
+                  <option value="custom">Enter a different address</option>
+                </select>
+              )}
+              {(selectedAddressId === "custom" || !addresses?.length) && (
+                <input
+                  className="w-full rounded-lg bg-muted/40 ring-1 ring-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
+                  placeholder="Street address, city"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              )}
+              <div className="flex items-center gap-2 pt-2">
+                <StickyNote className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-sm">Order note (optional)</h2>
+              </div>
+              <textarea
+                className="w-full rounded-lg bg-muted/40 ring-1 ring-border px-4 py-3 text-sm min-h-[70px] focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
+                placeholder="Allergies, extra instructions…"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </section>
+
+            {/* ─── Coupon / promo code ─── */}
+            <section className="rounded-lg bg-card ring-1 ring-border p-4 sm:p-5 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2">
+                <TicketPercent className="h-4 w-4 text-[var(--brand-clay)]" />
+                <h2 className="font-semibold text-sm">Have a coupon?</h2>
+              </div>
+              {appliedCoupon ? (
+                <div className="flex items-center gap-3 rounded-2xl border border-[var(--brand-forest)]/30 bg-[var(--brand-forest)]/10 px-4 py-3">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--brand-forest)] text-white shrink-0">
+                    <Check className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-bold tabular-nums text-foreground">
+                      {appliedCoupon.code}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate">
+                      {appliedCoupon.label}
+                    </div>
+                  </div>
+                  <button
+                    onClick={removeCoupon}
+                    className="text-xs font-semibold text-muted-foreground hover:text-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      applyCoupon();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      className="flex-1 rounded-lg bg-muted/40 ring-1 ring-border px-4 py-3 text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
+                      placeholder="Enter code"
+                      value={couponInput}
+                      onChange={(e) => {
+                        setCouponInput(e.target.value);
+                        if (couponError) setCouponError(null);
+                      }}
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                    <button
+                      type="submit"
+                      className="shrink-0 rounded-lg bg-foreground text-background px-5 py-3 text-sm font-semibold hover:opacity-90 transition"
+                    >
+                      Apply
+                    </button>
+                  </form>
+                  {couponError && (
+                    <div className="text-xs font-semibold text-red-600">{couponError}</div>
+                  )}
+                  <div className="text-[11px] text-muted-foreground">
+                    Try <span className="font-semibold text-foreground">WELCOME500</span>,{" "}
+                    <span className="font-semibold text-foreground">NAIJA10</span> or{" "}
+                    <span className="font-semibold text-foreground">FREEDEL</span>.
+                  </div>
+                </>
+              )}
+            </section>
+
+            {/* ─── Delivery Time ─── */}
+            <section className="rounded-lg bg-card ring-1 ring-border p-4 sm:p-5 shadow-sm space-y-4">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-[var(--brand-clay)]" />
+                <h2 className="font-semibold text-sm">Delivery Time</h2>
+              </div>
+
+              <div className="flex bg-muted/40 p-1 rounded-lg ring-1 ring-border">
+                <button
+                  type="button"
+                  onClick={() => setIsScheduled(false)}
+                  className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-all ${!isScheduled ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  ASAP
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsScheduled(true)}
+                  className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-all ${isScheduled ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Schedule
                 </button>
               </div>
-            ) : (
-              <>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    applyCoupon();
-                  }}
-                  className="flex items-center gap-2"
-                >
+
+              {isScheduled && (
+                <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Select a date and time
+                  </label>
                   <input
-                    className="flex-1 rounded-2xl bg-muted/40 ring-1 ring-border px-4 py-3 text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
-                    placeholder="Enter code"
-                    value={couponInput}
-                    onChange={(e) => {
-                      setCouponInput(e.target.value);
-                      if (couponError) setCouponError(null);
-                    }}
-                    autoCapitalize="characters"
-                    autoCorrect="off"
-                    spellCheck={false}
+                    type="datetime-local"
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="w-full rounded-lg bg-muted/20 ring-1 ring-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
                   />
-                  <button
-                    type="submit"
-                    className="shrink-0 rounded-2xl bg-foreground text-background px-5 py-3 text-sm font-semibold hover:opacity-90 transition"
-                  >
-                    Apply
-                  </button>
-                </form>
-                {couponError && (
-                  <div className="text-xs font-semibold text-red-600">{couponError}</div>
-                )}
-                <div className="text-[11px] text-muted-foreground">
-                  Try <span className="font-semibold text-foreground">WELCOME500</span>, <span className="font-semibold text-foreground">NAIJA10</span> or <span className="font-semibold text-foreground">FREEDEL</span>.
                 </div>
-              </>
-            )}
-          </section>
+              )}
+            </section>
 
-          {/* ─── Delivery Time ─── */}
-          <section className="rounded-3xl bg-card ring-1 ring-border p-4 sm:p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-[var(--brand-clay)]" />
-              <h2 className="font-semibold text-sm">Delivery Time</h2>
-            </div>
-            
-            <div className="flex bg-muted/40 p-1 rounded-2xl ring-1 ring-border">
-              <button
-                type="button"
-                onClick={() => setIsScheduled(false)}
-                className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-all ${!isScheduled ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                ASAP
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsScheduled(true)}
-                className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-all ${isScheduled ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Schedule
-              </button>
-            </div>
-
-            {isScheduled && (
-              <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
-                <label className="text-xs font-semibold text-muted-foreground">Select a date and time</label>
-                <input
-                  type="datetime-local"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  min={new Date().toISOString().slice(0, 16)}
-                  className="w-full rounded-2xl bg-muted/20 ring-1 ring-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] text-foreground"
-                />
+            {/* ─── Grand total summary — brand-warm accent for instant recognition ─── */}
+            <section className="relative space-y-2 overflow-hidden rounded-lg bg-[#171714] p-5 text-white shadow-[0_22px_50px_-34px_rgba(0,0,0,0.75)]">
+              <div className="relative flex items-center gap-2 mb-1">
+                <div className="text-[10px] uppercase tracking-widest font-bold text-[#f0bd43]">
+                  Order summary
+                </div>
+                <span className="rounded-full bg-white/10 text-white/70 px-2 py-0.5 text-[10px] font-bold">
+                  {vendorCarts.length} vendor{vendorCarts.length === 1 ? "" : "s"}
+                </span>
               </div>
-            )}
-          </section>
 
-          {/* ─── Grand total summary — brand-warm accent for instant recognition ─── */}
-          <section
-            className="relative overflow-hidden rounded-3xl p-4 sm:p-5 space-y-2 shadow-md"
-            style={{
-              background:
-                "linear-gradient(135deg, oklch(0.98 0.02 30) 0%, oklch(0.96 0.04 35) 100%)",
-              border: "1px solid oklch(0.85 0.10 30 / 0.35)",
-            }}
-          >
-            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[var(--brand-clay)]/15 blur-2xl" />
-            <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-[var(--brand-gold)]/20 blur-2xl" />
-
-            <div className="relative flex items-center gap-2 mb-1">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">
-                Order summary
-              </div>
-              <span className="rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-2 py-0.5 text-[10px] font-bold">
-                {vendorCarts.length} vendor{vendorCarts.length === 1 ? "" : "s"}
-              </span>
-            </div>
-
-            <div className="relative flex items-center justify-between text-sm">
-              <span className="text-zinc-700">Subtotal</span>
-              <span className="font-semibold tabular-nums text-zinc-900">{fmtWith(grandSubtotal, primaryCurrency)}</span>
-            </div>
-            <div className="relative flex items-center justify-between text-sm">
-              <span className="text-zinc-700">Delivery</span>
-              <span className="font-semibold tabular-nums text-zinc-900">{fmtWith(grandDelivery, primaryCurrency)}</span>
-            </div>
-            {appliedCoupon && couponDiscount > 0 && (
               <div className="relative flex items-center justify-between text-sm">
-                <span className="inline-flex items-center gap-1.5 text-[var(--brand-forest)] font-semibold">
-                  <TicketPercent className="h-3.5 w-3.5" />
-                  Coupon · {appliedCoupon.code}
-                </span>
-                <span className="font-semibold tabular-nums text-[var(--brand-forest)]">
-                  −{fmtWith(couponDiscount, primaryCurrency)}
+                <span className="text-white/60">Subtotal</span>
+                <span className="font-semibold tabular-nums text-white">
+                  {fmtWith(grandSubtotal, primaryCurrency)}
                 </span>
               </div>
-            )}
-            <div className="relative flex items-center justify-between pt-2 mt-1 border-t border-[var(--brand-clay)]/20">
-              <span className="font-bold text-zinc-900">Grand total</span>
-              <span className="font-display text-2xl font-extrabold tabular-nums text-[var(--brand-clay)]">
-                {fmtWith(grandTotal, primaryCurrency)}
-              </span>
+              <div className="relative flex items-center justify-between text-sm">
+                <span className="text-white/60">Delivery</span>
+                <span className="font-semibold tabular-nums text-white">
+                  {fmtWith(grandDelivery, primaryCurrency)}
+                </span>
+              </div>
+              {appliedCoupon && couponDiscount > 0 && (
+                <div className="relative flex items-center justify-between text-sm">
+                  <span className="inline-flex items-center gap-1.5 text-[var(--brand-forest)] font-semibold">
+                    <TicketPercent className="h-3.5 w-3.5" />
+                    Coupon · {appliedCoupon.code}
+                  </span>
+                  <span className="font-semibold tabular-nums text-[var(--brand-forest)]">
+                    −{fmtWith(couponDiscount, primaryCurrency)}
+                  </span>
+                </div>
+              )}
+              <div className="relative flex items-center justify-between pt-3 mt-2 border-t border-white/10">
+                <span className="font-bold text-white">Grand total</span>
+                <span className="font-display text-3xl font-semibold tabular-nums text-[#f0bd43]">
+                  {fmtWith(grandTotal, primaryCurrency)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={placeAllOrders}
+                disabled={!canCheckout}
+                className="mt-4 hidden w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-3.5 text-sm font-extrabold text-[#171714] transition hover:bg-[#f5f2e9] disabled:cursor-not-allowed disabled:opacity-45 lg:flex"
+              >
+                <CreditCard className="h-4 w-4" />
+                {placing ? "Placing order..." : "Pay and place order"}
+              </button>
+            </section>
+            <div className="hidden items-center justify-center gap-1.5 text-[10px] text-muted-foreground lg:flex">
+              <ShieldCheck className="h-3 w-3 text-[var(--brand-forest)]" />
+              Secured checkout · One payment for every vendor
             </div>
-          </section>
+          </aside>
 
           {/* ─── Sticky single-checkout footer ─── */}
-          <div className="fixed bottom-[80px] lg:bottom-4 inset-x-0 lg:left-60 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-3 sm:px-5 pointer-events-none">
+          <div className="fixed bottom-[80px] inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),0.75rem)] px-3 sm:px-5 pointer-events-none lg:hidden">
             <div className="pointer-events-auto mx-auto max-w-2xl">
               <div className="rounded-2xl bg-card border border-border shadow-[0_-8px_30px_-6px_rgba(0,0,0,0.15)] p-3 flex items-center gap-3">
                 <div className="min-w-0 flex-1 pl-1">
@@ -544,11 +613,11 @@ function CartPage() {
                 </div>
                 <button
                   onClick={placeAllOrders}
-                  disabled={placing}
+                  disabled={!canCheckout}
                   className={`inline-flex items-center gap-2 rounded-2xl px-5 sm:px-6 py-3.5 text-sm font-bold transition-all ${
-                    placing
+                    !canCheckout
                       ? "bg-muted text-muted-foreground cursor-not-allowed"
-                      : "bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] text-white shadow-lg shadow-[var(--brand-clay)]/30 hover:shadow-xl active:scale-[0.99]"
+                      : "bg-[#171714] text-white shadow-lg hover:bg-black active:scale-[0.99]"
                   }`}
                 >
                   {placing ? (

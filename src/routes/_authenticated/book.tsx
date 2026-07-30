@@ -3,7 +3,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleShell } from "@/components/naija/RoleShell";
-import { ArrowRight, Calendar, ChevronRight, Sparkles, Search, X, Trash2, Utensils, Star, MapPin } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  ChevronRight,
+  Sparkles,
+  Search,
+  X,
+  Trash2,
+  Utensils,
+  Star,
+  MapPin,
+} from "lucide-react";
 import { IoFlame } from "react-icons/io5";
 import {
   PiCoffeeDuotone,
@@ -21,6 +32,7 @@ import { toast } from "sonner";
 import { loadWallet, walletCharge } from "@/lib/wallet";
 import { useCountry } from "@/hooks/useCountry";
 import { useDrawerOpen } from "@/hooks/useDrawerOpen";
+import { dishJollof, illusChef } from "@/assets/landing-images";
 
 export const Route = createFileRoute("/_authenticated/book")({
   component: BookPage,
@@ -37,10 +49,15 @@ function BookPage() {
 
   return (
     <RoleShell
+      containerClassName="flex-1 overflow-y-auto pb-24"
       topBar={
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/25">
-            {tab === "planner" ? <Calendar className="h-5 w-5" /> : <PiChefHatDuotone className="h-5 w-5" />}
+            {tab === "planner" ? (
+              <Calendar className="h-5 w-5" />
+            ) : (
+              <PiChefHatDuotone className="h-5 w-5" />
+            )}
           </div>
           <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-wider text-[var(--brand-clay)] font-extrabold">
@@ -53,27 +70,37 @@ function BookPage() {
         </div>
       }
     >
-      <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-3 px-3 sm:px-4">
-        <div className="flex rounded-full bg-zinc-100 p-1 shadow-inner">
-          {(
-            [
-              { id: "planner", label: "Meal Planner", Icon: Calendar },
-              { id: "chef", label: "Book a Chef", Icon: PiChefHatDuotone },
-            ] as const
-          ).map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`flex-1 inline-flex items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold transition-all duration-300 ${
-                tab === t.id
-                  ? "bg-white text-zinc-900 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.15)]"
-                  : "text-zinc-500 hover:text-zinc-800"
-              }`}
-            >
-              <t.Icon className="h-4 w-4" /> {t.label}
-            </button>
-          ))}
+      <div className="mx-auto w-full max-w-7xl px-4 pt-7 sm:px-6">
+        <div className="flex flex-col gap-5 border-b border-black/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-xs font-extrabold uppercase tracking-[0.17em] text-[var(--brand-clay)]">
+              Plan ahead
+            </div>
+            <h1 className="mt-2 font-display text-3xl font-semibold tracking-normal sm:text-4xl">
+              Meals and chefs, booked beautifully.
+            </h1>
+          </div>
+          <div className="flex w-full rounded-lg border border-border bg-muted/40 p-1 sm:w-[390px]">
+            {(
+              [
+                { id: "planner", label: "Meal Planner", Icon: Calendar },
+                { id: "chef", label: "Book a Chef", Icon: PiChefHatDuotone },
+              ] as const
+            ).map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md py-2.5 text-sm font-bold transition ${
+                  tab === t.id
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                <t.Icon className="h-4 w-4" /> {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       {tab === "planner" ? <MealPlannerSection /> : <BookChefSection />}
@@ -134,8 +161,8 @@ const MEALS: Meal[] = [
  */
 const CUTOFF_HOUR: Record<MealId, number> = {
   breakfast: 11, // 11:00 AM
-  lunch: 16,     // 4:00 PM
-  dinner: 22,    // 10:00 PM
+  lunch: 16, // 4:00 PM
+  dinner: 22, // 10:00 PM
 };
 
 function isMealBookableForToday(mealId: MealId, now: Date): boolean {
@@ -165,7 +192,7 @@ type VendorMenuItem = {
 type PickedItem = {
   id: string;
   name: string;
-  sub: string;            // vendor label / description
+  sub: string; // vendor label / description
   price: number;
   imageUrl: string | null;
   currency: string;
@@ -267,7 +294,7 @@ function MealPlannerSection() {
   const totalPlanned = Object.values(plan).reduce((n, arr) => n + (arr?.length ?? 0), 0);
   const totalPrice = Object.values(plan).reduce(
     (sum, arr) => sum + (arr?.reduce((s, item) => s + item.price, 0) ?? 0),
-    0
+    0,
   );
 
   const daysWithFullMeals = week.filter((d) =>
@@ -329,27 +356,32 @@ function MealPlannerSection() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-5 px-3 sm:px-4 pb-8">
-        <h1 className="hidden lg:block font-display text-2xl font-bold tracking-tight mb-5">Meal planner</h1>
+      <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-6 sm:px-6">
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white shadow-[0_16px_40px_-20px_rgba(255,77,77,0.4)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
-          <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
+        <div className="relative min-h-[300px] overflow-hidden rounded-lg bg-[#171714] p-5 text-white shadow-[0_24px_60px_-38px_rgba(0,0,0,0.8)] sm:p-8">
+          <img
+            src={dishJollof}
+            alt="Jollof rice ready for a weekly meal plan"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/15" />
 
           <div className="relative flex items-start justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
               <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
                 Chef-prepared
               </div>
-              <h1 className="font-display text-xl sm:text-4xl font-bold tracking-tight mt-2 leading-[1.05]">
-                Plan the whole week.<br />Eat without thinking.
-              </h1>
-              <p className="mt-2 text-xs sm:text-[15px] text-white/80 max-w-md leading-relaxed">
-                Add meals to breakfast, lunch, and dinner slots.
+              <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-normal sm:text-5xl">
+                Plan the whole week.
+                <br />
+                Eat without thinking.
+              </h2>
+              <p className="mt-4 max-w-md text-sm leading-6 text-white/75 sm:text-base">
+                Choose breakfast, lunch, and dinner once, then let your week run more calmly.
               </p>
             </div>
             <div className="hidden sm:flex flex-col items-end gap-2 shrink-0">
-              <div className="rounded-2xl border border-white/15 bg-white/10 backdrop-blur px-3 py-2 text-right">
+              <div className="rounded-lg border border-white/15 bg-black/25 px-4 py-3 text-right backdrop-blur">
                 <div className="text-[10px] uppercase tracking-widest text-white/60">Meals</div>
                 <div className="font-display text-2xl font-semibold tabular-nums leading-none mt-0.5">
                   {totalPlanned}
@@ -359,15 +391,17 @@ function MealPlannerSection() {
           </div>
 
           <div className="relative mt-6">
-            <div className="h-2 rounded-full bg-white/12 overflow-hidden">
+            <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[var(--brand-gold)] to-white transition-all duration-500"
+                className="h-full rounded-full bg-[#f0bd43] transition-all duration-500"
                 style={{ width: `${Math.min(progress * 100, 100)}%` }}
               />
             </div>
             <div className="mt-2 flex items-center justify-between text-[11px] text-white/70 gap-2">
               <span className="truncate">
-                {daysWithFullMeals === 7 ? "Full week complete" : `${daysWithFullMeals}/7 days fully planned`}
+                {daysWithFullMeals === 7
+                  ? "Full week complete"
+                  : `${daysWithFullMeals}/7 days fully planned`}
               </span>
               <span className="shrink-0">Full week = 15% off</span>
             </div>
@@ -384,7 +418,9 @@ function MealPlannerSection() {
             <ChevronRight className="h-4 w-4 rotate-180" />
           </button>
           <div className="text-center">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">Week of</div>
+            <div className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">
+              Week of
+            </div>
             <div className="text-sm font-bold text-zinc-900">{weekLabel}</div>
           </div>
           <button
@@ -414,7 +450,7 @@ function MealPlannerSection() {
             return (
               <div
                 key={date.toISOString()}
-                className={`relative rounded-[1.75rem] bg-white shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] ring-1 transition-all duration-300 ${
+                className={`relative rounded-lg bg-white shadow-[0_12px_35px_-28px_rgba(0,0,0,0.45)] ring-1 transition-all duration-300 ${
                   isToday
                     ? "ring-[var(--brand-clay)]/25 shadow-[0_18px_50px_-20px_rgba(255,77,77,0.28)]"
                     : "ring-black/[0.04]"
@@ -424,9 +460,9 @@ function MealPlannerSection() {
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
                       <div
-                        className={`flex h-12 w-12 sm:h-14 sm:w-14 flex-col items-center justify-center rounded-2xl font-display font-extrabold leading-none shrink-0 ${
+                        className={`flex h-12 w-12 sm:h-14 sm:w-14 flex-col items-center justify-center rounded-lg font-display font-extrabold leading-none shrink-0 ${
                           isToday
-                            ? "bg-gradient-to-br from-[var(--brand-clay)] to-[#ff6b35] text-white shadow-lg shadow-[var(--brand-clay)]/30"
+                            ? "bg-[var(--brand-clay)] text-white"
                             : "bg-zinc-100 text-black/80"
                         }`}
                       >
@@ -487,7 +523,8 @@ function MealPlannerSection() {
                   )}
                   {hiddenTodayMealCount > 0 && mealsForDay.length > 0 && (
                     <p className="mt-3 text-[11px] text-zinc-500 font-semibold text-center">
-                      {hiddenTodayMealCount} meal window{hiddenTodayMealCount > 1 ? "s" : ""} for today already closed
+                      {hiddenTodayMealCount} meal window{hiddenTodayMealCount > 1 ? "s" : ""} for
+                      today already closed
                     </p>
                   )}
                 </div>
@@ -498,11 +535,7 @@ function MealPlannerSection() {
 
         {/* Checkout card */}
         {totalPrice > 0 && (
-          <div className="relative mt-8 overflow-hidden rounded-[28px] p-6 sm:p-8 text-white shadow-[0_24px_60px_-20px_rgba(122,45,18,0.55)] bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_50%),linear-gradient(145deg,#1a1108,#3a1a14_55%,#7c2d12)]">
-            <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/30 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-52 w-52 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.08)_50%,transparent_60%)]" />
-
+          <div className="relative mt-8 overflow-hidden rounded-lg bg-[#171714] p-6 text-white shadow-[0_24px_60px_-32px_rgba(0,0,0,0.75)] sm:p-8">
             <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-6">
               <div className="min-w-0">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-3 py-1 text-[10px] uppercase tracking-[0.18em] font-bold">
@@ -516,10 +549,12 @@ function MealPlannerSection() {
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/75">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur px-2.5 py-1">
-                    <Calendar className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> {totalPlanned} meal{totalPlanned === 1 ? "" : "s"} this week
+                    <Calendar className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> {totalPlanned}{" "}
+                    meal{totalPlanned === 1 ? "" : "s"} this week
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur px-2.5 py-1">
-                    <PiWalletDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Paid instantly from your wallet
+                    <PiWalletDuotone className="h-3.5 w-3.5 text-[var(--brand-gold)]" /> Paid
+                    instantly from your wallet
                   </span>
                 </div>
               </div>
@@ -532,7 +567,7 @@ function MealPlannerSection() {
                   setConfirming(true);
                 }}
                 disabled={paying}
-                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl bg-white text-zinc-900 px-8 py-4 text-[15px] font-bold shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-70 disabled:hover:translate-y-0"
+                className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-8 py-4 text-[15px] font-bold text-zinc-900 transition hover:bg-[#f5f2e9] disabled:opacity-70 sm:w-auto"
               >
                 Pay Now
                 <ArrowRight className="h-4 w-4" />
@@ -589,12 +624,15 @@ function PaymentConfirmationModal({
         : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
       const mealStr = mealPart ? mealPart.charAt(0).toUpperCase() + mealPart.slice(1) : "";
       return { ...item, slot: `${dayStr} · ${mealStr}` };
-    })
+    }),
   );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={paying ? undefined : onCancel} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={paying ? undefined : onCancel}
+      />
       <div className="relative w-full sm:max-w-md max-h-[85dvh] bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-200">
         <div className="p-5 border-b border-border bg-muted/30">
           <h2 className="font-display text-xl font-bold text-foreground">Confirm your order</h2>
@@ -612,7 +650,8 @@ function PaymentConfirmationModal({
                   </div>
                 </div>
                 <div className="font-bold text-foreground shrink-0 mt-0.5">
-                  {item.currency === "GBP" ? "£" : "₦"}{item.price.toLocaleString()}
+                  {item.currency === "GBP" ? "£" : "₦"}
+                  {item.price.toLocaleString()}
                 </div>
               </li>
             ))}
@@ -688,12 +727,18 @@ function MealSlot({
             hasItems ? "bg-emerald-500 text-white" : "bg-white text-zinc-800"
           }`}
         >
-          {hasItems ? <PiCheckCircleDuotone className="h-6 w-6" /> : <meal.Icon className="h-6 w-6" />}
+          {hasItems ? (
+            <PiCheckCircleDuotone className="h-6 w-6" />
+          ) : (
+            <meal.Icon className="h-6 w-6" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="font-bold text-sm text-black">{meal.label}</span>
-            <span className={`text-[9px] font-bold uppercase tracking-widest rounded-full px-1.5 py-0.5 ${meal.chipTone}`}>
+            <span
+              className={`text-[9px] font-bold uppercase tracking-widest rounded-full px-1.5 py-0.5 ${meal.chipTone}`}
+            >
               {meal.time}
             </span>
           </div>
@@ -723,32 +768,35 @@ function MealSlot({
           {items.map((it) => {
             const symbol = it.currency === "GBP" ? "£" : "₦";
             return (
-            <li key={it.id} className="flex items-center gap-2.5 px-3.5 py-2.5">
-              <span className="h-9 w-9 shrink-0 rounded-lg overflow-hidden bg-muted ring-1 ring-black/5 grid place-items-center">
-                {it.imageUrl ? (
-                  <img src={it.imageUrl} alt={it.name} className="h-full w-full object-cover" />
-                ) : (
-                  <Utensils className="h-4 w-4 text-zinc-400" />
-                )}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-black truncate">{it.name}</div>
-                <div className="text-[10px] text-black/60 truncate">
-                  {it.vendorName ? `${it.vendorName} · ` : ""}
-                  <span className="tabular-nums">{symbol}{it.price.toLocaleString()}</span>
+              <li key={it.id} className="flex items-center gap-2.5 px-3.5 py-2.5">
+                <span className="h-9 w-9 shrink-0 rounded-lg overflow-hidden bg-muted ring-1 ring-black/5 grid place-items-center">
+                  {it.imageUrl ? (
+                    <img src={it.imageUrl} alt={it.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <Utensils className="h-4 w-4 text-zinc-400" />
+                  )}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-black truncate">{it.name}</div>
+                  <div className="text-[10px] text-black/60 truncate">
+                    {it.vendorName ? `${it.vendorName} · ` : ""}
+                    <span className="tabular-nums">
+                      {symbol}
+                      {it.price.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              {!disabled && (
-                <button
-                  type="button"
-                  onClick={() => onRemove(it.id)}
-                  aria-label="Remove"
-                  className="grid h-7 w-7 place-items-center rounded-full text-zinc-400 hover:text-red-600 hover:bg-red-50 transition"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </li>
+                {!disabled && (
+                  <button
+                    type="button"
+                    onClick={() => onRemove(it.id)}
+                    aria-label="Remove"
+                    className="grid h-7 w-7 place-items-center rounded-full text-zinc-400 hover:text-red-600 hover:bg-red-50 transition"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </li>
             );
           })}
         </ul>
@@ -848,14 +896,23 @@ function MealPickerSheet({
         </div>
 
         {/* Header — the "Add to {meal}" title sits comfortably on its own row */}
-        <div className={`relative overflow-hidden px-4 sm:px-5 pt-4 pb-4 sm:pt-5 sm:pb-5 ${meal.bg} border-b border-black/5 shrink-0`}>
+        <div
+          className={`relative overflow-hidden px-4 sm:px-5 pt-4 pb-4 sm:pt-5 sm:pb-5 ${meal.bg} border-b border-black/5 shrink-0`}
+        >
           <div className="flex items-center gap-3">
             <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-zinc-800 shadow-sm shrink-0">
               <meal.Icon className="h-6 w-6" />
             </span>
             <div className="flex-1 min-w-0">
-              <div className={`text-[10px] sm:text-[11px] uppercase tracking-widest font-bold ${meal.chipTone.replace("bg-", "text-").split(" ")[1]}`}>
-                {meal.time} · {date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+              <div
+                className={`text-[10px] sm:text-[11px] uppercase tracking-widest font-bold ${meal.chipTone.replace("bg-", "text-").split(" ")[1]}`}
+              >
+                {meal.time} ·{" "}
+                {date.toLocaleDateString(undefined, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                })}
               </div>
               <div className="font-display text-lg sm:text-xl font-bold text-zinc-900 leading-snug mt-0.5">
                 Add to {meal.label}
@@ -900,7 +957,10 @@ function MealPickerSheet({
           {isLoading ? (
             <ul className="space-y-2">
               {Array.from({ length: 6 }).map((_, i) => (
-                <li key={i} className="w-full flex items-center gap-3 rounded-2xl p-3 bg-white border border-border animate-pulse">
+                <li
+                  key={i}
+                  className="w-full flex items-center gap-3 rounded-2xl p-3 bg-white border border-border animate-pulse"
+                >
                   <span className="h-14 w-14 rounded-2xl bg-muted shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="h-3 w-2/3 bg-muted rounded-full" />
@@ -952,7 +1012,11 @@ function MealPickerSheet({
                     >
                       <span className="h-14 w-14 shrink-0 rounded-2xl overflow-hidden bg-muted ring-1 ring-black/5 grid place-items-center">
                         {item.image_url ? (
-                          <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
                           <Utensils className="h-6 w-6 text-zinc-400" />
                         )}
@@ -964,7 +1028,8 @@ function MealPickerSheet({
                           {item.category_name ? ` · ${item.category_name}` : ""}
                         </div>
                         <div className="text-xs font-bold text-[var(--brand-clay)] tabular-nums mt-0.5">
-                          {symbol}{item.price.toLocaleString()}
+                          {symbol}
+                          {item.price.toLocaleString()}
                         </div>
                       </div>
                       <span
@@ -974,7 +1039,11 @@ function MealPickerSheet({
                             : "bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]"
                         }`}
                       >
-                        {already ? <PiCheckCircleDuotone className="h-5 w-5" /> : <PiPlusCircleDuotone className="h-5 w-5" />}
+                        {already ? (
+                          <PiCheckCircleDuotone className="h-5 w-5" />
+                        ) : (
+                          <PiPlusCircleDuotone className="h-5 w-5" />
+                        )}
                       </span>
                     </button>
                   </li>
@@ -991,7 +1060,9 @@ function MealPickerSheet({
               In this slot
             </div>
             <div className="text-sm font-bold truncate">
-              {picked.length === 0 ? "Nothing yet" : `${picked.length} item${picked.length === 1 ? "" : "s"}`}
+              {picked.length === 0
+                ? "Nothing yet"
+                : `${picked.length} item${picked.length === 1 ? "" : "s"}`}
             </div>
           </div>
           <Link
@@ -1038,30 +1109,42 @@ function BookChefSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vendors")
-        .select("id, name, slug, city, cover_image_url, logo_url, rating, currency, hourly_rate, event_services, tagline")
+        .select(
+          "id, name, slug, city, cover_image_url, logo_url, rating, currency, hourly_rate, event_services, tagline",
+        )
         .eq("type", "chef")
         .eq("status", "approved")
         .eq("country", country)
         .not("hourly_rate", "is", null)
         .order("rating", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((c: any) => ({ ...c, hourly_rate: Number(c.hourly_rate) })) as EventChef[];
+      return (data ?? []).map((c: any) => ({
+        ...c,
+        hourly_rate: Number(c.hourly_rate),
+      })) as EventChef[];
     },
   });
 
   return (
-    <div className="mx-auto w-full max-w-2xl lg:max-w-4xl pt-5 px-3 sm:px-4 pb-8">
+    <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-6 sm:px-6">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl p-4 sm:p-7 text-white shadow-[0_16px_40px_-20px_rgba(255,77,77,0.4)] bg-[radial-gradient(120%_120%_at_100%_0%,oklch(0.85_0.17_90/0.4),transparent_55%),linear-gradient(150deg,#14100a,#2d2010_55%,#7c5210)]">
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[var(--brand-gold)]/20 blur-3xl" />
+      <div className="relative min-h-[320px] overflow-hidden rounded-lg bg-[#171714] p-5 text-white shadow-[0_24px_60px_-38px_rgba(0,0,0,0.8)] sm:p-8">
+        <img
+          src={illusChef}
+          alt="A private chef preparing food"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/10" />
         <div className="relative">
           <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
             Private chefs, by the hour
           </div>
-          <h1 className="font-display text-xl sm:text-4xl font-bold tracking-tight mt-2 leading-[1.05]">
-            A chef for your party,<br />owambe, or quiet dinner.
-          </h1>
-          <p className="mt-2 text-xs sm:text-[15px] text-white/80 max-w-md leading-relaxed">
+          <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-normal sm:text-5xl">
+            A chef for your party,
+            <br />
+            owambe, or quiet dinner.
+          </h2>
+          <p className="mt-4 max-w-md text-sm leading-6 text-white/75 sm:text-base">
             Pick a chef, choose your date and hours, and they cook right where the occasion is.
           </p>
         </div>
@@ -1070,43 +1153,57 @@ function BookChefSection() {
       {/* Chef grid */}
       <div className="mt-6">
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[16/10] rounded-3xl bg-zinc-100 animate-pulse" />
+              <div key={i} className="aspect-[16/10] rounded-lg bg-zinc-100 animate-pulse" />
             ))}
           </div>
         ) : chefs.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border bg-card p-8 text-center">
+          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
             <PiChefHatDuotone className="h-10 w-10 mx-auto text-zinc-300" />
-            <p className="mt-2 font-semibold text-zinc-700">No chefs are taking event bookings yet</p>
+            <p className="mt-2 font-semibold text-zinc-700">
+              No chefs are taking event bookings yet
+            </p>
             <p className="text-xs text-muted-foreground mt-1">
               Chefs appear here once they publish an hourly rate. Check back soon.
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {chefs.map((chef) => {
               const symbol = chef.currency === "GBP" ? "£" : "₦";
               return (
-                <div key={chef.id} className="group overflow-hidden rounded-3xl bg-white ring-1 ring-black/[0.05] shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] transition hover:shadow-[0_18px_44px_-18px_rgba(0,0,0,0.22)]">
+                <div
+                  key={chef.id}
+                  className="group overflow-hidden rounded-lg bg-white ring-1 ring-black/[0.06] shadow-[0_16px_35px_-28px_rgba(0,0,0,0.45)] transition hover:shadow-[0_20px_44px_-28px_rgba(0,0,0,0.55)]"
+                >
                   <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100">
                     {chef.cover_image_url ? (
-                      <img src={chef.cover_image_url} alt={chef.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      <img
+                        src={chef.cover_image_url}
+                        alt={chef.name}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
                     ) : (
                       <div className="grid h-full w-full place-items-center text-zinc-300">
                         <PiChefHatDuotone className="h-12 w-12" />
                       </div>
                     )}
                     <div className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold shadow-md">
-                      {symbol}{chef.hourly_rate.toLocaleString()}<span className="text-zinc-500 font-semibold">/hr</span>
+                      {symbol}
+                      {chef.hourly_rate.toLocaleString()}
+                      <span className="text-zinc-500 font-semibold">/hr</span>
                     </div>
                   </div>
                   <div className="p-4">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-display text-lg font-bold text-zinc-900 truncate">{chef.name}</h3>
+                      <h3 className="font-display text-lg font-bold text-zinc-900 truncate">
+                        {chef.name}
+                      </h3>
                       {chef.rating != null && (
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-700 shrink-0">
-                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> {Number(chef.rating).toFixed(1)}
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{" "}
+                          {Number(chef.rating).toFixed(1)}
                         </span>
                       )}
                     </div>
@@ -1118,12 +1215,14 @@ function BookChefSection() {
                       )}
                     </div>
                     {(chef.event_services || chef.tagline) && (
-                      <p className="mt-2 text-xs text-zinc-600 line-clamp-2">{chef.event_services || chef.tagline}</p>
+                      <p className="mt-2 text-xs text-zinc-600 line-clamp-2">
+                        {chef.event_services || chef.tagline}
+                      </p>
                     )}
                     <button
                       type="button"
                       onClick={() => setBooking(chef)}
-                      className="mt-3.5 w-full rounded-full bg-[var(--brand-clay)] py-2.5 text-sm font-bold text-white shadow-md shadow-[var(--brand-clay)]/25 transition hover:scale-[1.02] active:scale-95"
+                      className="mt-3.5 w-full rounded-lg bg-[#171714] py-2.5 text-sm font-bold text-white transition hover:bg-black"
                     >
                       Book {chef.name.split(" ")[0]}
                     </button>
@@ -1195,8 +1294,12 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
     e.preventDefault();
     if (!eventDate) return void toast.error("Pick a date for your event");
     if (hours <= 0) return void toast.error("How many hours do you need the chef?");
-    if (conflict) return void toast.error(`${chef.name.split(" ")[0]} is unavailable ${conflict.start}–${conflict.end} that day — pick another time`);
-    if (priceMode === "offer" && offerTotal <= 0) return void toast.error("Enter the amount you'd like to offer");
+    if (conflict)
+      return void toast.error(
+        `${chef.name.split(" ")[0]} is unavailable ${conflict.start}–${conflict.end} that day — pick another time`,
+      );
+    if (priceMode === "offer" && offerTotal <= 0)
+      return void toast.error("Enter the amount you'd like to offer");
     setSubmitting(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -1252,10 +1355,16 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
           <div className="min-w-0 flex-1">
             <div className="font-display text-lg font-bold truncate">Book {chef.name}</div>
             <div className="text-xs text-muted-foreground">
-              {symbol}{chef.hourly_rate.toLocaleString()}/hour{chef.city ? ` · ${chef.city}` : ""}
+              {symbol}
+              {chef.hourly_rate.toLocaleString()}/hour{chef.city ? ` · ${chef.city}` : ""}
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full bg-muted hover:bg-zinc-200 transition shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="grid h-9 w-9 place-items-center rounded-full bg-muted hover:bg-zinc-200 transition shrink-0"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -1264,26 +1373,40 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs font-bold text-muted-foreground mb-1 block">Event date</span>
-              <input type="date" required min={minDate} value={eventDate} onChange={(e) => setEventDate(e.target.value)}
-                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+              <input
+                type="date"
+                required
+                min={minDate}
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm"
+              />
             </label>
             <label className="block">
               <span className="text-xs font-bold text-muted-foreground mb-1 block">Start time</span>
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                className={`w-full h-11 rounded-xl border bg-background px-3 text-sm ${conflict ? "border-red-400 ring-1 ring-red-300" : "border-border"}`} />
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className={`w-full h-11 rounded-xl border bg-background px-3 text-sm ${conflict ? "border-red-400 ring-1 ring-red-300" : "border-border"}`}
+              />
             </label>
           </div>
 
           {/* Availability for the chosen day */}
           {eventDate && (
-            <div className={`rounded-2xl border p-3 ${conflict ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50/60"}`}>
+            <div
+              className={`rounded-2xl border p-3 ${conflict ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50/60"}`}
+            >
               {(busySlots ?? []).length === 0 ? (
                 <div className="text-xs font-semibold text-emerald-700">
                   {chef.name.split(" ")[0]} is free all day — pick any time.
                 </div>
               ) : (
                 <>
-                  <div className={`text-xs font-bold ${conflict ? "text-red-700" : "text-zinc-700"}`}>
+                  <div
+                    className={`text-xs font-bold ${conflict ? "text-red-700" : "text-zinc-700"}`}
+                  >
                     {conflict
                       ? `That time is taken (${conflict.start}–${conflict.end}). Choose a free window:`
                       : "Already booked that day — avoid these times:"}
@@ -1304,21 +1427,44 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
           )}
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-xs font-bold text-muted-foreground mb-1 block">Hours needed</span>
-              <input type="number" min={1} max={24} required value={hours || ""} onChange={(e) => setHours(Number(e.target.value))}
-                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+              <span className="text-xs font-bold text-muted-foreground mb-1 block">
+                Hours needed
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={24}
+                required
+                value={hours || ""}
+                onChange={(e) => setHours(Number(e.target.value))}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm"
+              />
             </label>
             <label className="block">
-              <span className="text-xs font-bold text-muted-foreground mb-1 block">Guests (approx.)</span>
-              <input type="number" min={1} placeholder="e.g. 25" value={guests} onChange={(e) => setGuests(e.target.value)}
-                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm" />
+              <span className="text-xs font-bold text-muted-foreground mb-1 block">
+                Guests (approx.)
+              </span>
+              <input
+                type="number"
+                min={1}
+                placeholder="e.g. 25"
+                value={guests}
+                onChange={(e) => setGuests(e.target.value)}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3 text-sm"
+              />
             </label>
           </div>
           <label className="block">
-            <span className="text-xs font-bold text-muted-foreground mb-1 block">Tell the chef about your occasion</span>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}
+            <span className="text-xs font-bold text-muted-foreground mb-1 block">
+              Tell the chef about your occasion
+            </span>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
               placeholder="e.g. Birthday party — we'd love a live jollof station and small chops"
-              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm resize-none" />
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm resize-none"
+            />
           </label>
 
           {/* Pricing: chef's rate, or bid your own price */}
@@ -1358,7 +1504,8 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
                   />
                 </label>
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
-                  {chef.name.split(" ")[0]} can accept your offer, decline it, or send you a counter-offer.
+                  {chef.name.split(" ")[0]} can accept your offer, decline it, or send you a
+                  counter-offer.
                 </p>
               </div>
             )}
@@ -1366,7 +1513,9 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
 
           <div className="rounded-2xl bg-muted/50 p-4 flex items-center justify-between">
             <div className="text-sm">
-              <div className="font-bold">{priceMode === "offer" ? "Your offer" : "Estimated total"}</div>
+              <div className="font-bold">
+                {priceMode === "offer" ? "Your offer" : "Estimated total"}
+              </div>
               <div className="text-xs text-muted-foreground">
                 {priceMode === "offer"
                   ? `Chef's rate: ${symbol}${rateTotal.toLocaleString()} for ${hours || 0} hr${hours === 1 ? "" : "s"}`
@@ -1374,7 +1523,8 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
               </div>
             </div>
             <div className="font-display text-2xl font-extrabold tabular-nums">
-              {symbol}{total.toLocaleString()}
+              {symbol}
+              {total.toLocaleString()}
             </div>
           </div>
 
@@ -1383,7 +1533,13 @@ function ChefBookingModal({ chef, onClose }: { chef: EventChef; onClose: () => v
             disabled={submitting || !!conflict}
             className="w-full rounded-full bg-[var(--brand-clay)] py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--brand-clay)]/30 transition hover:scale-[1.01] active:scale-95 disabled:opacity-60"
           >
-            {submitting ? "Sending…" : conflict ? "Time unavailable — pick another" : priceMode === "offer" ? "Send offer" : "Send booking request"}
+            {submitting
+              ? "Sending…"
+              : conflict
+                ? "Time unavailable — pick another"
+                : priceMode === "offer"
+                  ? "Send offer"
+                  : "Send booking request"}
           </button>
           <p className="text-[11px] text-center text-muted-foreground">
             The chef confirms first — you'll only pay once your booking is accepted.
@@ -1414,7 +1570,10 @@ function MyChefBookings() {
   });
 
   const cancel = async (id: string) => {
-    const { error } = await supabase.from("chef_bookings").update({ status: "cancelled" }).eq("id", id);
+    const { error } = await supabase
+      .from("chef_bookings")
+      .update({ status: "cancelled" })
+      .eq("id", id);
     if (error) return void toast.error(error.message);
     toast.success("Booking cancelled");
     qc.invalidateQueries({ queryKey: ["my-chef-bookings"] });
@@ -1448,7 +1607,7 @@ function MyChefBookings() {
         {bookings.map((b: any) => {
           const symbol = b.currency === "GBP" ? "£" : "₦";
           return (
-            <div key={b.id} className="rounded-2xl bg-white ring-1 ring-black/[0.05] p-4">
+            <div key={b.id} className="rounded-lg bg-white ring-1 ring-black/[0.06] p-4">
               <div className="flex items-center gap-3">
                 <span className="h-11 w-11 shrink-0 rounded-2xl overflow-hidden bg-muted grid place-items-center">
                   {b.vendors?.logo_url ? (
@@ -1460,17 +1619,29 @@ function MyChefBookings() {
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-bold truncate">{b.vendors?.name ?? "Chef"}</div>
                   <div className="text-xs text-muted-foreground">
-                    {new Date(b.event_date).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" })}
-                    {b.start_time ? ` · ${b.start_time}` : ""} · {Number(b.hours)} hr{Number(b.hours) > 1 ? "s" : ""} · {symbol}{Number(b.total).toLocaleString()}
+                    {new Date(b.event_date).toLocaleDateString([], {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                    })}
+                    {b.start_time ? ` · ${b.start_time}` : ""} · {Number(b.hours)} hr
+                    {Number(b.hours) > 1 ? "s" : ""} · {symbol}
+                    {Number(b.total).toLocaleString()}
                     {b.offer_total != null && b.status === "pending" ? " (your offer)" : ""}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${statusCls[b.status] ?? "bg-muted"}`}>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${statusCls[b.status] ?? "bg-muted"}`}
+                  >
                     {b.status === "countered" ? "Counter-offer" : b.status}
                   </span>
                   {b.status === "pending" && (
-                    <button type="button" onClick={() => cancel(b.id)} className="text-[11px] font-semibold text-zinc-400 hover:text-red-600 transition">
+                    <button
+                      type="button"
+                      onClick={() => cancel(b.id)}
+                      className="text-[11px] font-semibold text-zinc-400 hover:text-red-600 transition"
+                    >
                       Cancel
                     </button>
                   )}
@@ -1480,9 +1651,16 @@ function MyChefBookings() {
               {b.status === "countered" && b.counter_total != null && (
                 <div className="mt-3 rounded-xl bg-purple-50 p-3">
                   <div className="text-sm">
-                    <span className="font-bold">{(b.vendors?.name ?? "The chef").split(" ")[0]} countered with {symbol}{Number(b.counter_total).toLocaleString()}</span>
+                    <span className="font-bold">
+                      {(b.vendors?.name ?? "The chef").split(" ")[0]} countered with {symbol}
+                      {Number(b.counter_total).toLocaleString()}
+                    </span>
                     {b.offer_total != null && (
-                      <span className="text-xs text-muted-foreground"> — you offered {symbol}{Number(b.offer_total).toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {" "}
+                        — you offered {symbol}
+                        {Number(b.offer_total).toLocaleString()}
+                      </span>
                     )}
                   </div>
                   <div className="mt-2.5 flex gap-2">
@@ -1491,7 +1669,8 @@ function MyChefBookings() {
                       onClick={() => acceptCounter(b)}
                       className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-bold text-white"
                     >
-                      Accept {symbol}{Number(b.counter_total).toLocaleString()}
+                      Accept {symbol}
+                      {Number(b.counter_total).toLocaleString()}
                     </button>
                     <button
                       type="button"

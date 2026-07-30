@@ -57,14 +57,16 @@ function ChatsList() {
   useEffect(() => {
     const ch = supabase
       .channel("conversations-customer")
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () =>
+        refetch(),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
   }, [refetch]);
 
-  const list = data ?? [];
+  const list = useMemo(() => data ?? [], [data]);
   const totalUnread = list.reduce((n, c: any) => n + (c.customer_unread ?? 0), 0);
 
   const filtered = useMemo(() => {
@@ -85,45 +87,57 @@ function ChatsList() {
 
   return (
     <CustomerShell hideBottomNav>
-      <div className="mx-auto w-full max-w-2xl px-0 sm:px-4 pb-24">
+      <div className="mx-auto w-full max-w-5xl px-4 pb-24 sm:px-6">
         {/* Sticky X-style header: back, title, tabs. Kept compact, no gradient hero. */}
-        <header className="sticky top-0 z-20 backdrop-blur-xl bg-white/85 border-b border-border/70">
-          <div className="flex items-center gap-3 px-4 pt-3 pb-2.5">
+        <header className="mt-6 overflow-hidden rounded-lg bg-[#171714] text-white shadow-[0_24px_60px_-40px_rgba(0,0,0,0.8)]">
+          <div className="flex items-start gap-3 px-5 pb-5 pt-6 sm:px-7 sm:pt-7">
             <Link
               to="/account"
               aria-label="Back"
-              className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <h1 className="font-display text-xl font-extrabold tracking-tight">Messages</h1>
+            <div>
+              <div className="text-[10px] font-extrabold uppercase tracking-[0.17em] text-[#f0bd43]">
+                Your conversations
+              </div>
+              <h1 className="mt-1 font-display text-3xl font-semibold tracking-normal sm:text-4xl">
+                Messages
+              </h1>
+              <p className="mt-2 max-w-md text-sm leading-6 text-white/60">
+                Keep every order question, chef update, and invoice in one place.
+              </p>
+            </div>
             {totalUnread > 0 && (
-              <span className="ml-auto inline-flex items-center rounded-full bg-[var(--brand-clay)] text-white px-2 py-0.5 text-[11px] font-bold">
+              <span className="ml-auto inline-flex items-center rounded-full bg-[#f0bd43] px-2.5 py-1 text-[11px] font-bold text-[#171714]">
                 {totalUnread}
               </span>
             )}
           </div>
 
-          <nav className="flex text-sm font-semibold">
+          <nav className="flex border-t border-white/10 text-sm font-semibold">
             {(["all", "unread"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`relative flex-1 h-11 capitalize transition ${
-                  tab === t ? "text-foreground" : "text-muted-foreground hover:bg-muted/40"
+                className={`relative h-12 flex-1 capitalize transition ${
+                  tab === t
+                    ? "bg-white/10 text-white"
+                    : "text-white/50 hover:bg-white/5 hover:text-white/80"
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
                   {t}
                   {t === "unread" && totalUnread > 0 && (
-                    <span className="rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-1.5 py-0.5 text-[10px]">
+                    <span className="rounded-full bg-[#f0bd43] px-1.5 py-0.5 text-[10px] text-[#171714]">
                       {totalUnread}
                     </span>
                   )}
                 </span>
                 <span
                   className={`absolute inset-x-1/2 -translate-x-1/2 bottom-0 h-[3px] w-12 rounded-full transition-all ${
-                    tab === t ? "bg-[var(--brand-clay)]" : "bg-transparent"
+                    tab === t ? "bg-[#f0bd43]" : "bg-transparent"
                   }`}
                 />
               </button>
@@ -132,14 +146,14 @@ function ChatsList() {
         </header>
 
         {/* Search bar */}
-        <div className="px-4 pt-3">
+        <div className="pt-5">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search Messages"
-              className="w-full h-11 rounded-full bg-muted/70 pl-10 pr-9 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-[var(--brand-clay)]/25 border border-transparent focus:border-border transition"
+              className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-9 text-sm outline-none transition focus:border-[var(--brand-clay)]"
             />
             {query && (
               <button
@@ -154,7 +168,7 @@ function ChatsList() {
         </div>
 
         {/* List */}
-        <div className="mt-2">
+        <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card shadow-[0_18px_40px_-34px_rgba(0,0,0,0.5)]">
           {filtered.length === 0 ? (
             <EmptyState hasQuery={!!query || tab === "unread"} />
           ) : (
@@ -171,7 +185,7 @@ function ChatsList() {
       <Link
         to="/discover"
         aria-label="Find a chef to chat with"
-        className="fixed bottom-24 right-5 lg:bottom-8 lg:right-8 z-30 grid h-14 w-14 place-items-center rounded-full bg-[var(--brand-clay)] text-white shadow-xl shadow-[var(--brand-clay)]/35 hover:scale-105 transition"
+        className="fixed bottom-24 right-5 z-30 grid h-14 w-14 place-items-center rounded-full bg-[#171714] text-white shadow-xl transition hover:scale-105 hover:bg-black lg:bottom-8 lg:right-8"
       >
         <Plus className="h-6 w-6" strokeWidth={2.5} />
       </Link>
@@ -185,19 +199,28 @@ function ChatRow({ convo }: { convo: any }) {
   const initial = (v?.name ?? "C").charAt(0).toUpperCase();
   const preview = messagePreview(convo.last_message, false);
   const kindLabel = v?.type === "grocery" ? "Grocery" : v?.type === "chef" ? "Chef" : "Restaurant";
-  const KindIcon = v?.type === "grocery" ? PiBasketDuotone : v?.type === "chef" ? PiChefHatDuotone : PiStorefrontDuotone;
+  const KindIcon =
+    v?.type === "grocery"
+      ? PiBasketDuotone
+      : v?.type === "chef"
+        ? PiChefHatDuotone
+        : PiStorefrontDuotone;
 
   return (
     <li>
       <Link
         to="/chats/$vendorId"
         params={{ vendorId: v?.id ?? "" }}
-        className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors"
+        className="flex items-start gap-4 px-4 py-4 transition-colors hover:bg-muted/35 sm:px-5 sm:py-5"
       >
         <div className="relative shrink-0">
-          <div className="h-12 w-12 rounded-full overflow-hidden bg-muted ring-1 ring-black/[0.06]">
+          <div className="h-14 w-14 rounded-lg overflow-hidden bg-muted ring-1 ring-black/[0.06]">
             {v?.logo_url || v?.cover_image_url ? (
-              <img src={v.logo_url ?? v.cover_image_url} alt={v.name} className="h-full w-full object-cover" />
+              <img
+                src={v.logo_url ?? v.cover_image_url}
+                alt={v.name}
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="h-full w-full grid place-items-center bg-[var(--gradient-warm)] text-white font-display font-bold text-lg">
                 {initial}
@@ -217,16 +240,20 @@ function ChatRow({ convo }: { convo: any }) {
               {v?.name ?? "Chef"}
             </span>
             {v?.type && (
-              <span className="inline-flex items-center gap-1 text-muted-foreground text-[12px]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                 <KindIcon className="h-3 w-3" />
                 {kindLabel}
               </span>
             )}
-            <span className={`ml-auto shrink-0 text-[12px] tabular-nums ${unread > 0 ? "text-[var(--brand-clay)] font-bold" : "text-muted-foreground"}`}>
+            <span
+              className={`ml-auto shrink-0 text-[12px] tabular-nums ${unread > 0 ? "text-[var(--brand-clay)] font-bold" : "text-muted-foreground"}`}
+            >
               {timeLabel(convo.last_message_at)}
             </span>
           </div>
-          <div className={`mt-0.5 flex items-center gap-1.5 text-[13px] ${unread > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
+          <div
+            className={`mt-0.5 flex items-center gap-1.5 text-[13px] ${unread > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}
+          >
             <PreviewIconGlyph kind={preview.icon} />
             <span className="truncate">{preview.text}</span>
           </div>
@@ -248,7 +275,7 @@ function PreviewIconGlyph({ kind }: { kind: PreviewIcon }) {
 function EmptyState({ hasQuery }: { hasQuery: boolean }) {
   if (hasQuery) {
     return (
-      <div className="mx-4 mt-8 rounded-3xl border border-dashed border-border bg-white p-10 text-center">
+      <div className="m-4 rounded-lg border border-dashed border-border bg-muted/20 p-10 text-center">
         <PiChatCircleDotsDuotone className="h-10 w-10 mx-auto text-muted-foreground" />
         <p className="mt-3 font-semibold">No chats match</p>
         <p className="text-xs text-muted-foreground mt-1">Try clearing your filter or search.</p>
@@ -256,8 +283,8 @@ function EmptyState({ hasQuery }: { hasQuery: boolean }) {
     );
   }
   return (
-    <div className="mx-4 mt-8 rounded-3xl border border-border bg-white p-10 text-center">
-      <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]">
+    <div className="m-4 rounded-lg bg-muted/20 p-10 text-center">
+      <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]">
         <PiChatCircleDotsDuotone className="h-8 w-8" />
       </div>
       <p className="mt-3 font-display text-lg font-bold">Your inbox is empty</p>
