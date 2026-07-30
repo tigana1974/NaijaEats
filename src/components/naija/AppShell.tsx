@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { ShoppingBag, Bell, MessageCircle, X } from "lucide-react";
 import {
-import { useHideOnScroll } from "@/hooks/useHideOnScroll";
   PiSquaresFourDuotone,
   PiClipboardTextDuotone,
   PiForkKnifeDuotone,
@@ -32,6 +31,7 @@ import { useHideOnScroll } from "@/hooks/useHideOnScroll";
   PiCrownDuotone,
   PiSparkleDuotone,
 } from "react-icons/pi";
+import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMyRole, type AppRole } from "@/hooks/useMyRole";

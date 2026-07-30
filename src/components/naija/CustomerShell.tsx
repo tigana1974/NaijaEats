@@ -1,7 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronLeft, MessagesSquare } from "lucide-react";
 import {
-import { useHideOnScroll } from "@/hooks/useHideOnScroll";
   IoHome, IoHomeOutline,
   IoBagHandle, IoBagHandleOutline,
   IoCalendar, IoCalendarOutline,
@@ -11,6 +10,7 @@ import { useHideOnScroll } from "@/hooks/useHideOnScroll";
   IoReceiptOutline, IoChatbubblesOutline, IoSearch,
   IoHelpCircleOutline
 } from "react-icons/io5";
+import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 import { useCart } from "@/hooks/useCart";
 import { Logo } from "@/components/naija/Logo";
 import { useState, type ReactNode } from "react";
