@@ -39,6 +39,7 @@ import {
   type BillingRegion,
   type BillingCadence,
 } from "@/lib/premium";
+import { offerPlatter } from "@/assets/landing-images";
 
 export const Route = createFileRoute("/_authenticated/subscription")({
   component: SubscriptionPage,
@@ -54,7 +55,6 @@ type Plan = {
   perks: { Icon: React.ComponentType<{ className?: string }>; label: string }[];
   featured?: boolean;
   chipTone: string;
-  gradient: string;
 };
 
 const PLANS: Plan[] = [
@@ -76,7 +76,6 @@ const PLANS: Plan[] = [
       "Email support (48 hr)",
     ],
     chipTone: "bg-zinc-100 text-zinc-700",
-    gradient: "from-zinc-50 to-white",
   },
   {
     key: "naija_one",
@@ -103,7 +102,6 @@ const PLANS: Plan[] = [
       "24/7 Priority support",
     ],
     chipTone: "bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]",
-    gradient: "from-[oklch(0.98_0.02_25)] to-white",
   },
 ];
 
@@ -143,7 +141,12 @@ const REGIONS: {
         <g clipPath="url(#cust-uk-a)">
           <path d="M0,0 v30 h60 v-30 z" fill="#012169" />
           <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
-          <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#cust-uk-b)" stroke="#C8102E" strokeWidth="4" />
+          <path
+            d="M0,0 L60,30 M60,0 L0,30"
+            clipPath="url(#cust-uk-b)"
+            stroke="#C8102E"
+            strokeWidth="4"
+          />
           <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
           <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
         </g>
@@ -258,7 +261,9 @@ function SubscriptionPage() {
       } else {
         // Charged from the wallet; the RPC enforces the real price server-side.
         await purchasePremium(billing, region);
-        toast.success(`Welcome to ${PLANS.find((p) => p.key === plan)?.name}! Paid from your wallet.`);
+        toast.success(
+          `Welcome to ${PLANS.find((p) => p.key === plan)?.name}! Paid from your wallet.`,
+        );
       }
       setCurrent(loadCustomerPlan());
       setConfirmPlan(null);
@@ -278,32 +283,42 @@ function SubscriptionPage() {
 
   return (
     <CustomerShell
+      containerClassName="mx-auto w-full max-w-7xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6 lg:pb-16"
       showBack
       backTo="/account"
       hideBottomNav
       topBar={
         <div className="flex items-center gap-3">
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">Premium</div>
+            <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">
+              Premium
+            </div>
             <div className="text-sm font-bold truncate text-zinc-900">Naija Eats memberships</div>
           </div>
         </div>
       }
     >
-      <div className="py-3 sm:py-6 pb-24">
+      <div>
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-3xl p-4 sm:p-8 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)] shadow-[var(--shadow-warm)]">
-          <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_40%,rgba(255,255,255,0.06)_50%,transparent_60%)]" />
+        <div className="relative overflow-hidden rounded-lg bg-[#171714] p-5 text-white sm:p-8 lg:min-h-[360px] lg:p-10">
+          <img
+            src={offerPlatter}
+            alt="A NaijaEats dining spread"
+            className="absolute inset-0 h-full w-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-black/55" />
 
-          <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4 sm:gap-6">
+          <div className="relative flex min-h-[280px] flex-col justify-between gap-8 sm:flex-row sm:items-end">
             <div className="max-w-xl">
               <div className="inline-flex items-center rounded-full bg-white/12 backdrop-blur px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
                 Naija Eats premium
               </div>
-              <h1 className="font-display text-2xl sm:text-5xl font-bold tracking-tight mt-2 leading-[1.05]">
-                Free delivery.<br />5–10% cashback.<br />Chef VIP access.
+              <h1 className="mt-3 max-w-2xl font-display text-3xl font-bold leading-[1.05] tracking-normal sm:text-5xl">
+                Free delivery.
+                <br />
+                5–10% cashback.
+                <br />
+                Chef VIP access.
               </h1>
               <p className="text-white/80 text-xs sm:text-base mt-2 sm:mt-3 leading-relaxed">
                 Prices in{" "}
@@ -315,19 +330,26 @@ function SubscriptionPage() {
 
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur border border-white/15 px-2.5 py-1 text-[11px] font-semibold">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Your plan: <span className="font-bold uppercase tracking-wider">{current === "basic" ? "Basic" : PLANS.find((p) => p.key === current)?.name}</span>
+                Your plan:{" "}
+                <span className="font-bold uppercase tracking-wider">
+                  {current === "basic" ? "Basic" : PLANS.find((p) => p.key === current)?.name}
+                </span>
               </div>
             </div>
 
-            <div className="flex flex-row sm:flex-col sm:items-end flex-wrap gap-2 sm:gap-3">
+            <div className="flex flex-row flex-wrap gap-2 sm:flex-col sm:items-end sm:gap-3">
               <RegionSwitcher region={region} onChange={setRegion} />
-              <BillingToggle billing={billing} onChange={setBilling} yearlyDiscount={yearlyDiscount} />
+              <BillingToggle
+                billing={billing}
+                onChange={setBilling}
+                yearlyDiscount={yearlyDiscount}
+              />
             </div>
           </div>
         </div>
 
         {/* Plans */}
-        <div className="mt-4 sm:mt-6 grid gap-3 sm:gap-5 lg:grid-cols-3">
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
           {PLANS.map((plan) => (
             <PlanCard
               key={plan.key}
@@ -342,7 +364,7 @@ function SubscriptionPage() {
         </div>
 
         {/* Trust */}
-        <div className="mt-6 rounded-3xl bg-card border border-border p-5">
+        <div className="mt-6 rounded-lg border border-border bg-card p-5 sm:p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <TrustItem Icon={ShieldCheck} label="Secure payments" sub="Paystack & Stripe" />
             <TrustItem Icon={PiSealCheckDuotone} label="7-day free trial" sub="Naija One" />
@@ -353,16 +375,22 @@ function SubscriptionPage() {
 
         {/* Compare */}
         <div className="mt-10">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">Compare</div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">
+            Compare
+          </div>
           <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
             Every perk, side by side
           </h2>
-          <div className="mt-5 rounded-3xl bg-card border border-border overflow-x-auto">
+          <div className="mt-5 overflow-x-auto rounded-lg border border-border bg-card">
             <div className="min-w-[520px] grid grid-cols-[minmax(150px,1.4fr)_repeat(3,1fr)] bg-muted/40 border-b border-border">
-              <div className="p-4 font-bold text-xs uppercase tracking-wider text-muted-foreground">Feature</div>
+              <div className="p-4 font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                Feature
+              </div>
               {PLANS.map((p) => (
                 <div key={p.key} className="p-4 text-center border-l border-border">
-                  <div className={`inline-flex items-center gap-1.5 rounded-full ${p.chipTone} px-2.5 py-1 text-[11px] font-bold uppercase`}>
+                  <div
+                    className={`inline-flex items-center gap-1.5 rounded-full ${p.chipTone} px-2.5 py-1 text-[11px] font-bold uppercase`}
+                  >
                     <p.Icon className="h-3.5 w-3.5" />
                     {p.key === "basic" ? "Basic" : "Naija One"}
                   </div>
@@ -440,11 +468,13 @@ function SubscriptionPage() {
 
         {/* FAQ */}
         <div className="mt-12">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">FAQ</div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--brand-clay)] font-bold">
+            FAQ
+          </div>
           <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mt-1">
             Frequently asked
           </h2>
-          <div className="mt-5 rounded-3xl bg-card border border-border divide-y divide-border overflow-hidden">
+          <div className="mt-5 divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
             {FAQ.map((item, i) => {
               const open = openFaq === i;
               return (
@@ -454,8 +484,12 @@ function SubscriptionPage() {
                     className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-muted/30 transition"
                   >
                     <span className="font-semibold text-sm sm:text-base">{item.q}</span>
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-foreground/70">
-                      {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-muted text-foreground/70">
+                      {open ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
                     </span>
                   </button>
                   {open && (
@@ -489,20 +523,28 @@ function SubscriptionPage() {
 
 /* ────────────── sub-components ────────────── */
 
-function RegionSwitcher({ region, onChange }: { region: BillingRegion; onChange: (r: BillingRegion) => void }) {
+function RegionSwitcher({
+  region,
+  onChange,
+}: {
+  region: BillingRegion;
+  onChange: (r: BillingRegion) => void;
+}) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-full bg-white/10 backdrop-blur p-1 border border-white/15">
+    <div className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-black/25 p-1 backdrop-blur">
       {REGIONS.map((r) => {
         const active = r.id === region;
         return (
           <button
             key={r.id}
             onClick={() => onChange(r.id)}
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+            className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-bold transition ${
               active ? "bg-white text-zinc-900 shadow-lg" : "text-white/85 hover:text-white"
             }`}
           >
-            <span className="h-4 w-6 rounded-sm overflow-hidden ring-1 ring-black/20 shrink-0">{r.flag}</span>
+            <span className="h-4 w-6 rounded-sm overflow-hidden ring-1 ring-black/20 shrink-0">
+              {r.flag}
+            </span>
             {r.name}
           </button>
         );
@@ -521,22 +563,26 @@ function BillingToggle({
   yearlyDiscount: number;
 }) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-full bg-white/10 backdrop-blur p-1 border border-white/15">
+    <div className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-black/25 p-1 backdrop-blur">
       {(["monthly", "yearly"] as BillingCadence[]).map((b) => {
         const active = b === billing;
         return (
           <button
             key={b}
             onClick={() => onChange(b)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold capitalize transition ${
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold capitalize transition ${
               active ? "bg-white text-zinc-900 shadow-lg" : "text-white/85 hover:text-white"
             }`}
           >
             {b}
             {b === "yearly" && yearlyDiscount > 0 && (
-              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
-                active ? "bg-emerald-100 text-emerald-700" : "bg-[var(--brand-gold)] text-zinc-900"
-              }`}>
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                  active
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-[var(--brand-gold)] text-zinc-900"
+                }`}
+              >
                 Save {yearlyDiscount}%
               </span>
             )}
@@ -563,32 +609,35 @@ function PlanCard({
   onSelect: () => void;
 }) {
   const price = plan.price[region][billing];
-  const monthlyEq = billing === "yearly" && price > 0
-    ? region === "UK" ? (price / 12).toFixed(2) : Math.round(price / 12).toLocaleString()
-    : region === "UK" ? price.toFixed(2) : price.toLocaleString();
+  const monthlyEq =
+    billing === "yearly" && price > 0
+      ? region === "UK"
+        ? (price / 12).toFixed(2)
+        : Math.round(price / 12).toLocaleString()
+      : region === "UK"
+        ? price.toFixed(2)
+        : price.toLocaleString();
   const isFree = price === 0;
   const featured = plan.featured;
 
   return (
     <div
-      className={`relative rounded-3xl p-5 sm:p-7 transition-all duration-300 flex flex-col text-zinc-900 ${
+      className={`relative flex flex-col rounded-lg p-5 text-zinc-900 transition-all duration-300 sm:p-7 ${
         featured
-          ? "bg-gradient-to-br from-white via-white to-[oklch(0.98_0.02_25)] border-2 border-[var(--brand-clay)] shadow-[0_24px_60px_-24px_rgba(217,75,58,0.35)] lg:scale-[1.02]"
-          : `bg-gradient-to-br ${plan.gradient} border border-border`
+          ? "border border-[#e6b950] bg-[#fff9ed] shadow-[0_20px_50px_-34px_rgba(0,0,0,0.45)]"
+          : "border border-border bg-white"
       }`}
     >
       {featured && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full bg-gradient-to-r from-[var(--brand-clay)] to-orange-500 text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-[var(--brand-clay)]/30 whitespace-nowrap">
+        <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center whitespace-nowrap rounded-lg bg-[#171714] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
           Most popular
         </span>
       )}
 
       <div className="flex items-center gap-3">
         <span
-          className={`grid h-11 w-11 place-items-center rounded-2xl shrink-0 ${
-            plan.key === "naija_one"
-              ? "bg-gradient-to-br from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/30"
-              : "bg-zinc-100 text-zinc-700"
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg ${
+            plan.key === "naija_one" ? "bg-[#171714] text-[#f0bd43]" : "bg-zinc-100 text-zinc-700"
           }`}
         >
           <plan.Icon className="h-5 w-5" />
@@ -608,16 +657,22 @@ function PlanCard({
         </div>
         {billing === "yearly" && !isFree && (
           <div className="text-xs text-muted-foreground mt-1">
-            Billed yearly · {currency}{region === "UK" ? price.toFixed(2) : price.toLocaleString()}
+            Billed yearly · {currency}
+            {region === "UK" ? price.toFixed(2) : price.toLocaleString()}
           </div>
         )}
-        {isFree && <div className="text-xs text-muted-foreground mt-1">No membership fee, ever</div>}
+        {isFree && (
+          <div className="text-xs text-muted-foreground mt-1">No membership fee, ever</div>
+        )}
       </div>
 
       {/* Perk chips */}
       <div className="mt-4 space-y-1.5">
         {plan.perks.map((p) => (
-          <div key={p.label} className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-bold ${plan.chipTone} mr-1`}>
+          <div
+            key={p.label}
+            className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-bold ${plan.chipTone} mr-1`}
+          >
             <p.Icon className="h-3.5 w-3.5" />
             {p.label}
           </div>
@@ -642,13 +697,13 @@ function PlanCard({
       <button
         onClick={onSelect}
         disabled={isCurrent}
-        className={`mt-6 w-full h-12 rounded-2xl inline-flex items-center justify-center gap-1.5 text-sm font-bold transition-all ${
+        className={`mt-6 inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-bold transition-all ${
           isCurrent
             ? "bg-zinc-100 text-zinc-500 cursor-default"
             : featured
-              ? "bg-gradient-to-r from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/30 hover:shadow-xl active:scale-[0.99]"
+              ? "bg-[#171714] text-white hover:bg-black active:scale-[0.99]"
               : plan.key === "naija_one"
-                ? "bg-gradient-to-r from-[var(--brand-clay)] to-orange-500 text-white shadow-lg shadow-[var(--brand-clay)]/30 hover:shadow-xl active:scale-[0.99]"
+                ? "bg-[#171714] text-white hover:bg-black active:scale-[0.99]"
                 : "bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.99]"
         }`}
       >
@@ -657,10 +712,14 @@ function PlanCard({
             <Check className="h-4 w-4" strokeWidth={3} /> Current plan
           </>
         ) : isFree ? (
-          <>Switch to Basic <ArrowRight className="h-4 w-4" /></>
+          <>
+            Switch to Basic <ArrowRight className="h-4 w-4" />
+          </>
         ) : (
           <>
-            {plan.key === "naija_one" ? "Start 7-day trial" : `Upgrade to ${plan.name.split(" ").pop()}`}
+            {plan.key === "naija_one"
+              ? "Start 7-day trial"
+              : `Upgrade to ${plan.name.split(" ").pop()}`}
             <ArrowRight className="h-4 w-4" />
           </>
         )}
@@ -669,10 +728,18 @@ function PlanCard({
   );
 }
 
-function TrustItem({ Icon, label, sub }: { Icon: React.ComponentType<{ className?: string }>; label: string; sub: string }) {
+function TrustItem({
+  Icon,
+  label,
+  sub,
+}: {
+  Icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  sub: string;
+}) {
   return (
     <div className="flex items-center gap-3">
-      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-700 shrink-0">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
         <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0">
@@ -683,9 +750,15 @@ function TrustItem({ Icon, label, sub }: { Icon: React.ComponentType<{ className
   );
 }
 
-function PayChip({ label, Icon }: { label: string; Icon?: React.ComponentType<{ className?: string }> }) {
+function PayChip({
+  label,
+  Icon,
+}: {
+  label: string;
+  Icon?: React.ComponentType<{ className?: string }>;
+}) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-border px-3 py-1.5 text-xs font-semibold shadow-sm">
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold shadow-sm">
       {Icon ? <Icon className="h-4 w-4 text-muted-foreground" /> : null}
       {label}
     </span>
@@ -721,11 +794,15 @@ function ConfirmSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 animate-in slide-in-from-bottom-4 duration-200">
+      <div className="relative w-full animate-in rounded-t-lg bg-white p-6 shadow-2xl duration-200 slide-in-from-bottom-4 sm:max-w-md sm:rounded-lg">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--brand-clay)]">
-              {isSame ? "You're already on this plan" : isDowngrade ? "Confirm downgrade" : "Confirm subscription"}
+              {isSame
+                ? "You're already on this plan"
+                : isDowngrade
+                  ? "Confirm downgrade"
+                  : "Confirm subscription"}
             </div>
             <div className="font-display text-xl font-bold mt-0.5">{plan.name}</div>
           </div>
@@ -738,7 +815,7 @@ function ConfirmSheet({
           </button>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-border bg-muted/30 p-4">
+        <div className="mt-5 rounded-lg border border-border bg-muted/30 p-4">
           <Row label="Plan" value={plan.name} />
           <Row label="Billing" value={billing} capitalize />
           <Row label="Region" value={region === "NG" ? "Nigeria" : "United Kingdom"} />
@@ -747,22 +824,27 @@ function ConfirmSheet({
             <span className="font-display text-2xl font-bold tabular-nums inline-flex items-center gap-1">
               <CurrencyIcon className="h-5 w-5 text-[var(--brand-clay)]" />
               {isFree ? "0" : `${currency}${priceText}`}
-              {!isFree && <span className="text-xs font-semibold text-muted-foreground ml-1">/ {billing === "yearly" ? "yr" : "mo"}</span>}
+              {!isFree && (
+                <span className="text-xs font-semibold text-muted-foreground ml-1">
+                  / {billing === "yearly" ? "yr" : "mo"}
+                </span>
+              )}
             </span>
           </div>
         </div>
 
         {!isFree && !isDowngrade && !isSame && (
-          <div className="mt-4 flex items-start gap-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">
+          <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
             <PiSealCheckDuotone className="h-4 w-4 shrink-0 mt-0.5" />
             <span>
-              You're starting a <strong>7-day free trial</strong>. Cancel any time before it ends and you won't be charged.
+              You're starting a <strong>7-day free trial</strong>. Cancel any time before it ends
+              and you won't be charged.
             </span>
           </div>
         )}
 
         {isDowngrade && (
-          <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
             Downgrades take effect at the end of your current billing period.
           </div>
         )}
@@ -770,7 +852,7 @@ function ConfirmSheet({
         <button
           onClick={onConfirm}
           disabled={loading || isSame}
-          className={`mt-5 w-full h-12 rounded-2xl inline-flex items-center justify-center gap-2 text-sm font-bold transition ${
+          className={`mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition ${
             isSame
               ? "bg-zinc-200 text-zinc-500 cursor-not-allowed"
               : "bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.99]"
@@ -793,7 +875,15 @@ function ConfirmSheet({
         </button>
 
         <p className="mt-3 text-center text-[10px] text-muted-foreground">
-          By continuing you agree to our <Link to="/help" className="underline">Terms</Link> and <Link to="/help" className="underline">Refund Policy</Link>.
+          By continuing you agree to our{" "}
+          <Link to="/help" className="underline">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link to="/help" className="underline">
+            Refund Policy
+          </Link>
+          .
         </p>
       </div>
     </div>

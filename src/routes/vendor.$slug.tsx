@@ -2,18 +2,33 @@ import { createFileRoute, Link, notFound, Outlet, useMatchRoute } from "@tanstac
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
-  IoStar, IoTime, IoLocation, IoChevronBack, IoChatbubbleEllipses,
-  IoCartOutline, IoFlame, IoAdd, IoHeart, IoHeartOutline, IoShareOutline,
-  IoLeafOutline, IoSearch,
+  IoStar,
+  IoTime,
+  IoLocation,
+  IoChevronBack,
+  IoChatbubbleEllipses,
+  IoCartOutline,
+  IoFlame,
+  IoAdd,
+  IoHeart,
+  IoHeartOutline,
+  IoShareOutline,
+  IoLeafOutline,
+  IoSearch,
 } from "react-icons/io5";
 import {
-  PiCheckCircleDuotone, PiMedalDuotone, PiCookingPotDuotone,
-  PiStorefrontDuotone, PiTruckDuotone, PiSealCheckDuotone,
+  PiCheckCircleDuotone,
+  PiMedalDuotone,
+  PiCookingPotDuotone,
+  PiStorefrontDuotone,
+  PiTruckDuotone,
+  PiSealCheckDuotone,
 } from "react-icons/pi";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { isFavorite, toggleFavorite } from "@/lib/favorites";
+import { chefPortrait, groceryMarket, restaurantDining } from "@/assets/landing-images";
 
 export const Route = createFileRoute("/vendor/$slug")({
   head: ({ params }) => ({
@@ -64,7 +79,11 @@ function VendorPage() {
 
       const [{ data: categories }, { data: items }] = await Promise.all([
         supabase.from("menu_categories").select("*").eq("vendor_id", vendor.id).order("sort_order"),
-        supabase.from("menu_items").select("*").eq("vendor_id", vendor.id).order("is_featured", { ascending: false }),
+        supabase
+          .from("menu_items")
+          .select("*")
+          .eq("vendor_id", vendor.id)
+          .order("is_featured", { ascending: false }),
       ]);
       return { vendor, categories: categories ?? [], items: items ?? [] };
     },
@@ -77,8 +96,9 @@ function VendorPage() {
   if (!data) return null;
 
   const { vendor, categories, items } = data;
-  const fmt = (n: number) => `${vendor.currency === "GBP" ? "£" : "₦"}${Number(n).toLocaleString()}`;
-  
+  const fmt = (n: number) =>
+    `${vendor.currency === "GBP" ? "£" : "₦"}${Number(n).toLocaleString()}`;
+
   const vendorCart = carts[vendor.id];
   const subtotal = vendorCart?.items.reduce((s, i) => s + i.price * i.quantity, 0) ?? 0;
   const cartIsForThisVendor = !!vendorCart && vendorCart.items.length > 0;
@@ -118,20 +138,47 @@ function VendorSkeleton() {
   );
 }
 
-function TopIconButton({ to, ariaLabel, onClick, children, tone = "glass" }: { to?: string; ariaLabel: string; onClick?: () => void; children: React.ReactNode; tone?: "glass" | "light" }) {
+function TopIconButton({
+  to,
+  ariaLabel,
+  onClick,
+  children,
+  tone = "glass",
+}: {
+  to?: string;
+  ariaLabel: string;
+  onClick?: () => void;
+  children: React.ReactNode;
+  tone?: "glass" | "light";
+}) {
   const base =
     tone === "glass"
       ? "bg-black/25 backdrop-blur-md text-white hover:bg-black/40 ring-1 ring-white/15"
       : "bg-white/95 text-zinc-800 hover:bg-white shadow-sm ring-1 ring-black/5";
   const Cmp: any = to ? Link : "button";
   return (
-    <Cmp to={to} onClick={onClick} aria-label={ariaLabel} className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition ${base}`}>
+    <Cmp
+      to={to}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition ${base}`}
+    >
       {children}
     </Cmp>
   );
 }
 
-function TopBar({ backTo, itemCount, vendor, tone = "glass" }: { backTo: string; itemCount: number; vendor?: any; tone?: "glass" | "light" }) {
+function TopBar({
+  backTo,
+  itemCount,
+  vendor,
+  tone = "glass",
+}: {
+  backTo: string;
+  itemCount: number;
+  vendor?: any;
+  tone?: "glass" | "light";
+}) {
   const [saved, setSaved] = useState(() => (vendor ? isFavorite(vendor.id) : false));
 
   const share = async () => {
@@ -153,11 +200,15 @@ function TopBar({ backTo, itemCount, vendor, tone = "glass" }: { backTo: string;
     if (!vendor) return;
     const nowSaved = toggleFavorite(vendor.id);
     setSaved(nowSaved);
-    toast.success(nowSaved ? `${vendor.name} saved to your favourites` : `${vendor.name} removed from favourites`);
+    toast.success(
+      nowSaved
+        ? `${vendor.name} saved to your favourites`
+        : `${vendor.name} removed from favourites`,
+    );
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4 flex items-center justify-between">
+    <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
       <TopIconButton to={backTo} ariaLabel="Back" tone={tone}>
         <IoChevronBack className="h-6 w-6" />
       </TopIconButton>
@@ -165,8 +216,16 @@ function TopBar({ backTo, itemCount, vendor, tone = "glass" }: { backTo: string;
         <TopIconButton ariaLabel="Share" tone={tone} onClick={share}>
           <IoShareOutline className="h-5 w-5" />
         </TopIconButton>
-        <TopIconButton ariaLabel={saved ? "Remove from favourites" : "Save to favourites"} tone={tone} onClick={save}>
-          {saved ? <IoHeart className="h-5 w-5 text-[var(--brand-clay)]" /> : <IoHeartOutline className="h-5 w-5" />}
+        <TopIconButton
+          ariaLabel={saved ? "Remove from favourites" : "Save to favourites"}
+          tone={tone}
+          onClick={save}
+        >
+          {saved ? (
+            <IoHeart className="h-5 w-5 text-[var(--brand-clay)]" />
+          ) : (
+            <IoHeartOutline className="h-5 w-5" />
+          )}
         </TopIconButton>
         <div className="relative">
           <TopIconButton to="/cart" ariaLabel="Cart" tone={tone}>
@@ -188,24 +247,28 @@ function TopBar({ backTo, itemCount, vendor, tone = "glass" }: { backTo: string;
 function RestaurantLayout({ vendor, grouped, cartIsForThisVendor, itemCount, subtotal, fmt }: any) {
   const isOpen = true; // placeholder — connect to hours when wired
   return (
-    <div className="min-h-dvh bg-[oklch(0.985_0.002_90)] pb-32">
+    <div className="min-h-dvh bg-[#f7f7f4] pb-32">
       {/* Cinematic Hero */}
-      <div className="relative w-full h-[380px] sm:h-[440px]">
+      <div className="relative h-[420px] w-full overflow-hidden sm:h-[500px]">
         {vendor.cover_image_url ? (
-          <img src={vendor.cover_image_url} alt={vendor.name} className="h-full w-full object-cover" />
+          <img
+            src={vendor.cover_image_url}
+            alt={vendor.name}
+            className="h-full w-full object-cover"
+          />
         ) : (
-          <div className="h-full w-full bg-[var(--gradient-warm)]" />
+          <img src={restaurantDining} alt={vendor.name} className="h-full w-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_100%,rgba(0,0,0,0.7),transparent_65%)]" />
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 to-transparent" />
 
         <div className="absolute top-0 inset-x-0 z-20">
           <TopBar backTo="/discover" itemCount={itemCount} vendor={vendor} />
         </div>
 
         {/* Vendor Identity - Floating */}
-        <div className="absolute bottom-0 inset-x-0 px-4 sm:px-6 pb-6">
-          <div className="mx-auto max-w-5xl">
+        <div className="absolute inset-x-0 bottom-0 px-4 pb-8 sm:px-6 sm:pb-10">
+          <div className="mx-auto max-w-7xl">
             <div className="flex flex-wrap items-center gap-2 text-white/90 text-xs font-semibold">
               {vendor.is_featured && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-clay)] px-2.5 py-1 uppercase tracking-wider shadow-lg shadow-[var(--brand-clay)]/40">
@@ -220,15 +283,17 @@ function RestaurantLayout({ vendor, grouped, cartIsForThisVendor, itemCount, sub
                   isOpen ? "bg-emerald-500/20 text-emerald-100" : "bg-red-500/20 text-red-100"
                 }`}
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${isOpen ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${isOpen ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`}
+                />
                 {isOpen ? "Open now" : "Closed"}
               </span>
             </div>
-            <h1 className="font-display text-4xl sm:text-6xl font-bold leading-[0.95] tracking-tight mt-4 text-white drop-shadow-lg">
+            <h1 className="mt-4 max-w-4xl font-display text-4xl font-bold leading-none tracking-normal text-white sm:text-6xl">
               {vendor.name}
             </h1>
             {vendor.tagline && (
-              <p className="text-white/85 mt-3 text-base sm:text-lg max-w-2xl leading-relaxed drop-shadow">
+              <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/75 sm:text-lg">
                 {vendor.tagline}
               </p>
             )}
@@ -237,24 +302,48 @@ function RestaurantLayout({ vendor, grouped, cartIsForThisVendor, itemCount, sub
       </div>
 
       {/* Info panel */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 -mt-6 relative z-10">
-        <div className="rounded-[2rem] bg-white shadow-[0_20px_60px_-24px_rgba(0,0,0,0.25)] ring-1 ring-black/[0.04] p-5 sm:p-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <InfoStat Icon={IoStar} tone="gold" primary={`${Number(vendor.rating || 0).toFixed(1)}`} secondary={`${vendor.rating_count || 0} reviews`} label="Rating" />
-            <InfoStat Icon={IoTime} tone="clay" primary={`${vendor.prep_time_minutes ?? 30}m`} secondary="Prep time" label="Delivery" />
-            <InfoStat Icon={PiTruckDuotone} tone="ink" primary={fmt(vendor.delivery_fee || 0)} secondary="Delivery fee" label="Fee" />
-            <InfoStat Icon={IoLocation} tone="forest" primary={vendor.city || "—"} secondary="Local kitchen" label="Location" />
+      <div className="relative z-10 mx-auto -mt-5 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-5 rounded-lg border border-black/5 bg-white p-5 shadow-[0_18px_50px_-32px_rgba(0,0,0,0.45)] lg:grid-cols-[1fr_auto] lg:items-center lg:p-6">
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
+            <InfoStat
+              Icon={IoStar}
+              tone="gold"
+              primary={`${Number(vendor.rating || 0).toFixed(1)}`}
+              secondary={`${vendor.rating_count || 0} reviews`}
+              label="Rating"
+            />
+            <InfoStat
+              Icon={IoTime}
+              tone="clay"
+              primary={`${vendor.prep_time_minutes ?? 30}m`}
+              secondary="Prep time"
+              label="Delivery"
+            />
+            <InfoStat
+              Icon={PiTruckDuotone}
+              tone="ink"
+              primary={fmt(vendor.delivery_fee || 0)}
+              secondary="Delivery fee"
+              label="Fee"
+            />
+            <InfoStat
+              Icon={IoLocation}
+              tone="forest"
+              primary={vendor.city || "—"}
+              secondary="Local kitchen"
+              label="Location"
+            />
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 lg:justify-end">
             <Link
               to="/chats/$vendorId"
               params={{ vendorId: vendor.id }}
-              className="inline-flex items-center gap-2 rounded-full bg-zinc-900 text-white px-5 py-2.5 text-sm font-semibold hover:bg-zinc-800 transition"
+              className="inline-flex h-11 items-center gap-2 rounded-lg bg-[#171714] px-5 text-sm font-semibold text-white transition hover:bg-black"
             >
               <IoChatbubbleEllipses className="h-4 w-4" /> Message the kitchen
             </Link>
-            <button className="inline-flex items-center gap-2 rounded-full bg-zinc-100 text-zinc-800 px-5 py-2.5 text-sm font-semibold hover:bg-zinc-200 transition">
+            <button className="inline-flex h-11 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-5 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-50">
               <PiCookingPotDuotone className="h-4 w-4" /> About the chef
             </button>
           </div>
@@ -262,14 +351,26 @@ function RestaurantLayout({ vendor, grouped, cartIsForThisVendor, itemCount, sub
       </div>
 
       <MenuSection grouped={grouped} vendor={vendor} />
-      <CartBar cartIsForThisVendor={cartIsForThisVendor} itemCount={itemCount} subtotal={subtotal} fmt={fmt} />
+      <CartBar
+        cartIsForThisVendor={cartIsForThisVendor}
+        itemCount={itemCount}
+        subtotal={subtotal}
+        fmt={fmt}
+      />
     </div>
   );
 }
 
 /* ────────────────────────  GROCERY  ──────────────────────── */
 
-function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, subtotal, fmt }: any) {
+function GroceryStoreLayout({
+  vendor,
+  grouped,
+  cartIsForThisVendor,
+  itemCount,
+  subtotal,
+  fmt,
+}: any) {
   const [productQuery, setProductQuery] = useState("");
   const pq = productQuery.trim().toLowerCase();
   // Filter every category's products by the store search box.
@@ -278,69 +379,79 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
         .map(({ category, items }: any) => ({
           category,
           items: items.filter((i: any) =>
-            [i.name, i.description].filter(Boolean).some((s: string) => s.toLowerCase().includes(pq)),
+            [i.name, i.description]
+              .filter(Boolean)
+              .some((s: string) => s.toLowerCase().includes(pq)),
           ),
         }))
         .filter(({ items }: any) => items.length > 0)
     : grouped;
 
   return (
-    <div className="min-h-dvh bg-[oklch(0.985_0.005_150)] pb-32">
-      {/* Fresh green hero */}
-      <div className="relative bg-gradient-to-br from-emerald-900 via-emerald-700 to-emerald-600 text-white pb-12 overflow-hidden">
-        <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-lime-400/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-emerald-300/15 blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 opacity-20 mix-blend-overlay bg-[radial-gradient(2px_2px_at_20%_30%,white,transparent_50%),radial-gradient(2px_2px_at_80%_60%,white,transparent_50%),radial-gradient(2px_2px_at_40%_80%,white,transparent_50%)]" />
+    <div className="min-h-dvh bg-[#f5f7f2] pb-32">
+      <div className="relative overflow-hidden bg-[#163d2b] pb-10 text-white">
+        <img
+          src={vendor.cover_image_url || groceryMarket}
+          alt="Fresh grocery produce"
+          className="absolute inset-0 h-full w-full object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-[#163d2b]/70" />
 
         <div className="relative">
           <TopBar backTo="/groceries" itemCount={itemCount} vendor={vendor} />
         </div>
 
-        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 mt-4">
-          <div className="flex items-center gap-5">
-            <div className="h-24 w-24 rounded-3xl bg-white p-1.5 shadow-2xl ring-1 ring-white/40 shrink-0">
-              {vendor.logo_url || vendor.cover_image_url ? (
-                <img src={vendor.logo_url || vendor.cover_image_url} alt="" className="h-full w-full rounded-2xl object-cover" />
-              ) : (
-                <div className="h-full w-full rounded-2xl bg-emerald-100 grid place-items-center">
-                  <PiStorefrontDuotone className="h-10 w-10 text-emerald-700" />
-                </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest">
-                <IoLeafOutline className="h-3 w-3" /> Fresh groceries
+        <div className="relative mx-auto mt-4 max-w-7xl px-4 sm:px-6">
+          <div className="grid gap-7 lg:grid-cols-[1fr_420px] lg:items-end">
+            <div className="flex items-center gap-5">
+              <div className="h-24 w-24 shrink-0 rounded-lg bg-white p-1 shadow-xl ring-1 ring-white/30">
+                {vendor.logo_url || vendor.cover_image_url ? (
+                  <img
+                    src={vendor.logo_url || vendor.cover_image_url}
+                    alt=""
+                    className="h-full w-full rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="grid h-full w-full place-items-center rounded-md bg-emerald-100">
+                    <PiStorefrontDuotone className="h-10 w-10 text-emerald-700" />
+                  </div>
+                )}
               </div>
-              <h1 className="font-display text-3xl sm:text-4xl font-bold mt-2 tracking-tight leading-tight">{vendor.name}</h1>
-              <p className="text-emerald-50/85 text-sm mt-1 flex items-center gap-1.5">
-                <IoLocation className="h-4 w-4" /> {vendor.city}
-              </p>
-              <Link
-                to="/chats/$vendorId"
-                params={{ vendorId: vendor.id }}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-white text-emerald-800 px-5 py-2.5 text-sm font-semibold hover:bg-emerald-50 transition shadow-lg"
-              >
-                <IoChatbubbleEllipses className="h-4 w-4" /> Message store
-              </Link>
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest">
+                  <IoLeafOutline className="h-3 w-3" /> Fresh groceries
+                </div>
+                <h1 className="font-display text-3xl sm:text-4xl font-bold mt-2 tracking-tight leading-tight">
+                  {vendor.name}
+                </h1>
+                <p className="text-emerald-50/85 text-sm mt-1 flex items-center gap-1.5">
+                  <IoLocation className="h-4 w-4" /> {vendor.city}
+                </p>
+                <Link
+                  to="/chats/$vendorId"
+                  params={{ vendorId: vendor.id }}
+                  className="mt-3 inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50"
+                >
+                  <IoChatbubbleEllipses className="h-4 w-4" /> Message store
+                </Link>
+              </div>
             </div>
-          </div>
-
-          {/* Search bar */}
-          <div className="mt-6 relative">
-            <IoSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
-            <input
-              value={productQuery}
-              onChange={(e) => setProductQuery(e.target.value)}
-              placeholder="Search yam, rice, palm oil…"
-              className="w-full h-13 rounded-2xl bg-white text-zinc-900 pl-11 pr-4 py-3.5 text-sm placeholder:text-zinc-400 shadow-xl outline-none focus:ring-2 focus:ring-lime-400"
-            />
+            <div className="relative lg:mb-1">
+              <IoSearch className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+              <input
+                value={productQuery}
+                onChange={(e) => setProductQuery(e.target.value)}
+                placeholder="Search yam, rice, palm oil…"
+                className="h-13 w-full rounded-lg border border-white/20 bg-white pl-11 pr-4 text-sm text-zinc-900 shadow-xl outline-none placeholder:text-zinc-400 focus:ring-2 focus:ring-[#f0bd43]"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Info row */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 -mt-6 relative z-10">
-        <div className="rounded-2xl bg-white shadow-[0_16px_50px_-24px_rgba(6,78,59,0.35)] ring-1 ring-emerald-100/60 p-4 grid grid-cols-4 gap-2 text-center">
+      <div className="relative z-10 mx-auto -mt-4 max-w-7xl px-4 sm:px-6">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-emerald-950/5 bg-emerald-950/10 p-px text-center shadow-[0_16px_45px_-32px_rgba(6,78,59,0.5)] sm:grid-cols-4">
           <MiniStat label="Rating" value={`${Number(vendor.rating || 0).toFixed(1)}★`} />
           <MiniStat label="Delivery" value={`${vendor.prep_time_minutes ?? 30}m`} />
           <MiniStat label="Fee" value={fmt(vendor.delivery_fee || 0)} />
@@ -349,7 +460,7 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
       </div>
 
       {/* Category chips */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-8">
+      <div className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {visibleGroups.map(({ category }: any, i: number) => (
             <a
@@ -357,11 +468,13 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
               href={`#category-${category.id}`}
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById(`category-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                document
+                  .getElementById(`category-${category.id}`)
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
               className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
                 i === 0
-                  ? "bg-emerald-900 text-white border-emerald-900"
+                  ? "bg-[#163d2b] text-white border-[#163d2b]"
                   : "bg-white text-zinc-700 border-zinc-200 hover:border-emerald-400"
               }`}
             >
@@ -377,77 +490,101 @@ function GroceryStoreLayout({ vendor, grouped, cartIsForThisVendor, itemCount, s
         </div>
       )}
       <GroceryMenuSection grouped={visibleGroups} vendor={vendor} />
-      <CartBar cartIsForThisVendor={cartIsForThisVendor} itemCount={itemCount} subtotal={subtotal} fmt={fmt} tone="green" />
+      <CartBar
+        cartIsForThisVendor={cartIsForThisVendor}
+        itemCount={itemCount}
+        subtotal={subtotal}
+        fmt={fmt}
+        tone="green"
+      />
     </div>
   );
 }
 
 /* ────────────────────────  CHEF  ──────────────────────── */
 
-function ChefProfileLayout({ vendor, grouped, cartIsForThisVendor, itemCount, subtotal, fmt }: any) {
+function ChefProfileLayout({
+  vendor,
+  grouped,
+  cartIsForThisVendor,
+  itemCount,
+  subtotal,
+  fmt,
+}: any) {
   return (
-    <div className="min-h-dvh bg-[oklch(0.99_0.003_90)] pb-32">
+    <div className="min-h-dvh bg-[#f7f5f1] pb-32">
       {/* Editorial hero */}
       <div className="relative">
-        <div className="absolute inset-x-0 top-0 h-[340px] overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[390px] overflow-hidden">
           {vendor.cover_image_url ? (
             <img src={vendor.cover_image_url} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="h-full w-full bg-[var(--gradient-warm)]" />
+            <img src={chefPortrait} alt="Chef at work" className="h-full w-full object-cover" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[oklch(0.99_0.003_90)]" />
+          <div className="absolute inset-0 bg-black/35" />
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#f7f5f1] to-transparent" />
         </div>
 
         <div className="relative z-10">
           <TopBar backTo="/discover" itemCount={itemCount} vendor={vendor} />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 pt-24 sm:pt-32">
-          <div className="rounded-[2.5rem] bg-white shadow-[0_30px_80px_-30px_rgba(0,0,0,0.3)] ring-1 ring-black/[0.04] p-8 sm:p-10">
-            <div className="flex flex-col items-center text-center">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-24 sm:px-6 sm:pt-40">
+          <div className="rounded-lg border border-black/5 bg-white p-6 shadow-[0_28px_70px_-44px_rgba(0,0,0,0.5)] sm:p-8 lg:p-10">
+            <div className="grid gap-8 lg:grid-cols-[180px_1fr_auto] lg:items-center">
               <div className="relative">
-                <div className="h-32 w-32 rounded-full ring-4 ring-white shadow-2xl overflow-hidden bg-zinc-200">
+                <div className="mx-auto h-36 w-36 overflow-hidden rounded-lg bg-zinc-200 shadow-xl ring-1 ring-black/5 lg:mx-0 lg:h-44 lg:w-44">
                   {vendor.logo_url || vendor.cover_image_url ? (
-                    <img src={vendor.logo_url || vendor.cover_image_url} alt={vendor.name} className="h-full w-full object-cover" />
+                    <img
+                      src={vendor.logo_url || vendor.cover_image_url}
+                      alt={vendor.name}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
-                    <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${vendor.slug}`} alt="" className="h-full w-full object-cover" />
+                    <img
+                      src={`https://api.dicebear.com/7.x/notionists/svg?seed=${vendor.slug}`}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   )}
                 </div>
-                <span className="absolute -bottom-1 -right-1 grid h-9 w-9 place-items-center rounded-full bg-[var(--brand-clay)] text-white shadow-lg ring-4 ring-white">
+                <span className="absolute -bottom-2 left-1/2 grid h-9 w-9 -translate-x-1/2 place-items-center rounded-full bg-[var(--brand-clay)] text-white shadow-lg ring-4 ring-white lg:left-auto lg:right-[-8px] lg:translate-x-0">
                   <PiCookingPotDuotone className="h-5 w-5" />
                 </span>
               </div>
 
-              <div className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-clay)]/8 text-[var(--brand-clay)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
-                <PiMedalDuotone className="h-3.5 w-3.5" /> Chef
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl font-bold mt-3 text-zinc-900 tracking-tight leading-[1.05]">
-                {vendor.name}
-              </h1>
-              <p className="text-zinc-500 font-medium mt-1 text-sm">{vendor.city}</p>
-              {(vendor.description || vendor.tagline) && (
-                <p className="max-w-xl text-[15px] text-zinc-600 mt-5 leading-relaxed">
-                  {vendor.description || vendor.tagline}
-                </p>
-              )}
+              <div className="text-center lg:text-left">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-clay)]/8 text-[var(--brand-clay)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+                  <PiMedalDuotone className="h-3.5 w-3.5" /> Chef
+                </div>
+                <h1 className="mt-3 font-display text-4xl font-bold leading-[1.05] tracking-normal text-zinc-900 sm:text-5xl">
+                  {vendor.name}
+                </h1>
+                <p className="text-zinc-500 font-medium mt-1 text-sm">{vendor.city}</p>
+                {(vendor.description || vendor.tagline) && (
+                  <p className="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed text-zinc-600 lg:mx-0">
+                    {vendor.description || vendor.tagline}
+                  </p>
+                )}
 
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 text-amber-800 px-3 py-1.5 text-xs font-bold">
-                  <IoStar className="h-3.5 w-3.5" /> {Number(vendor.rating || 0).toFixed(1)} · {vendor.rating_count || 0}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 text-zinc-800 px-3 py-1.5 text-xs font-bold">
-                  <IoTime className="h-3.5 w-3.5" /> {vendor.prep_time_minutes ?? 30} min
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1.5 text-xs font-bold">
-                  <PiSealCheckDuotone className="h-3.5 w-3.5" /> ID verified
-                </span>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 text-amber-800 px-3 py-1.5 text-xs font-bold">
+                    <IoStar className="h-3.5 w-3.5" /> {Number(vendor.rating || 0).toFixed(1)} ·{" "}
+                    {vendor.rating_count || 0}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 text-zinc-800 px-3 py-1.5 text-xs font-bold">
+                    <IoTime className="h-3.5 w-3.5" /> {vendor.prep_time_minutes ?? 30} min
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-800 px-3 py-1.5 text-xs font-bold">
+                    <PiSealCheckDuotone className="h-3.5 w-3.5" /> ID verified
+                  </span>
+                </div>
               </div>
-
-              <div className="mt-7 flex items-center justify-center gap-3">
+              <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row lg:flex-col">
                 <Link
                   to="/chats/$vendorId"
                   params={{ vendorId: vendor.id }}
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-clay)] text-white px-6 py-3 text-sm font-bold shadow-lg shadow-[var(--brand-clay)]/25 hover:scale-105 transition"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#171714] px-6 text-sm font-bold text-white transition hover:bg-black"
                 >
                   <IoChatbubbleEllipses className="h-4 w-4" /> Message chef
                 </Link>
@@ -455,9 +592,11 @@ function ChefProfileLayout({ vendor, grouped, cartIsForThisVendor, itemCount, su
                   href="#category-all"
                   onClick={(e) => {
                     e.preventDefault();
-                    document.getElementById(`category-${grouped[0]?.category?.id}`)?.scrollIntoView({ behavior: "smooth" });
+                    document
+                      .getElementById(`category-${grouped[0]?.category?.id}`)
+                      ?.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="inline-flex items-center gap-2 rounded-full bg-zinc-100 text-zinc-900 px-6 py-3 text-sm font-bold hover:bg-zinc-200 transition"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-6 text-sm font-bold text-zinc-900 transition hover:bg-zinc-50"
                 >
                   See menu
                 </a>
@@ -468,7 +607,12 @@ function ChefProfileLayout({ vendor, grouped, cartIsForThisVendor, itemCount, su
       </div>
 
       <MenuSection grouped={grouped} vendor={vendor} />
-      <CartBar cartIsForThisVendor={cartIsForThisVendor} itemCount={itemCount} subtotal={subtotal} fmt={fmt} />
+      <CartBar
+        cartIsForThisVendor={cartIsForThisVendor}
+        itemCount={itemCount}
+        subtotal={subtotal}
+        fmt={fmt}
+      />
     </div>
   );
 }
@@ -484,12 +628,14 @@ function InfoStat({ Icon, tone, primary, secondary, label }: any) {
   };
   return (
     <div className="flex items-center gap-3">
-      <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${toneMap[tone]}`}>
+      <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg ${toneMap[tone]}`}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">{label}</div>
-        <div className="text-[15px] font-extrabold text-zinc-900 leading-tight truncate">{primary}</div>
+        <div className="text-[15px] font-extrabold text-zinc-900 leading-tight truncate">
+          {primary}
+        </div>
         <div className="text-[11px] text-zinc-500 truncate">{secondary}</div>
       </div>
     </div>
@@ -498,9 +644,11 @@ function InfoStat({ Icon, tone, primary, secondary, label }: any) {
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="bg-white px-3 py-4">
       <div className="text-sm font-extrabold text-zinc-900 tabular-nums">{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mt-0.5">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold mt-0.5">
+        {label}
+      </div>
     </div>
   );
 }
@@ -527,7 +675,7 @@ function MenuSection({ grouped, vendor }: any) {
 
   const pills = [
     { id: "menu" as const, label: "Menu", count: allItems.length },
-    { id: "new" as const, label: "New", count: (newItems.length || newFallback.length) },
+    { id: "new" as const, label: "New", count: newItems.length || newFallback.length },
     { id: "trending" as const, label: "Trending", count: trendingItems.length },
   ];
 
@@ -538,7 +686,7 @@ function MenuSection({ grouped, vendor }: any) {
     <>
       {/* Filter pill row — no top/bottom borders, brand-clay active */}
       <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl mt-8">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
             {pills.map((p) => {
               const isActive = tab === p.id;
@@ -557,9 +705,7 @@ function MenuSection({ grouped, vendor }: any) {
                   {p.count > 0 && (
                     <span
                       className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 ${
-                        isActive
-                          ? "bg-white/25 text-white"
-                          : "bg-white text-zinc-500"
+                        isActive ? "bg-white/25 text-white" : "bg-white text-zinc-500"
                       }`}
                     >
                       {p.count}
@@ -572,7 +718,7 @@ function MenuSection({ grouped, vendor }: any) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-6 space-y-14">
+      <div className="mx-auto mt-8 max-w-7xl space-y-14 px-4 sm:px-6">
         {tab === "menu" ? (
           // Full menu grouped by category
           grouped.map(({ category, items }: any) => (
@@ -586,7 +732,7 @@ function MenuSection({ grouped, vendor }: any) {
                 </span>
               </div>
               {items.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-zinc-200 bg-white p-10 text-center text-zinc-400 text-sm">
+                <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-10 text-center text-sm text-zinc-400">
                   Nothing in this section yet.
                 </div>
               ) : (
@@ -608,21 +754,13 @@ function MenuSection({ grouped, vendor }: any) {
           <FilteredList
             title={tab === "new" ? "Fresh on the menu" : "Trending right now"}
             subtitle={
-              tab === "new"
-                ? "Just added by the kitchen"
-                : "What everyone's ordering this week"
+              tab === "new" ? "Just added by the kitchen" : "What everyone's ordering this week"
             }
-            items={
-              tab === "new"
-                ? (newItems.length > 0 ? newItems : newFallback)
-                : trendingItems
-            }
+            items={tab === "new" ? (newItems.length > 0 ? newItems : newFallback) : trendingItems}
             vendor={vendor}
             fmtPrice={fmtPrice}
             emptyMsg={
-              tab === "new"
-                ? "No new items yet — check back soon."
-                : "Nothing trending right now."
+              tab === "new" ? "No new items yet — check back soon." : "Nothing trending right now."
             }
           />
         )}
@@ -633,12 +771,16 @@ function MenuSection({ grouped, vendor }: any) {
 
 function GroceryMenuSection({ grouped, vendor }: any) {
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-8 space-y-12">
+    <div className="mx-auto mt-8 max-w-7xl space-y-12 px-4 sm:px-6">
       {grouped.map(({ category, items }: any) => (
         <section key={category.id} id={`category-${category.id}`} className="scroll-mt-24">
           <div className="flex items-end justify-between mb-5">
-            <h3 className="font-display text-2xl font-bold text-zinc-900 tracking-tight">{category.name}</h3>
-            <span className="text-xs font-semibold text-zinc-400">{items.length} item{items.length === 1 ? "" : "s"}</span>
+            <h3 className="font-display text-2xl font-bold text-zinc-900 tracking-tight">
+              {category.name}
+            </h3>
+            <span className="text-xs font-semibold text-zinc-400">
+              {items.length} item{items.length === 1 ? "" : "s"}
+            </span>
           </div>
           {items.length === 0 ? (
             <p className="text-zinc-400 text-sm">Nothing in this section yet.</p>
@@ -689,7 +831,7 @@ function FilteredList({
         </span>
       </div>
       {items.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-zinc-200 bg-white p-10 text-center text-zinc-400 text-sm">
+        <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-10 text-center text-sm text-zinc-400">
           {emptyMsg}
         </div>
       ) : (
@@ -711,22 +853,22 @@ function FilteredList({
 function CartBar({ cartIsForThisVendor, itemCount, subtotal, fmt, tone = "clay" }: any) {
   if (!cartIsForThisVendor || itemCount <= 0) return null;
   const gradient =
-    tone === "green"
-      ? "bg-gradient-to-r from-emerald-700 to-emerald-600 shadow-emerald-500/25"
-      : "bg-gradient-to-r from-[var(--brand-clay)] to-[oklch(0.58_0.22_35)] shadow-[var(--brand-clay)]/30";
+    tone === "green" ? "bg-[#163d2b] shadow-emerald-950/20" : "bg-[#171714] shadow-black/20";
   return (
     <div className="fixed bottom-0 inset-x-0 z-40 pb-[max(env(safe-area-inset-bottom),1rem)] px-4 pointer-events-none">
       <div className="pointer-events-auto mx-auto max-w-md">
         <Link
           to="/cart"
-          className={`flex items-center justify-between gap-4 rounded-2xl ${gradient} px-5 py-4 text-white shadow-2xl hover:scale-[1.02] active:scale-[0.99] transition-transform`}
+          className={`flex items-center justify-between gap-4 rounded-lg ${gradient} px-5 py-4 text-white shadow-2xl transition-transform hover:-translate-y-0.5 active:translate-y-0`}
         >
           <span className="inline-flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/20 backdrop-blur">
               <IoCartOutline className="h-5 w-5" />
             </span>
             <span className="flex flex-col leading-tight">
-              <span className="text-[11px] uppercase tracking-widest text-white/70">{itemCount} item{itemCount > 1 ? "s" : ""}</span>
+              <span className="text-[11px] uppercase tracking-widest text-white/70">
+                {itemCount} item{itemCount > 1 ? "s" : ""}
+              </span>
               <span className="text-sm font-extrabold">View basket</span>
             </span>
           </span>
@@ -761,7 +903,7 @@ function HorizontalFoodCard({ vendor, item, priceLabel }: any) {
 
   const content = (
     <div
-      className={`relative flex gap-5 p-4 rounded-[1.75rem] bg-white shadow-[0_2px_16px_-4px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.04] transition-all duration-500 group ${
+      className={`group relative flex gap-4 rounded-lg bg-white p-4 shadow-[0_2px_16px_-8px_rgba(0,0,0,0.16)] ring-1 ring-black/[0.05] transition-all duration-300 ${
         isAvailable
           ? "hover:shadow-[0_16px_44px_-12px_rgba(0,0,0,0.18)] hover:-translate-y-1 hover:ring-[var(--brand-clay)]/25"
           : "opacity-55 grayscale"
@@ -778,10 +920,14 @@ function HorizontalFoodCard({ vendor, item, priceLabel }: any) {
           {item.name}
         </h4>
         {item.description && (
-          <p className="mt-2 text-sm text-zinc-500 line-clamp-2 flex-1 leading-relaxed">{item.description}</p>
+          <p className="mt-2 text-sm text-zinc-500 line-clamp-2 flex-1 leading-relaxed">
+            {item.description}
+          </p>
         )}
         <div className="mt-3.5 flex flex-wrap items-center gap-2 justify-between">
-          <div className="font-display font-extrabold text-lg text-zinc-900 tracking-tight">{priceLabel}</div>
+          <div className="font-display font-extrabold text-lg text-zinc-900 tracking-tight">
+            {priceLabel}
+          </div>
           {!isAvailable && (
             <p className="text-[10px] font-extrabold text-red-600 uppercase tracking-widest bg-red-50 px-2 py-1 rounded-lg">
               Sold out
@@ -789,7 +935,7 @@ function HorizontalFoodCard({ vendor, item, priceLabel }: any) {
           )}
         </div>
       </div>
-      <div className="relative h-[128px] w-[128px] shrink-0 rounded-2xl overflow-hidden bg-zinc-100 shadow-[0_6px_18px_-6px_rgba(0,0,0,0.15)] ring-1 ring-black/[0.05]">
+      <div className="relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-lg bg-zinc-100 ring-1 ring-black/[0.05] sm:h-[132px] sm:w-[132px]">
         {item.image_url ? (
           <img
             src={item.image_url}
@@ -813,7 +959,11 @@ function HorizontalFoodCard({ vendor, item, priceLabel }: any) {
   );
   if (!isAvailable) return content;
   return (
-    <Link to="/vendor/$slug/item/$itemId" params={{ slug: vendor.slug, itemId: item.id }} className="block">
+    <Link
+      to="/vendor/$slug/item/$itemId"
+      params={{ slug: vendor.slug, itemId: item.id }}
+      className="block"
+    >
       {content}
     </Link>
   );
@@ -844,13 +994,19 @@ function GroceryCard({ vendor, item, priceLabel }: any) {
 
   const content = (
     <div
-      className={`group relative rounded-2xl bg-white ring-1 ring-black/[0.04] shadow-[0_2px_10px_-2px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-300 ${
-        isAvailable ? "hover:shadow-[0_12px_30px_-10px_rgba(6,78,59,0.25)] hover:-translate-y-0.5 hover:ring-emerald-400/40" : "opacity-55 grayscale"
+      className={`group relative overflow-hidden rounded-lg bg-white shadow-[0_2px_10px_-4px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.05] transition-all duration-300 ${
+        isAvailable
+          ? "hover:shadow-[0_12px_30px_-10px_rgba(6,78,59,0.25)] hover:-translate-y-0.5 hover:ring-emerald-400/40"
+          : "opacity-55 grayscale"
       }`}
     >
       <div className="relative aspect-square bg-emerald-50 overflow-hidden">
         {item.image_url ? (
-          <img src={item.image_url} alt={item.name} className={`h-full w-full object-cover transition-transform duration-500 ${isAvailable ? "group-hover:scale-110" : ""}`} />
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className={`h-full w-full object-cover transition-transform duration-500 ${isAvailable ? "group-hover:scale-110" : ""}`}
+          />
         ) : (
           <div className="h-full w-full grid place-items-center text-emerald-300">
             <IoLeafOutline className="h-10 w-10" />
@@ -881,7 +1037,11 @@ function GroceryCard({ vendor, item, priceLabel }: any) {
   );
   if (!isAvailable) return content;
   return (
-    <Link to="/vendor/$slug/item/$itemId" params={{ slug: vendor.slug, itemId: item.id }} className="block">
+    <Link
+      to="/vendor/$slug/item/$itemId"
+      params={{ slug: vendor.slug, itemId: item.id }}
+      className="block"
+    >
       {content}
     </Link>
   );
