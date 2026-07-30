@@ -1,7 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { ChevronLeft, CreditCard, ChevronDown, ChevronUp, Bike, ShoppingCart, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { loadWallet, walletPayOrder } from "@/lib/wallet";
@@ -25,7 +24,7 @@ function OrderDetailPage() {
 
   // Live-ish: refetch every 20s while the order is still active so the
   // status pills and map pin advance without a manual reload. Cheap.
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["order-detail", orderId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,8 +33,10 @@ function OrderDetailPage() {
         .eq("id", orderId)
         .maybeSingle();
       if (error) throw error;
-      if (!data) throw notFound();
-      return data;
+      // Return null rather than throwing a router notFound() here: this runs
+      // inside react-query, so a throw just becomes a query error and the page
+      // renders nothing. The component handles the null/error case explicitly.
+      return data ?? null;
     },
     refetchInterval: (q) => {
       const status = (q.state.data as any)?.status;
@@ -79,7 +80,41 @@ function OrderDetailPage() {
       <div className="min-h-dvh bg-white grid place-items-center text-zinc-500">Loading…</div>
     );
   }
-  if (!data) return null;
+  // Never render a blank screen: say what happened and give a way back.
+  if (isError || !data) {
+    return (
+      <div className="min-h-dvh bg-white grid place-items-center px-6">
+        <div className="w-full max-w-sm rounded-3xl ring-1 ring-zinc-100 shadow-sm p-8 text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--brand-clay)]/10 text-[var(--brand-clay)]">
+            <ShoppingCart className="h-7 w-7" />
+          </div>
+          <p className="mt-4 font-display text-lg font-bold text-zinc-900">
+            {isError ? "Couldn't load this order" : "Order not found"}
+          </p>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            {isError
+              ? (error as Error)?.message || "Please check your connection and try again."
+              : "This order may have been removed, or it belongs to another account."}
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="rounded-full bg-[var(--brand-clay)] px-5 py-2.5 text-sm font-bold text-white hover:opacity-90 transition"
+            >
+              Try again
+            </button>
+            <Link
+              to="/orders"
+              className="rounded-full bg-zinc-100 px-5 py-2.5 text-sm font-bold text-zinc-800 hover:bg-zinc-200 transition"
+            >
+              Back to my orders
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isCancelled = data.status === "cancelled";
   const isDelivered = data.status === "delivered";
