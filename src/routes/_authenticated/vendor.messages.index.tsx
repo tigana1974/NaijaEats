@@ -6,7 +6,8 @@ import { AppShell } from "@/components/naija/AppShell";
 import { useMyRole } from "@/hooks/useMyRole";
 import { useVendorStore } from "@/hooks/useVendorStore";
 import { ArrowLeft, Search, X } from "lucide-react";
-import { PiChatCircleDotsDuotone, PiUserCircleDuotone } from "react-icons/pi";
+import { PiChatCircleDotsDuotone, PiUserCircleDuotone, PiMicrophoneDuotone, PiReceiptDuotone, PiImageDuotone, PiPaperclipDuotone } from "react-icons/pi";
+import { messagePreview, type PreviewIcon } from "@/lib/chatPreview";
 
 export const Route = createFileRoute("/_authenticated/vendor/messages/")({
   component: VendorInbox,
@@ -110,89 +111,84 @@ function VendorInbox() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4 sm:py-8 pb-24">
-        <div className="mb-4">
-          <Link
-            to="/vendor/dashboard"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-border hover:bg-muted transition"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </div>
-        {/* Hero */}
-        <div className="relative overflow-hidden rounded-[2rem] p-5 sm:p-7 text-white bg-[radial-gradient(120%_120%_at_0%_0%,oklch(0.85_0.17_90/0.5),transparent_55%),radial-gradient(120%_120%_at_100%_100%,oklch(0.55_0.22_25/0.95),transparent_55%),linear-gradient(150deg,#1a0e0a,#3a1a14_55%,#7c2d12)]">
-          <div className="pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full bg-[var(--brand-gold)]/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-52 w-52 rounded-full bg-[var(--brand-clay)]/40 blur-3xl" />
-
-          <div className="relative flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/12 backdrop-blur border border-white/15">
-              <PiChatCircleDotsDuotone className="h-7 w-7 text-[var(--brand-gold)]" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-white/70">Inbox</div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
-                Customer messages
-              </h1>
-            </div>
+      <div className="mx-auto max-w-2xl px-0 sm:px-4 pb-24">
+        {/* Sticky X-style header */}
+        <header className="sticky top-0 z-20 backdrop-blur-xl bg-white/85 border-b border-border/70">
+          <div className="flex items-center gap-3 px-4 pt-3 pb-2.5">
+            <Link
+              to="/vendor/dashboard"
+              aria-label="Back"
+              className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="font-display text-xl font-extrabold tracking-tight">Messages</h1>
             {totalUnread > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white text-[var(--brand-clay)] px-3 py-1.5 text-xs font-bold shadow-lg">
-                {totalUnread} new
+              <span className="ml-auto inline-flex items-center rounded-full bg-[var(--brand-clay)] text-white px-2 py-0.5 text-[11px] font-bold">
+                {totalUnread}
               </span>
             )}
           </div>
-        </div>
 
-        {/* Toolbar */}
-        <div className="mt-5 flex items-center gap-2">
-          <div className="relative flex-1">
+          <nav className="flex text-sm font-semibold">
+            {(["all", "unread"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`relative flex-1 h-11 capitalize transition ${
+                  tab === t ? "text-foreground" : "text-muted-foreground hover:bg-muted/40"
+                }`}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {t}
+                  {t === "unread" && totalUnread > 0 && (
+                    <span className="rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-1.5 py-0.5 text-[10px]">
+                      {totalUnread}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={`absolute inset-x-1/2 -translate-x-1/2 bottom-0 h-[3px] w-12 rounded-full transition-all ${
+                    tab === t ? "bg-[var(--brand-clay)]" : "bg-transparent"
+                  }`}
+                />
+              </button>
+            ))}
+          </nav>
+        </header>
+
+        {/* Search bar */}
+        <div className="px-4 pt-3">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search customers"
-              className="w-full h-11 rounded-2xl border border-border bg-white pl-10 pr-9 text-sm outline-none focus:border-[var(--brand-clay)] focus:ring-2 focus:ring-[var(--brand-clay)]/15 transition"
+              placeholder="Search Messages"
+              className="w-full h-11 rounded-full bg-muted/70 pl-10 pr-9 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-[var(--brand-clay)]/25 border border-transparent focus:border-border transition"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-full bg-muted hover:bg-muted/70"
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-full bg-black/5 hover:bg-black/10"
                 aria-label="Clear"
               >
                 <X className="h-3 w-3" />
               </button>
             )}
           </div>
-          <div className="inline-flex rounded-2xl bg-muted p-0.5 text-xs font-bold">
-            {(["all", "unread"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-3 h-10 rounded-xl capitalize transition ${
-                  tab === t ? "bg-white text-foreground shadow-sm" : "text-muted-foreground"
-                }`}
-              >
-                {t}
-                {t === "unread" && totalUnread > 0 && (
-                  <span className="ml-1 rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-1.5 py-0.5 text-[10px]">
-                    {totalUnread}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* List */}
-        <div className="mt-5">
+        <div className="mt-2">
           {filtered.length === 0 ? (
             <EmptyState hasQuery={!!query || tab === "unread"} />
           ) : (
-            <div className="rounded-3xl bg-white border border-border overflow-hidden divide-y divide-border">
+            <ul className="divide-y divide-border/70">
               {filtered.map((c: any) => (
                 <ChatRow key={c.id} convo={c} />
               ))}
-            </div>
+            </ul>
           )}
         </div>
       </div>
@@ -207,43 +203,63 @@ function ChatRow({ convo }: { convo: any }) {
   const unread = convo.vendor_unread ?? 0;
   const initial = name.charAt(0).toUpperCase();
   const showShopBadge = (convo.__shopCount ?? 1) > 1 && shop?.name;
+  const preview = messagePreview(convo.last_message, false);
   return (
-    <Link
-      to="/vendor/messages/$conversationId"
-      params={{ conversationId: convo.id }}
-      className="flex items-center gap-3 p-3.5 hover:bg-muted/40 transition-colors"
-    >
-      <div className="relative">
-        <div className="rounded-2xl overflow-hidden bg-muted ring-1 ring-black/5 shrink-0" style={{ height: 52, width: 52 }}>
-          {cust?.avatar_url ? (
-            <img src={cust.avatar_url} alt={name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full grid place-items-center bg-[var(--brand-forest)] text-[var(--brand-ink)] font-display font-bold text-lg">
-              {initial}
-            </div>
+    <li>
+      <Link
+        to="/vendor/messages/$conversationId"
+        params={{ conversationId: convo.id }}
+        className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors"
+      >
+        <div className="relative shrink-0">
+          <div className="h-12 w-12 rounded-full overflow-hidden bg-muted ring-1 ring-black/[0.06]">
+            {cust?.avatar_url ? (
+              <img src={cust.avatar_url} alt={name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full grid place-items-center bg-[var(--brand-forest)] text-[var(--brand-ink)] font-display font-bold text-lg">
+                {initial}
+              </div>
+            )}
+          </div>
+          {unread > 0 && (
+            <span className="absolute -bottom-0.5 -right-0.5 grid h-5 min-w-[1.25rem] px-1 place-items-center rounded-full bg-[var(--brand-clay)] text-white text-[10px] font-bold ring-2 ring-white">
+              {unread > 9 ? "9+" : unread}
+            </span>
           )}
         </div>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <span className={`truncate ${unread > 0 ? "font-extrabold" : "font-semibold"} text-sm sm:text-[15px]`}>
-            {name}
-          </span>
-          <span className={`text-[11px] shrink-0 tabular-nums ${unread > 0 ? "text-[var(--brand-clay)] font-bold" : "text-muted-foreground"}`}>
-            {timeLabel(convo.last_message_at)}
-          </span>
-        </div>
-        {showShopBadge && (
-          <div className="mt-0.5 mb-0.5 inline-flex items-center gap-1 rounded-full bg-[var(--brand-clay)]/10 text-[var(--brand-clay)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider max-w-full">
-            <span className="truncate">to {shop.name}</span>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className={`truncate text-[15px] ${unread > 0 ? "font-extrabold" : "font-bold"}`}>
+              {name}
+            </span>
+            {showShopBadge && (
+              <span className="inline-flex items-center gap-1 text-muted-foreground text-[12px]">
+                <PiUserCircleDuotone className="h-3 w-3" />
+                to {shop.name}
+              </span>
+            )}
+            <span className={`ml-auto shrink-0 text-[12px] tabular-nums ${unread > 0 ? "text-[var(--brand-clay)] font-bold" : "text-muted-foreground"}`}>
+              {timeLabel(convo.last_message_at)}
+            </span>
           </div>
-        )}
-        <p className={`mt-0.5 text-xs truncate ${unread > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
-          {convo.last_message ?? "Say hello"}
-        </p>
-      </div>
-    </Link>
+          <div className={`mt-0.5 flex items-center gap-1.5 text-[13px] ${unread > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
+            <PreviewIconGlyph kind={preview.icon} />
+            <span className="truncate">{preview.text}</span>
+          </div>
+        </div>
+      </Link>
+    </li>
   );
+}
+
+function PreviewIconGlyph({ kind }: { kind: PreviewIcon }) {
+  const cls = "h-3.5 w-3.5 shrink-0 opacity-80";
+  if (kind === "audio") return <PiMicrophoneDuotone className={cls} />;
+  if (kind === "invoice") return <PiReceiptDuotone className={cls} />;
+  if (kind === "image") return <PiImageDuotone className={cls} />;
+  if (kind === "file") return <PiPaperclipDuotone className={cls} />;
+  return null;
 }
 
 function EmptyState({ hasQuery }: { hasQuery: boolean }) {
