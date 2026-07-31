@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ShoppingBag, ChevronRight, Clock3, PackageCheck, XCircle } from "lucide-react";
@@ -32,6 +32,14 @@ const fmt = (n: number, currency = "NGN") =>
   );
 
 function OrdersPage() {
+  // /orders/$orderId is generated as a CHILD of this route, so navigating to an
+  // order detail renders THIS component as its parent layout. Without yielding
+  // to <Outlet /> the child had nowhere to render and users just saw the orders
+  // list again ("it takes me back to My Orders"). Render only the outlet when a
+  // child route is active.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isChildRoute = pathname.replace(/\/+$/, "") !== "/orders";
+
   const { user } = Route.useRouteContext();
   const [filter, setFilter] = useState<"all" | "active" | "delivered" | "cancelled">("all");
   const { data: orders, isLoading } = useQuery({
@@ -59,6 +67,10 @@ function OrdersPage() {
     activeStatuses.includes(order.status),
   ).length;
   const deliveredCount = (orders ?? []).filter((order: any) => order.status === "delivered").length;
+
+  // Placed after all hooks so hook order stays stable between the list and the
+  // nested order-detail route.
+  if (isChildRoute) return <Outlet />;
 
   return (
     <CustomerShell

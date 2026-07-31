@@ -88,40 +88,32 @@ function ChatsList() {
   return (
     <CustomerShell hideBottomNav>
       <div className="mx-auto w-full max-w-5xl px-4 pb-24 sm:px-6">
-        {/* Sticky X-style header: back, title, tabs. Kept compact, no gradient hero. */}
-        <header className="mt-6 overflow-hidden rounded-lg bg-[#171714] text-white shadow-[0_24px_60px_-40px_rgba(0,0,0,0.8)]">
-          <div className="flex items-start gap-3 px-5 pb-5 pt-6 sm:px-7 sm:pt-7">
+        {/* Compact header: single row (back + title + count), tabs inline. */}
+        <header className="mt-3 overflow-hidden rounded-lg bg-[#171714] text-white">
+          <div className="flex items-center gap-2 px-4 py-3 sm:px-5">
             <Link
               to="/account"
               aria-label="Back"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
+              className="-ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <div>
-              <div className="text-[10px] font-extrabold uppercase tracking-[0.17em] text-[#f0bd43]">
-                Your conversations
-              </div>
-              <h1 className="mt-1 font-display text-3xl font-semibold tracking-normal sm:text-4xl">
-                Messages
-              </h1>
-              <p className="mt-2 max-w-md text-sm leading-6 text-white/60">
-                Keep every order question, chef update, and invoice in one place.
-              </p>
-            </div>
+            <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
+              Messages
+            </h1>
             {totalUnread > 0 && (
-              <span className="ml-auto inline-flex items-center rounded-full bg-[#f0bd43] px-2.5 py-1 text-[11px] font-bold text-[#171714]">
+              <span className="ml-auto inline-flex items-center rounded-full bg-[#f0bd43] px-2 py-0.5 text-[11px] font-bold text-[#171714]">
                 {totalUnread}
               </span>
             )}
           </div>
 
-          <nav className="flex border-t border-white/10 text-sm font-semibold">
+          <nav className="flex border-t border-white/10 text-[13px] font-semibold">
             {(["all", "unread"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`relative h-12 flex-1 capitalize transition ${
+                className={`relative h-9 flex-1 capitalize transition ${
                   tab === t
                     ? "bg-white/10 text-white"
                     : "text-white/50 hover:bg-white/5 hover:text-white/80"
@@ -136,7 +128,7 @@ function ChatsList() {
                   )}
                 </span>
                 <span
-                  className={`absolute inset-x-1/2 -translate-x-1/2 bottom-0 h-[3px] w-12 rounded-full transition-all ${
+                  className={`absolute inset-x-1/2 bottom-0 h-[3px] w-10 -translate-x-1/2 rounded-full transition-all ${
                     tab === t ? "bg-[#f0bd43]" : "bg-transparent"
                   }`}
                 />
@@ -146,19 +138,19 @@ function ChatsList() {
         </header>
 
         {/* Search bar */}
-        <div className="pt-5">
+        <div className="pt-3">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search Messages"
-              className="h-12 w-full rounded-lg border border-border bg-card pl-10 pr-9 text-sm outline-none transition focus:border-[var(--brand-clay)]"
+              className="h-10 w-full rounded-lg border border-border bg-card pl-9 pr-9 text-sm outline-none transition focus:border-[var(--brand-clay)]"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-full bg-black/5 hover:bg-black/10"
+                className="absolute right-3 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full bg-black/5 hover:bg-black/10"
                 aria-label="Clear"
               >
                 <X className="h-3 w-3" />
@@ -168,7 +160,7 @@ function ChatsList() {
         </div>
 
         {/* List */}
-        <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card shadow-[0_18px_40px_-34px_rgba(0,0,0,0.5)]">
+        <div className="mt-3 overflow-hidden rounded-lg border border-border bg-card">
           {filtered.length === 0 ? (
             <EmptyState hasQuery={!!query || tab === "unread"} />
           ) : (
@@ -211,7 +203,7 @@ function ChatRow({ convo }: { convo: any }) {
       <Link
         to="/chats/$vendorId"
         params={{ vendorId: v?.id ?? "" }}
-        className="flex items-start gap-4 px-4 py-4 transition-colors hover:bg-muted/35 sm:px-5 sm:py-5"
+        className="flex items-start gap-3 px-3.5 py-3 transition-colors hover:bg-muted/35 sm:px-4"
       >
         <div className="relative shrink-0">
           <div className="h-14 w-14 rounded-lg overflow-hidden bg-muted ring-1 ring-black/[0.06]">
