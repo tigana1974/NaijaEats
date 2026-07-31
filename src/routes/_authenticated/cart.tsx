@@ -633,10 +633,6 @@ function CartPage() {
                   )}
                 </button>
               </div>
-              <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-                <ShieldCheck className="h-3 w-3 text-[var(--brand-forest)]" />
-                Secured by Paystack &amp; Stripe · One tap pays for every vendor
-              </div>
             </div>
           </div>
         </div>

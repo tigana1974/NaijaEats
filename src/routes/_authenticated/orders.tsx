@@ -96,7 +96,7 @@ function OrdersPage() {
           </div>
         </section>
 
-        <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
+        <div className="scrollbar-hide mt-6 flex gap-2 overflow-x-auto">
           {(
             [
               ["all", "All orders", ShoppingBag],
@@ -131,9 +131,8 @@ function OrdersPage() {
             <ul className="grid gap-4 md:grid-cols-2">
               {filteredOrders.map((o: any) => (
                 <li key={o.id}>
-                  <Link
-                    to="/orders/$orderId"
-                    params={{ orderId: o.id }}
+                  <a
+                    href={`/orders/${encodeURIComponent(o.id)}`}
                     className="group flex min-h-28 items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition hover:border-zinc-300 hover:shadow-[0_14px_34px_-26px_rgba(0,0,0,0.5)]"
                   >
                     <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-zinc-100">
@@ -181,7 +180,7 @@ function OrdersPage() {
                       {fmt(Number(o.total), o.currency)}
                     </div>
                     <ChevronRight className="h-4 w-4 text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-zinc-700" />
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>

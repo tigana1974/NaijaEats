@@ -70,38 +70,58 @@ function BookPage() {
         </div>
       }
     >
-      <div className="mx-auto w-full max-w-7xl px-4 pt-7 sm:px-6">
-        <div className="flex flex-col gap-5 border-b border-black/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="text-xs font-extrabold uppercase tracking-[0.17em] text-[var(--brand-clay)]">
-              Plan ahead
+      <div className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6">
+        <header className="relative overflow-hidden rounded-lg bg-[#171714] px-5 py-7 text-white sm:px-8 sm:py-9 lg:min-h-[250px]">
+          <img
+            src={tab === "planner" ? dishJollof : illusChef}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-25"
+          />
+          <div className="absolute inset-0 bg-black/55" />
+          <div className="relative flex min-h-[190px] flex-col justify-between gap-8 lg:flex-row lg:items-end">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#f0bd43]">
+                {tab === "planner" ? (
+                  <Calendar className="h-4 w-4" />
+                ) : (
+                  <PiChefHatDuotone className="h-4 w-4" />
+                )}
+                {tab === "planner" ? "Plan your week" : "Private dining"}
+              </div>
+              <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-normal sm:text-5xl">
+                {tab === "planner"
+                  ? "Good meals, already planned."
+                  : "The right chef for your table."}
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 sm:text-base">
+                {tab === "planner"
+                  ? "Build breakfast, lunch, and dinner around your week, then book everything in one checkout."
+                  : "Browse trusted chefs and reserve a personal dining experience for your occasion."}
+              </p>
             </div>
-            <h1 className="mt-2 font-display text-3xl font-semibold tracking-normal sm:text-4xl">
-              Meals and chefs, booked beautifully.
-            </h1>
+            <div className="flex w-full rounded-lg border border-white/15 bg-black/25 p-1 backdrop-blur lg:w-[390px]">
+              {(
+                [
+                  { id: "planner", label: "Meal Planner", Icon: Calendar },
+                  { id: "chef", label: "Book a Chef", Icon: PiChefHatDuotone },
+                ] as const
+              ).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id)}
+                  className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md py-2.5 text-sm font-bold transition ${
+                    tab === t.id
+                      ? "bg-white text-zinc-900 shadow-sm"
+                      : "text-white/65 hover:text-white"
+                  }`}
+                >
+                  <t.Icon className="h-4 w-4" /> {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex w-full rounded-lg border border-border bg-muted/40 p-1 sm:w-[390px]">
-            {(
-              [
-                { id: "planner", label: "Meal Planner", Icon: Calendar },
-                { id: "chef", label: "Book a Chef", Icon: PiChefHatDuotone },
-              ] as const
-            ).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md py-2.5 text-sm font-bold transition ${
-                  tab === t.id
-                    ? "bg-white text-zinc-900 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-800"
-                }`}
-              >
-                <t.Icon className="h-4 w-4" /> {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        </header>
       </div>
       {tab === "planner" ? <MealPlannerSection /> : <BookChefSection />}
     </RoleShell>
