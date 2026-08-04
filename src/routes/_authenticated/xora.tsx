@@ -23,6 +23,7 @@ import { useCart } from "@/hooks/useCart";
 import { walletPayOrder } from "@/lib/wallet";
 import { toast } from "sonner";
 import { requiresConfirmation, type XoraAction } from "@/lib/xoraActions";
+import { WalletPinDialog } from "@/components/naija/WalletPinDialog";
 import { XoraAvatar } from "@/components/naija/XoraAvatar";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { useQuery } from "@tanstack/react-query";
@@ -89,6 +90,8 @@ function XoraChatPage() {
   const { addItem } = useCart();
   // Actions Xora prepared that need an explicit tap (money / status changes).
   const [pendingActions, setPendingActions] = useState<XoraAction[]>([]);
+  // Payment Xora prepared, waiting on the user's PIN.
+  const [pinFor, setPinFor] = useState<Extract<XoraAction, { type: "confirm_payment" }> | null>(null);
 
   /** Runs an action for real. Auto-run for safe ones; tap-to-confirm for the rest. */
   const runAction = async (a: XoraAction) => {
@@ -107,10 +110,9 @@ function XoraChatPage() {
         return;
       }
       if (a.type === "confirm_payment") {
-        await walletPayOrder(a.orderId);
-        toast.success("Payment complete");
-        setPendingActions((p) => p.filter((x) => x !== a));
-        navigate({ to: "/orders/$orderId" as never, params: { orderId: a.orderId } as never });
+        // Never charge straight from a chat message: the user must enter their
+        // wallet PIN so we know the instruction really came from them.
+        setPinFor(a);
         return;
       }
       if (a.type === "set_order_status") {
@@ -333,6 +335,26 @@ function XoraChatPage() {
           thread.messages.map((m) => <MessageBubble key={m.id} msg={m} region={region} />)
         )}
       </div>
+
+      <WalletPinDialog
+        open={pinFor !== null}
+        title="Authorise payment"
+        amountLabel={
+          pinFor
+            ? `${pinFor.currency === "GBP" ? "£" : "₦"}${Number(pinFor.amount).toLocaleString()}`
+            : undefined
+        }
+        onClose={() => setPinFor(null)}
+        onVerified={async () => {
+          if (!pinFor) return;
+          await walletPayOrder(pinFor.orderId);
+          toast.success("Payment complete");
+          const paid = pinFor;
+          setPendingActions((p) => p.filter((x) => x !== paid));
+          setPinFor(null);
+          navigate({ to: "/orders/$orderId" as never, params: { orderId: paid.orderId } as never });
+        }}
+      />
 
       {/* ─── Pending confirmations (money / status changes) ─── */}
       {pendingActions.length > 0 && (

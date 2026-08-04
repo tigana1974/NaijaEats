@@ -8,6 +8,7 @@ import { printHtml } from "@/lib/csv";
 import { OrderStatusTracker, statusHeadlineFor } from "@/components/naija/OrderTracking";
 import { LiveOrderMap } from "@/components/naija/LiveOrderMap";
 import { toast } from "sonner";
+import { WalletPinDialog } from "@/components/naija/WalletPinDialog";
 
 export const Route = createFileRoute("/_authenticated/orders/$orderId")({
   component: OrderDetailPage,
@@ -20,6 +21,7 @@ function OrderDetailPage() {
   const { orderId } = Route.useParams();
   const qc = useQueryClient();
   const [paying, setPaying] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Live-ish: refetch every 20s while the order is still active so the
@@ -54,7 +56,13 @@ function OrderDetailPage() {
     setDetailsOpen(true);
   }, [data?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const payNow = async () => {
+  // Ask for the wallet PIN first — proof the payment is really from the owner.
+  const payNow = () => {
+    if (!data) return;
+    setPinOpen(true);
+  };
+
+  const doPay = async () => {
     if (!data) return;
     const w = loadWallet();
     if (w.balance < data.total) {
@@ -125,6 +133,13 @@ function OrderDetailPage() {
 
   return (
     <div className="min-h-dvh bg-white relative overflow-hidden">
+      <WalletPinDialog
+        open={pinOpen}
+        title="Authorise payment"
+        amountLabel={fmt(Number(data.total), data.currency)}
+        onClose={() => setPinOpen(false)}
+        onVerified={doPay}
+      />
       {/* Map fills the full screen behind everything */}
       <div className="absolute inset-0 z-0">
         {isCancelled ? (
