@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/search")({
 
 const POPULAR_SEARCHES = ["Jollof Rice", "Suya", "Plantain", "Shawarma", "Burger"];
 const ITEM_SEARCH_SELECT =
-  "id, name, description, tags, price, image_url, is_available, is_featured, food_type:global_food_types(name), category:menu_categories(name), vendor:vendors!inner(id, slug, name, city, type, currency, country, status)";
+  "id, name, description, tags, price, image_url, is_available, is_featured, food_type:global_food_types(name), category:menu_categories(name), vendor:vendors!inner(id, slug, name, city, state, type, currency, country, status)";
 
 type SearchVendor = {
   id: string;
@@ -80,6 +80,7 @@ function itemMatchesSearch(item: SearchItem, searchTerm: string) {
       item.category?.name,
       item.vendor?.name,
       item.vendor?.city,
+      (item.vendor as { state?: string | null } | undefined)?.state,
       ...(Array.isArray(item.tags) ? item.tags : []),
     ].join(" "),
   );
@@ -128,7 +129,9 @@ function SearchPage() {
         .select("*")
         .eq("status", "approved")
         .eq("country", country)
-        .or(`name.ilike.${like},tagline.ilike.${like},city.ilike.${like},state.ilike.${like},address_line.ilike.${like}`);
+        .or(
+          `name.ilike.${like},tagline.ilike.${like},cuisine.ilike.${like},city.ilike.${like},state.ilike.${like},address_line.ilike.${like},description.ilike.${like}`,
+        );
         
       if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
         query = query.eq("type", filter);
@@ -207,16 +210,17 @@ function SearchPage() {
                 ref={inputRef}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Restaurants, groceries, dishes..."
+                placeholder="Dishes, chefs, restaurants, groceries, city or state"
                 className="w-full rounded-full bg-zinc-50 border-transparent ring-1 ring-zinc-200 pl-10 pr-4 py-2.5 text-sm font-medium placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] transition"
               />
             </div>
           </div>
           {/* Chips */}
-          <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:mx-0 sm:px-0">
             {[
               { id: "All", label: "All" },
               { id: "restaurant", label: "Restaurants" },
+              { id: "chef", label: "Chefs" },
               { id: "grocery", label: "Groceries" },
               { id: "shopping", label: "Shopping" },
               { id: "pickup", label: "Pickup" },
@@ -247,7 +251,7 @@ function SearchPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Restaurants, groceries, dishes..."
+              placeholder="Dishes, chefs, restaurants, groceries, city or state"
               autoFocus
               className="w-full rounded-full bg-zinc-50 border-transparent ring-1 ring-zinc-200 pl-10 pr-4 py-3 text-sm font-medium placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-clay)] transition"
             />
@@ -256,6 +260,7 @@ function SearchPage() {
             {[
               { id: "All", label: "All" },
               { id: "restaurant", label: "Restaurants" },
+              { id: "chef", label: "Chefs" },
               { id: "grocery", label: "Groceries" },
               { id: "shopping", label: "Shopping" },
               { id: "pickup", label: "Pickup" },
