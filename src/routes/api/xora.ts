@@ -1038,9 +1038,12 @@ async function askOpenAI({
       break;
     }
 
-    // Echo the model's tool calls back, then append each result.
-    for (const call of calls) {
-      input.push(call);
+    // Echo back the FULL output, not just the function_call items. Reasoning
+    // models (gpt-5-*) emit a `reasoning` item that each function_call depends
+    // on; dropping it makes the next request fail with
+    // "function_call was provided without its required 'reasoning' item".
+    for (const item of output) {
+      input.push(item);
     }
     for (const call of calls) {
       let parsed: any = {};

@@ -34,14 +34,28 @@ export function useUnreadNotifications(): { count: number; refetch: () => void }
   useEffect(() => {
     let uid: string | null = null;
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
 
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       uid = u.user?.id ?? null;
-      if (!uid) return;
+      if (!uid || cancelled) return;
+
+      // The effect can re-run (StrictMode, remounts) before the previous async
+      // setup finished. supabase.channel() returns the EXISTING channel for a
+      // topic, and calling .on() on an already-subscribed channel throws
+      // "cannot add postgres_changes callbacks ... after subscribe()".
+      // Drop any channel already holding this topic first.
+      const topic = `notifications:${uid}`;
+      for (const existing of supabase.getChannels()) {
+        if (existing.topic === topic || existing.topic === `realtime:${topic}`) {
+          await supabase.removeChannel(existing);
+        }
+      }
+      if (cancelled) return;
 
       channel = supabase
-        .channel(`notifications:${uid}`)
+        .channel(topic)
         .on(
           "postgres_changes",
           {
@@ -59,6 +73,7 @@ export function useUnreadNotifications(): { count: number; refetch: () => void }
     })();
 
     return () => {
+      cancelled = true;
       if (channel) supabase.removeChannel(channel);
     };
   }, [qc]);
