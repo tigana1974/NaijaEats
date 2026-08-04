@@ -133,11 +133,11 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
   const navigate = useNavigate();
   const [descOpen, setDescOpen] = useState(false);
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-[#d4cdbd] via-[#faede6] to-[#eae5da] pb-[100px] font-sans relative overflow-x-hidden">
+    <div className="min-h-dvh bg-gradient-to-br from-[#d4cdbd] via-[#faede6] to-[#eae5da] pb-[100px] lg:pb-16 font-sans relative overflow-x-hidden">
       
       {/* Header */}
-      <div className="absolute top-0 inset-x-0 z-20">
-        <div className="mx-auto max-w-md px-5 py-5 flex items-center justify-between pt-safe">
+      <div className="absolute top-0 inset-x-0 z-20 lg:static">
+        <div className="mx-auto max-w-md lg:max-w-6xl px-5 lg:px-8 py-5 lg:py-6 flex items-center justify-between pt-safe">
           <Link
             to="/vendor/$slug"
             params={{ slug }}
@@ -173,10 +173,13 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
         </div>
       </div>
 
+      {/* Desktop: image left, everything else right. Mobile: unchanged stack. */}
+      <div className="lg:mx-auto lg:max-w-6xl lg:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14 lg:items-start">
+
       {/* Floating Hero Image */}
-      <div className="relative mx-auto max-w-md pt-20 pb-2">
+      <div className="relative mx-auto max-w-md w-full pt-20 pb-2 lg:max-w-none lg:pt-0 lg:sticky lg:top-8">
         {item.image_url ? (
-          <div className="relative w-full h-[360px] flex justify-center items-center px-6">
+          <div className="relative w-full h-[360px] lg:h-[520px] flex justify-center items-center px-6 lg:px-0">
              <img 
                src={item.image_url} 
                alt={item.name} 
@@ -189,7 +192,7 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
       </div>
 
       {/* Details Section (No background, sits directly on gradient) */}
-      <div className="mx-auto max-w-md px-6 relative z-10">
+      <div className="mx-auto max-w-md w-full px-6 relative z-10 lg:max-w-none lg:px-0 lg:pt-2">
         
         {/* Title and Favorite */}
         <div className="flex items-start justify-between gap-4">
@@ -319,9 +322,9 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
 
       </div>
 
-      {/* Bottom Action Bar (No background, sits on main gradient) */}
-      <div className="fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-2 px-6">
-        <div className="mx-auto max-w-md flex items-center justify-between gap-4">
+      {/* Bottom Action Bar — fixed on mobile, inline beside the image on desktop */}
+      <div className="fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-2 px-6 lg:static lg:z-auto lg:col-start-2 lg:px-0 lg:pb-0 lg:pt-8">
+        <div className="mx-auto max-w-md lg:max-w-none flex items-center justify-between gap-4">
           
           {/* Custom Stepper */}
           <div className="flex items-center justify-between bg-white rounded-full p-1 shadow-[0_4px_14px_rgba(0,0,0,0.05)] w-[115px] shrink-0 border border-zinc-100/50">
@@ -351,17 +354,18 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
           </button>
         </div>
       </div>
+      </div>
     </div>
   );
 }
 
 function GroceryItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, setIsFavorite, handleAddToCart, fmt }: any) {
   return (
-    <div className="min-h-dvh bg-white pb-[100px] font-sans relative overflow-x-hidden">
+    <div className="min-h-dvh bg-white pb-[100px] lg:pb-16 font-sans relative overflow-x-hidden">
       
       {/* Header */}
       <div className="absolute top-0 inset-x-0 z-20">
-        <div className="mx-auto max-w-md px-5 py-5 flex items-center justify-between pt-safe">
+        <div className="mx-auto max-w-md lg:max-w-6xl px-5 lg:px-8 py-5 lg:py-6 flex items-center justify-between pt-safe">
           <Link
             to="/vendor/$slug"
             params={{ slug }}
@@ -403,7 +407,9 @@ function GroceryItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite
       </div>
 
       {/* Grocery Image Product Shot */}
-      <div className="relative mx-auto max-w-md bg-zinc-50 rounded-b-[2.5rem] pt-24 pb-8 px-8 shadow-sm">
+      <div className="lg:mx-auto lg:max-w-6xl lg:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14 lg:items-start">
+
+      <div className="relative mx-auto max-w-md w-full bg-zinc-50 rounded-b-[2.5rem] lg:rounded-[2rem] pt-24 lg:pt-8 pb-8 px-8 shadow-sm lg:max-w-none lg:sticky lg:top-8">
         {item.image_url ? (
           <div className="relative w-full h-[280px] flex justify-center items-center">
              <img 
@@ -420,7 +426,7 @@ function GroceryItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite
       </div>
 
       {/* Details Section */}
-      <div className="mx-auto max-w-md px-6 pt-6 relative z-10">
+      <div className="mx-auto max-w-md w-full px-6 pt-6 relative z-10 lg:max-w-none lg:px-0 lg:pt-2">
         
         {/* Brand / Vendor Label */}
         <div className="flex items-center gap-2 mb-2">
@@ -471,8 +477,8 @@ function GroceryItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 px-6 bg-white border-t border-zinc-100">
-        <div className="mx-auto max-w-md flex items-center justify-between gap-4">
+      <div className="fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 px-6 bg-white border-t border-zinc-100 lg:static lg:z-auto lg:col-start-2 lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-8">
+        <div className="mx-auto max-w-md lg:max-w-none flex items-center justify-between gap-4">
           
           {/* Custom Stepper */}
           <div className="flex items-center justify-between bg-zinc-50 rounded-2xl p-1 w-[120px] shrink-0 border border-zinc-200/60">
@@ -501,6 +507,7 @@ function GroceryItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite
             {adding ? "Adding…" : "Add to cart"}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
