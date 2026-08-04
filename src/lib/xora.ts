@@ -11,6 +11,7 @@
 
 import { detectRegion, type BillingRegion } from "@/lib/premium";
 import { supabase } from "@/integrations/supabase/client";
+import type { XoraAction } from "@/lib/xoraActions";
 
 export type XoraRole = "user" | "xora";
 
@@ -321,11 +322,11 @@ Ask me anything — I speak plain English (and a little Pidgin when you do 😉)
 export async function* generateReply(
   userText: string,
   opts?: { region?: BillingRegion; history?: XoraMessage[] },
-): AsyncGenerator<{ delta?: string; done?: boolean; actions?: { label: string; to: string }[] }> {
+): AsyncGenerator<{ delta?: string; done?: boolean; actions?: { label: string; to: string }[]; xoraActions?: XoraAction[] }> {
   const region = opts?.region ?? getRegion();
   const serverReply = await tryServerReply(userText, region, opts?.history ?? []);
   if (serverReply.reply) {
-    yield* streamContent(serverReply.reply);
+    yield* streamContent(serverReply.reply, undefined, serverReply.actions);
     return;
   }
   if (serverReply.reachedServer) {
@@ -349,7 +350,7 @@ async function tryServerReply(userText: string, region: BillingRegion, history: 
     const token = data.session?.access_token;
     if (!token) {
       console.warn("[xora] no signed-in session — using local fallback. Log in for full, catalog-aware answers.");
-      return { reachedServer: false, reply: null };
+      return { reachedServer: false, reply: null, actions: [] };
     }
 
     const response = await fetch("/api/xora", {
@@ -372,25 +373,30 @@ async function tryServerReply(userText: string, region: BillingRegion, history: 
     });
     if (!response.ok) {
       console.warn(`[xora] /api/xora responded ${response.status} — using local fallback.`);
-      return { reachedServer: true, reply: null };
+      return { reachedServer: true, reply: null, actions: [] };
     }
-    const payload = (await response.json()) as { reply?: unknown };
+    const payload = (await response.json()) as { reply?: unknown; actions?: unknown };
     return {
       reachedServer: true,
       reply: typeof payload.reply === "string" ? payload.reply : null,
+      actions: Array.isArray(payload.actions) ? (payload.actions as XoraAction[]) : [],
     };
   } catch (err) {
     console.warn("[xora] server reply unavailable, using local fallback", err);
-    return { reachedServer: false, reply: null };
+    return { reachedServer: false, reply: null, actions: [] };
   }
 }
 
-async function* streamContent(content: string, actions?: { label: string; to: string }[]) {
+async function* streamContent(
+  content: string,
+  actions?: { label: string; to: string }[],
+  xoraActions?: XoraAction[],
+) {
   // Stream by word / punctuation groups so it feels natural.
   const tokens = content.match(/(\s+|\S+)/g) ?? [content];
   for (const t of tokens) {
     await new Promise((r) => setTimeout(r, 22 + Math.random() * 34));
     yield { delta: t };
   }
-  yield { done: true, actions };
+  yield { done: true, actions, xoraActions };
 }

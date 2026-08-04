@@ -19,6 +19,10 @@ import {
   type XoraMessage,
 } from "@/lib/xora";
 import { useMyRole } from "@/hooks/useMyRole";
+import { useCart } from "@/hooks/useCart";
+import { walletPayOrder } from "@/lib/wallet";
+import { toast } from "sonner";
+import { requiresConfirmation, type XoraAction } from "@/lib/xoraActions";
 import { XoraAvatar } from "@/components/naija/XoraAvatar";
 import { RoleShell } from "@/components/naija/RoleShell";
 import { useQuery } from "@tanstack/react-query";
@@ -82,6 +86,47 @@ function suggestionsFor(role: string | undefined, vendorType?: string | null): S
 
 function XoraChatPage() {
   const navigate = useNavigate();
+  const { addItem } = useCart();
+  // Actions Xora prepared that need an explicit tap (money / status changes).
+  const [pendingActions, setPendingActions] = useState<XoraAction[]>([]);
+
+  /** Runs an action for real. Auto-run for safe ones; tap-to-confirm for the rest. */
+  const runAction = async (a: XoraAction) => {
+    try {
+      if (a.type === "navigate") {
+        navigate({ to: a.to as never });
+        return;
+      }
+      if (a.type === "add_to_cart") {
+        for (let i = 0; i < Math.max(1, a.quantity); i++) addItem(a.vendor, a.item);
+        toast.success(`Added ${a.quantity}× ${a.item.name} to your cart`);
+        return;
+      }
+      if (a.type === "open_checkout") {
+        navigate({ to: "/cart" as never });
+        return;
+      }
+      if (a.type === "confirm_payment") {
+        await walletPayOrder(a.orderId);
+        toast.success("Payment complete");
+        setPendingActions((p) => p.filter((x) => x !== a));
+        navigate({ to: "/orders/$orderId" as never, params: { orderId: a.orderId } as never });
+        return;
+      }
+      if (a.type === "set_order_status") {
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: a.status })
+          .eq("id", a.orderId);
+        if (error) throw error;
+        toast.success(`Order marked ${a.status}`);
+        setPendingActions((p) => p.filter((x) => x !== a));
+        return;
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not complete that action");
+    }
+  };
   const { intent, q } = Route.useSearch();
   const { data: role } = useMyRole();
   const region = useMemo(() => getRegion(), []);
@@ -175,6 +220,13 @@ function XoraChatPage() {
             messages: prev.messages.map((m) => (m.id === xoraId ? { ...m, content: acc } : m)),
             updatedAt: new Date().toISOString(),
           }));
+        }
+        if (chunk.done && chunk.xoraActions?.length) {
+          // Safe actions fire immediately; money / status changes wait for a tap.
+          const auto = chunk.xoraActions.filter((a) => !requiresConfirmation(a));
+          const confirm = chunk.xoraActions.filter(requiresConfirmation);
+          setPendingActions(confirm);
+          for (const a of auto) await runAction(a);
         }
         if (chunk.done && chunk.actions) {
           setThread((prev) => ({
@@ -281,6 +333,40 @@ function XoraChatPage() {
           thread.messages.map((m) => <MessageBubble key={m.id} msg={m} region={region} />)
         )}
       </div>
+
+      {/* ─── Pending confirmations (money / status changes) ─── */}
+      {pendingActions.length > 0 && (
+        <div className="shrink-0 border-t border-border bg-amber-50/70 px-3 sm:px-4 py-2.5 lg:px-[max(1rem,calc((100%-48rem)/2))]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-amber-800">
+              Needs your confirmation
+            </span>
+            {pendingActions.map((a, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => void runAction(a)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-clay)] px-3.5 py-1.5 text-xs font-bold text-white hover:opacity-90 transition"
+              >
+                {a.label}
+                {a.type === "confirm_payment" && (
+                  <span className="tabular-nums">
+                    · {a.currency === "GBP" ? "£" : "₦"}
+                    {Number(a.amount).toLocaleString()}
+                  </span>
+                )}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setPendingActions([])}
+              className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ─── Composer ─── */}
       <form
