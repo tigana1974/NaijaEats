@@ -21,11 +21,22 @@ export type XoraAction =
     }
   | { type: "open_checkout"; label: string }
   | { type: "confirm_payment"; orderId: string; amount: number; currency: string; label: string }
-  | { type: "set_order_status"; orderId: string; status: string; label: string };
+  | { type: "set_order_status"; orderId: string; status: string; label: string }
+  | {
+      type: "fund_wallet";
+      label: string;
+      shortfall: number;
+      suggested: number;
+      currency: string;
+    };
 
 /** Actions that must be confirmed by the user before they run. */
 export function requiresConfirmation(action: XoraAction): boolean {
-  return action.type === "confirm_payment" || action.type === "set_order_status";
+  return (
+    action.type === "confirm_payment" ||
+    action.type === "set_order_status" ||
+    action.type === "fund_wallet"
+  );
 }
 
 /** Whitelisted in-app destinations Xora may open, per role. */

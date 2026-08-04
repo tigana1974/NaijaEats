@@ -27,6 +27,10 @@ import { initiateWalletTopup } from "@/lib/api/payments.functions";
 import { detectRegion } from "@/lib/premium";
 
 export const Route = createFileRoute("/_authenticated/wallet/top-up")({
+  // Xora can deep-link here with a suggested amount (?amount=5000).
+  validateSearch: (s: Record<string, unknown>): { amount?: number } => ({
+    amount: Number(s.amount) > 0 ? Number(s.amount) : undefined,
+  }),
   component: TopUpPage,
 });
 
@@ -57,7 +61,8 @@ function TopUpPage() {
   const navigate = useNavigate();
   const initiateTopup = useServerFn(initiateWalletTopup);
   const [step, setStep] = useState<Step>("amount");
-  const [amount, setAmount] = useState<number>(0);
+  const { amount: presetAmount } = Route.useSearch();
+  const [amount, setAmount] = useState<number>(presetAmount ?? 0);
   const [method, setMethod] = useState<MethodId>("card");
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);

@@ -750,14 +750,33 @@ function toolsForRole(role: AppRole) {
       },
       {
         type: "function" as const,
-    strict: false,
+        strict: false,
+        name: "list_unpaid_orders",
+        description:
+          "List the user's unpaid orders with their ids and totals. Call this before prepare_payment when you don't already have an order id.",
+        parameters: { type: "object", properties: {}, additionalProperties: false },
+      },
+      {
+        type: "function" as const,
+        strict: false,
         name: "prepare_payment",
         description:
-          "Prepare payment for one of the user's unpaid orders. This does NOT charge them — it returns a confirmation the user must tap. Use order ids from their context.",
+          "Prepare payment for an unpaid order and check the wallet balance. Omit orderId to use the user's most recent unpaid order. Does NOT charge — the user confirms with their PIN. If funds are short it returns a wallet top-up instead.",
         parameters: {
           type: "object",
           properties: { orderId: { type: "string" } },
-          required: ["orderId"],
+          additionalProperties: false,
+        },
+      },
+      {
+        type: "function" as const,
+        strict: false,
+        name: "fund_wallet",
+        description:
+          "Start a wallet top-up. Use when the user agrees to add money. amount is what they want to add.",
+        parameters: {
+          type: "object",
+          properties: { amount: { type: "number" } },
           additionalProperties: false,
         },
       },
@@ -893,26 +912,127 @@ async function runTool(
     return { result: { ok: true }, action: { type: "open_checkout", label: "Go to checkout" } };
   }
 
-  if (name === "prepare_payment") {
-    const orderId = String(args?.orderId ?? "");
-    const { data: order } = await supabaseAdmin
+  if (name === "list_unpaid_orders") {
+    const { data } = await supabaseAdmin
       .from("orders")
-      .select("id,total,currency,payment_status,customer_id")
-      .eq("id", orderId)
-      .maybeSingle();
-    if (!order || (order as any).customer_id !== ctx.userId) {
-      return { result: { ok: false, error: "Order not found." } };
+      .select("id,total,currency,payment_status,created_at,vendor:vendors(name)")
+      .eq("customer_id", ctx.userId)
+      .neq("payment_status", "paid")
+      .neq("status", "cancelled")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    const orders = (data ?? []).map((o: any) => ({
+      id: o.id,
+      total: o.total,
+      currency: o.currency,
+      vendor: o.vendor?.name ?? null,
+    }));
+    return {
+      result: orders.length
+        ? { ok: true, orders }
+        : {
+            ok: false,
+            error:
+              "No unpaid orders. Items in the cart are not an order yet — the user must check out first.",
+          },
+    };
+  }
+
+  if (name === "fund_wallet") {
+    const amount = Math.max(0, Number(args?.amount ?? 0));
+    const currency = ctx.region === "UK" ? "GBP" : "NGN";
+    return {
+      result: { ok: true, startingTopUp: amount || null },
+      action: {
+        type: "fund_wallet",
+        label: amount ? `Add ${currency === "GBP" ? "£" : "₦"}${amount.toLocaleString()}` : "Fund wallet",
+        shortfall: 0,
+        suggested: amount,
+        currency,
+      },
+    };
+  }
+
+  if (name === "prepare_payment") {
+    const requestedId = String(args?.orderId ?? "").trim();
+
+    // Resolve the order. With no id (or a stale one) fall back to the most
+    // recent unpaid order — a cart is not an order, which is why paying right
+    // after "add to cart" used to fail with "Order not found".
+    let order: any = null;
+    if (requestedId) {
+      const { data } = await supabaseAdmin
+        .from("orders")
+        .select("id,total,currency,payment_status,customer_id")
+        .eq("id", requestedId)
+        .maybeSingle();
+      if (data && (data as any).customer_id === ctx.userId) order = data;
     }
-    if ((order as any).payment_status === "paid") {
+    if (!order) {
+      const { data } = await supabaseAdmin
+        .from("orders")
+        .select("id,total,currency,payment_status,customer_id")
+        .eq("customer_id", ctx.userId)
+        .neq("payment_status", "paid")
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      order = data ?? null;
+    }
+    if (!order) {
+      return {
+        result: {
+          ok: false,
+          error:
+            "No unpaid order to pay for. Anything in the cart still needs to be checked out — send them to checkout.",
+        },
+        action: { type: "open_checkout", label: "Go to checkout" },
+      };
+    }
+    if (order.payment_status === "paid") {
       return { result: { ok: false, error: "That order is already paid." } };
     }
+
+    // Funds check BEFORE asking for a PIN, so we never send someone into a
+    // payment they cannot complete.
+    const total = Number(order.total ?? 0);
+    const currency = String(order.currency ?? (ctx.region === "UK" ? "GBP" : "NGN"));
+    const { data: acct } = await supabaseAdmin
+      .from("wallet_accounts")
+      .select("balance")
+      .eq("user_id", ctx.userId)
+      .maybeSingle();
+    const balance = Number((acct as any)?.balance ?? 0);
+
+    if (balance < total) {
+      const shortfall = Math.round(total - balance);
+      return {
+        result: {
+          ok: false,
+          insufficientFunds: true,
+          balance,
+          total,
+          shortfall,
+          error: `Not enough in the wallet. Balance ${balance}, order ${total}, short by ${shortfall}. Ask the user if they want to fund their wallet, and how much.`,
+        },
+        action: {
+          type: "fund_wallet",
+          label: "Fund wallet",
+          shortfall,
+          suggested: shortfall,
+          currency,
+        },
+      };
+    }
+
     return {
-      result: { ok: true, awaitingUserConfirmation: true, total: (order as any).total },
+      result: { ok: true, awaitingUserConfirmation: true, total, balance },
       action: {
         type: "confirm_payment",
-        orderId,
-        amount: Number((order as any).total),
-        currency: String((order as any).currency ?? "NGN"),
+        orderId: order.id,
+        amount: total,
+        currency,
         label: "Confirm payment",
       },
     };
@@ -1107,7 +1227,9 @@ function personaInstructions(context: ContextBlock): string {
     "Never say 'you can go to X', 'here's how', 'to do this', 'first…then…'. Just call the tool.",
     "HARD LIMIT: at most ONE short sentence, under 20 words. Confirm what you did — nothing else.",
     "NEVER claim an action happened unless you actually called its tool in this turn. Saying 'done', 'added', 'opened' or 'payment ready' without the matching tool call is a failure.",
-    "To pay: you MUST call prepare_payment with the order id. Do not announce a payment you have not prepared.",
+    "To pay: call prepare_payment (order id optional — it picks the latest unpaid order). Never announce a payment you have not prepared.",
+    "A cart is NOT an order. If there is nothing to pay for, the user must check out first — send them to checkout.",
+    "If prepare_payment reports insufficientFunds, say the shortfall in a few words. The app then asks whether to fund the wallet and for how much — do not ask those questions yourself.",
     "To add items: you MUST call search_catalog, then add_to_cart with the returned id. Never claim an item was added otherwise.",
     "Only after the tool returns, confirm in a few words what happened.",
     "For questions, answer with a bare list or the single fact asked for. No preamble, no closing line, no offers of further help, no 'let me know if…'.",

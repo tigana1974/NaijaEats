@@ -92,6 +92,9 @@ function XoraChatPage() {
   const [pendingActions, setPendingActions] = useState<XoraAction[]>([]);
   // Payment Xora prepared, waiting on the user's PIN.
   const [pinFor, setPinFor] = useState<Extract<XoraAction, { type: "confirm_payment" }> | null>(null);
+  // Insufficient-funds prompt: ask, then choose an amount, then go to top-up.
+  const [fundFor, setFundFor] = useState<Extract<XoraAction, { type: "fund_wallet" }> | null>(null);
+  const [fundStep, setFundStep] = useState<"ask" | "amount">("ask");
 
   /** Runs an action for real. Auto-run for safe ones; tap-to-confirm for the rest. */
   const runAction = async (a: XoraAction) => {
@@ -113,6 +116,11 @@ function XoraChatPage() {
         // Never charge straight from a chat message: the user must enter their
         // wallet PIN so we know the instruction really came from them.
         setPinFor(a);
+        return;
+      }
+      if (a.type === "fund_wallet") {
+        setFundFor(a);
+        setFundStep(a.suggested > 0 ? "amount" : "ask");
         return;
       }
       if (a.type === "set_order_status") {
@@ -374,6 +382,84 @@ function XoraChatPage() {
         }}
       />
 
+      {/* ─── Insufficient funds: Yes/No, then amount, then top-up ─── */}
+      {fundFor && (
+        <div className="shrink-0 border-t border-border bg-amber-50/80 px-3 sm:px-4 py-3 lg:px-[max(1rem,calc((100%-48rem)/2))]">
+          {fundStep === "ask" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[13px] font-semibold text-amber-900">
+                Not enough in your wallet. Do you want to fund it?
+              </span>
+              <button
+                type="button"
+                onClick={() => setFundStep("amount")}
+                className="rounded-full bg-[var(--brand-clay)] px-4 py-1.5 text-xs font-bold text-white hover:opacity-90"
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setFundFor(null)}
+                className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="text-[13px] font-semibold text-amber-900">
+                How much do you want to add?
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {Array.from(
+                  new Set(
+                    [
+                      fundFor.shortfall > 0 ? fundFor.shortfall : 0,
+                      ...(fundFor.currency === "GBP" ? [10, 25, 50, 100] : [5000, 10000, 20000, 50000]),
+                    ].filter((n) => n > 0),
+                  ),
+                )
+                  .slice(0, 5)
+                  .map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() =>
+                        navigate({
+                          to: "/wallet/top-up" as never,
+                          search: { amount: amt } as never,
+                        })
+                      }
+                      className="rounded-full bg-[var(--brand-clay)] px-4 py-1.5 text-xs font-bold text-white hover:opacity-90"
+                    >
+                      {fundFor.currency === "GBP" ? "£" : "₦"}
+                      {amt.toLocaleString()}
+                    </button>
+                  ))}
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/wallet/top-up" as never })}
+                  className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                >
+                  Another amount
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFundFor(null)}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-700"
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="mt-1.5 text-[11px] text-amber-800/80">
+                You'll be taken to {fundFor.currency === "GBP" ? "Stripe" : "Paystack"} to complete
+                the payment securely.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ─── Pending confirmations (money / status changes) ─── */}
       {pendingActions.length > 0 && (
         <div className="shrink-0 border-t border-border bg-amber-50/70 px-3 sm:px-4 py-2.5 lg:px-[max(1rem,calc((100%-48rem)/2))]">
@@ -381,7 +467,7 @@ function XoraChatPage() {
             <span className="text-[11px] font-bold uppercase tracking-wide text-amber-800">
               Needs your confirmation
             </span>
-            {pendingActions.map((a, i) => (
+            {pendingActions.filter((a) => a.type !== "fund_wallet").map((a, i) => (
               <button
                 key={i}
                 type="button"
