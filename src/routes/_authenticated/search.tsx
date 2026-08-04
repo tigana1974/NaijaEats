@@ -124,24 +124,26 @@ function SearchPage() {
     queryFn: async () => {
       if (!search.trim()) return [];
       const like = makeIlikePattern(search);
-      let query = supabase
-        .from("vendors")
-        .select("*")
-        .eq("status", "approved")
-        .eq("country", country)
-        .or(
-          `name.ilike.${like},tagline.ilike.${like},cuisine.ilike.${like},city.ilike.${like},state.ilike.${like},address_line.ilike.${like},description.ilike.${like}`,
-        );
-        
-      if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
-        query = query.eq("type", filter);
-      }
+      const matchCols = `name.ilike.${like},tagline.ilike.${like},cuisine.ilike.${like},city.ilike.${like},state.ilike.${like},address_line.ilike.${like},description.ilike.${like}`;
 
-      const { data, error } = await query
-        .order("rating", { ascending: false })
-        .limit(10);
+      const build = (scopeToCountry: boolean) => {
+        let q = supabase.from("vendors").select("*").eq("status", "approved").or(matchCols);
+        if (scopeToCountry) q = q.eq("country", country);
+        if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
+          q = q.eq("type", filter);
+        }
+        return q.order("rating", { ascending: false }).limit(10);
+      };
+
+      const { data, error } = await build(true);
       if (error) throw error;
-      return data ?? [];
+      if ((data ?? []).length > 0) return data ?? [];
+
+      // Nothing in the selected region. The landing page searches every market,
+      // so a place like "Port Harcourt" resolved there but looked empty here.
+      const { data: anyRegion, error: anyErr } = await build(false);
+      if (anyErr) throw anyErr;
+      return anyRegion ?? [];
     },
     enabled: search.trim().length > 1,
   });
@@ -174,9 +176,13 @@ function SearchPage() {
         mergedItems.set(it.id, it as SearchItem);
       });
 
-      const filtered = Array.from(mergedItems.values())
-        .filter(hasApprovedVendor)
-        .filter((it) => it.vendor.country === country)
+      const approved = Array.from(mergedItems.values()).filter(hasApprovedVendor);
+      const inRegion = approved.filter((it) => it.vendor.country === country);
+      // Same fallback as vendors: if the selected region has no match, widen to
+      // every market instead of reporting "No results found".
+      const pool = inRegion.length > 0 ? inRegion : approved;
+
+      const filtered = pool
         .filter((it) => {
           if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
             return it.vendor.type === filter;
