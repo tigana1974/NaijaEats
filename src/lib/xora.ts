@@ -372,7 +372,15 @@ async function tryServerReply(userText: string, region: BillingRegion, history: 
       }),
     });
     if (!response.ok) {
-      console.warn(`[xora] /api/xora responded ${response.status} — using local fallback.`);
+      let detail = "";
+      try {
+        detail = ((await response.json()) as { detail?: string })?.detail ?? "";
+      } catch {
+        /* ignore */
+      }
+      console.warn(
+        `[xora] /api/xora responded ${response.status}${detail ? ` — ${detail}` : ""} — using local fallback.`,
+      );
       return { reachedServer: true, reply: null, actions: [] };
     }
     const payload = (await response.json()) as { reply?: unknown; actions?: unknown };

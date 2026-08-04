@@ -24,7 +24,7 @@ type ContextBlock = {
 
 const DEFAULT_MODEL = "gpt-5-nano";
 const MAX_MESSAGE_LENGTH = 2_000;
-const MAX_TOOL_TURNS = 4;
+const MAX_TOOL_TURNS = 6;
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_MESSAGE_LENGTH = 800;
 const MAX_OUTPUT_TOKENS = 220;
@@ -76,8 +76,9 @@ export const Route = createFileRoute("/api/xora")({
 
           return json({ reply, actions, role, contextSummary: context.summary });
         } catch (error) {
-          console.error("[xora] request failed", error);
-          return json({ error: "Xora is unavailable right now" }, 500);
+          const detail = error instanceof Error ? error.message : String(error);
+          console.error("[xora] request failed", detail);
+          return json({ error: "Xora is unavailable right now", detail }, 502);
         }
       },
     },
@@ -688,6 +689,7 @@ function truncate(value: string, max: number) {
 function toolsForRole(role: AppRole) {
   const navigate = {
     type: "function" as const,
+    strict: false,
     name: "navigate_to_page",
     description:
       "Open a page in the NaijaEats app for the user. Use this whenever the user asks to go somewhere, see something, or when a task is best finished on a specific page.",
@@ -707,6 +709,7 @@ function toolsForRole(role: AppRole) {
       navigate,
       {
         type: "function" as const,
+    strict: false,
         name: "search_catalog",
         description:
           "Search the live catalog for vendors (chefs/restaurants/groceries) or dishes. Use before recommending or adding anything so you only reference real, available items.",
@@ -724,6 +727,7 @@ function toolsForRole(role: AppRole) {
       },
       {
         type: "function" as const,
+    strict: false,
         name: "add_to_cart",
         description:
           "Add a real menu item to the user's cart. Only call with an itemId returned by search_catalog.",
@@ -739,12 +743,14 @@ function toolsForRole(role: AppRole) {
       },
       {
         type: "function" as const,
+    strict: false,
         name: "open_checkout",
         description: "Take the user to checkout to review and pay for what is in their cart.",
         parameters: { type: "object", properties: {}, additionalProperties: false },
       },
       {
         type: "function" as const,
+    strict: false,
         name: "prepare_payment",
         description:
           "Prepare payment for one of the user's unpaid orders. This does NOT charge them — it returns a confirmation the user must tap. Use order ids from their context.",
@@ -763,6 +769,7 @@ function toolsForRole(role: AppRole) {
       navigate,
       {
         type: "function" as const,
+    strict: false,
         name: "prepare_order_status",
         description:
           "Prepare a status change for one of this vendor's orders (accepted, preparing, ready, cancelled). Returns a confirmation the vendor must tap; it does not apply immediately.",
@@ -993,7 +1000,33 @@ async function askOpenAI({
     if (!response.ok) {
       const details = await response.text();
       console.error("[xora] OpenAI request failed", response.status, details.slice(0, 500));
-      throw new Error("Xora could not reach OpenAI right now.");
+      let msg = details.slice(0, 200);
+      try {
+        msg = (JSON.parse(details) as { error?: { message?: string } })?.error?.message ?? msg;
+      } catch {
+        /* keep raw */
+      }
+      // Most failures here are tool-schema/model issues. Fall back to a plain
+      // (tool-less) completion so the user gets a real answer instead of
+      // "could not reach the AI service".
+      const plain = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          model,
+          instructions: personaInstructions(context),
+          input,
+          max_output_tokens: MAX_OUTPUT_TOKENS,
+        }),
+      });
+      if (!plain.ok) {
+        throw new Error(`OpenAI ${response.status} (model "${model}"): ${msg}`);
+      }
+      const plainData = await plain.json();
+      return {
+        reply: sanitizeCustomerFacingReply(extractOutputText(plainData) || "Sorry — try again."),
+        actions,
+      };
     }
 
     const data = await response.json();
@@ -1016,11 +1049,23 @@ async function askOpenAI({
       } catch {
         parsed = {};
       }
-      const { result, action } = await runTool(String(call.name), parsed, {
-        userId,
-        role: context.role,
-        region,
-      });
+      let result: unknown;
+      let action: XoraAction | undefined;
+      try {
+        ({ result, action } = await runTool(String(call.name), parsed, {
+          userId,
+          role: context.role,
+          region,
+        }));
+      } catch (toolErr) {
+        // A broken tool should degrade to "that didn't work", never 500 the
+        // whole conversation.
+        console.error("[xora] tool failed", call.name, toolErr);
+        result = {
+          ok: false,
+          error: toolErr instanceof Error ? toolErr.message : "Tool failed",
+        };
+      }
       if (action) actions.push(action);
       input.push({
         type: "function_call_output",
