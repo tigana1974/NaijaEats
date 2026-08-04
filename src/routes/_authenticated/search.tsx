@@ -119,15 +119,22 @@ function SearchPage() {
     if (q !== undefined) setSearch(q);
   }, [q]);
 
-  const { data: vendors, isLoading: vendorsLoading } = useQuery<SearchVendor[]>({
+  const { data: vendors, isLoading: vendorsLoading, error: vendorsError } = useQuery<SearchVendor[]>({
     queryKey: ["search-vendors", search, filter],
     queryFn: async () => {
       if (!search.trim()) return [];
       const like = makeIlikePattern(search);
       const matchCols = `name.ilike.${like},tagline.ilike.${like},cuisine.ilike.${like},city.ilike.${like},state.ilike.${like},address_line.ilike.${like},description.ilike.${like}`;
 
-      const build = (scopeToCountry: boolean) => {
-        let q = supabase.from("vendors").select("*").eq("status", "approved").or(matchCols);
+      // Columns that might not exist yet in a database missing a migration
+      // (e.g. vendors.state). PostgREST rejects the WHOLE .or() with a 400 if
+      // any referenced column is unknown, which silently turned every search
+      // into "No results found". So we degrade instead of failing.
+      const fullMatch = matchCols;
+      const safeMatch = `name.ilike.${like},tagline.ilike.${like},city.ilike.${like},address_line.ilike.${like}`;
+
+      const build = (scopeToCountry: boolean, cols: string) => {
+        let q = supabase.from("vendors").select("*").eq("status", "approved").or(cols);
         if (scopeToCountry) q = q.eq("country", country);
         if (filter !== "All" && filter !== "pickup" && filter !== "shopping") {
           q = q.eq("type", filter);
@@ -135,20 +142,29 @@ function SearchPage() {
         return q.order("rating", { ascending: false }).limit(10);
       };
 
-      const { data, error } = await build(true);
-      if (error) throw error;
-      if ((data ?? []).length > 0) return data ?? [];
+      const run = async (scopeToCountry: boolean) => {
+        const res = await build(scopeToCountry, fullMatch);
+        if (!res.error) return res.data ?? [];
+        console.warn(
+          "[search] vendor query failed with the full column set — retrying without optional columns:",
+          res.error.message,
+        );
+        const fallback = await build(scopeToCountry, safeMatch);
+        if (fallback.error) throw fallback.error;
+        return fallback.data ?? [];
+      };
+
+      const inCountry = await run(true);
+      if (inCountry.length > 0) return inCountry;
 
       // Nothing in the selected region. The landing page searches every market,
       // so a place like "Port Harcourt" resolved there but looked empty here.
-      const { data: anyRegion, error: anyErr } = await build(false);
-      if (anyErr) throw anyErr;
-      return anyRegion ?? [];
+      return await run(false);
     },
     enabled: search.trim().length > 1,
   });
 
-  const { data: items, isLoading: itemsLoading } = useQuery<SearchItemWithVendor[]>({
+  const { data: items, isLoading: itemsLoading, error: itemsError } = useQuery<SearchItemWithVendor[]>({
     queryKey: ["search-items", search, filter],
     queryFn: async () => {
       const term = search.trim();
@@ -370,10 +386,22 @@ function SearchPage() {
             {!vendorsLoading && !itemsLoading && !hasResults && (
               <div className="mt-12 rounded-3xl border border-dashed border-zinc-200 bg-zinc-50/50 p-8 text-center">
                 <SearchIcon className="h-8 w-8 text-zinc-300 mx-auto mb-3" />
-                <p className="font-semibold text-zinc-700">No results found</p>
-                <p className="mt-1 text-sm text-zinc-500">
-                  We couldn't find anything matching "{search}". Try searching for something else.
-                </p>
+                {vendorsError || itemsError ? (
+                  <>
+                    <p className="font-semibold text-red-700">Search is unavailable</p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                      {((vendorsError ?? itemsError) as Error)?.message ||
+                        "Something went wrong running the search."}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-zinc-700">No results found</p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                      We couldn't find anything matching "{search}". Try searching for something else.
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </>
