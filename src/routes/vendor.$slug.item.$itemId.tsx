@@ -55,7 +55,19 @@ function MenuItemPage() {
       if (iErr) throw iErr;
       if (!item) throw notFound();
 
-      return { vendor, item };
+      // Vendors have no phone column — the contact number lives on the owner's
+      // profile. Fetched here so the call button can be real (or hidden).
+      let ownerPhone: string | null = null;
+      if (vendor.owner_id) {
+        const { data: owner } = await supabase
+          .from("profiles")
+          .select("phone")
+          .eq("id", vendor.owner_id)
+          .maybeSingle();
+        ownerPhone = (owner as { phone?: string | null } | null)?.phone ?? null;
+      }
+
+      return { vendor, item, ownerPhone };
     },
   });
 
@@ -65,7 +77,7 @@ function MenuItemPage() {
     );
   }
   if (!data) return null;
-  const { vendor, item } = data;
+  const { vendor, item, ownerPhone } = data;
   const fmt = (n: number) => `${vendor.currency === "GBP" ? "£" : "₦"}${Number(n).toLocaleString()}`;
 
   const handleAddToCart = async () => {
@@ -108,6 +120,7 @@ function MenuItemPage() {
     setIsFavorite,
     handleAddToCart,
     fmt,
+    ownerPhone,
   };
 
   if (vendor.type === "grocery") {
@@ -116,7 +129,9 @@ function MenuItemPage() {
   return <FoodItemLayout {...commonProps} />;
 }
 
-function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, setIsFavorite, handleAddToCart, fmt }: any) {
+function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, setIsFavorite, handleAddToCart, fmt, ownerPhone }: any) {
+  const navigate = useNavigate();
+  const [descOpen, setDescOpen] = useState(false);
   return (
     <div className="min-h-dvh bg-gradient-to-br from-[#d4cdbd] via-[#faede6] to-[#eae5da] pb-[100px] font-sans relative overflow-x-hidden">
       
@@ -136,8 +151,22 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
           
           <button
             type="button"
+            onClick={async () => {
+              const url = typeof window !== "undefined" ? window.location.href : "";
+              const title = `${item.name} · ${vendor.name} on NaijaEats`;
+              try {
+                if (navigator.share) {
+                  await navigator.share({ title, url });
+                } else {
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Link copied");
+                }
+              } catch {
+                /* user dismissed the share sheet */
+              }
+            }}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-zinc-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition hover:scale-105"
-            aria-label="More options"
+            aria-label="Share this dish"
           >
             <IoEllipsisVertical className="h-5 w-5" />
           </button>
@@ -213,10 +242,27 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] text-zinc-600 hover:bg-zinc-50 transition">
+            <button
+              type="button"
+              onClick={() => {
+                if (ownerPhone) {
+                  window.location.href = `tel:${ownerPhone}`;
+                } else {
+                  toast.info("No phone number on file — send a message instead.");
+                  navigate({ to: "/chats/$vendorId", params: { vendorId: vendor.id } });
+                }
+              }}
+              aria-label={`Call ${vendor.name}`}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] text-zinc-600 hover:bg-zinc-50 transition"
+            >
               <IoCallOutline className="h-4 w-4" />
             </button>
-            <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] text-zinc-600 hover:bg-zinc-50 transition">
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/chats/$vendorId", params: { vendorId: vendor.id } })}
+              aria-label={`Message ${vendor.name}`}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] text-zinc-600 hover:bg-zinc-50 transition"
+            >
               <IoChatbubbleEllipsesOutline className="h-4 w-4" />
             </button>
           </div>
@@ -225,11 +271,27 @@ function FoodItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite, s
         {/* Description */}
         <div className="mt-7">
           <h3 className="text-[15px] font-medium text-zinc-900 mb-2">Description</h3>
-          <p className="text-[12px] text-zinc-500 leading-relaxed font-normal">
-            {item.description || "This looks like a rich, indulgent dish built for serious flavor. Fresh ingredients and expert preparation bring irresistible taste to every bite."}
-            {" "}
-            <button className="font-medium text-zinc-900 ml-1 capitalize hover:underline">Read more...</button>
-          </p>
+          {(() => {
+            const text =
+              item.description ||
+              "This looks like a rich, indulgent dish built for serious flavor. Fresh ingredients and expert preparation bring irresistible taste to every bite.";
+            const isLong = text.length > 180;
+            const shown = descOpen || !isLong ? text : `${text.slice(0, 180).trimEnd()}…`;
+            return (
+              <p className="text-[12px] text-zinc-500 leading-relaxed font-normal">
+                {shown}
+                {isLong && (
+                  <button
+                    type="button"
+                    onClick={() => setDescOpen((v) => !v)}
+                    className="font-medium text-zinc-900 ml-1 hover:underline"
+                  >
+                    {descOpen ? "Read less" : "Read more..."}
+                  </button>
+                )}
+              </p>
+            );
+          })()}
         </div>
 
         {/* Macros */}
@@ -317,8 +379,22 @@ function GroceryItemLayout({ slug, vendor, item, qty, setQty, adding, isFavorite
             </button>
             <button
               type="button"
+              onClick={async () => {
+                const url = typeof window !== "undefined" ? window.location.href : "";
+                const title = `${item.name} · ${vendor.name} on NaijaEats`;
+                try {
+                  if (navigator.share) {
+                    await navigator.share({ title, url });
+                  } else {
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Link copied");
+                  }
+                } catch {
+                  /* user dismissed the share sheet */
+                }
+              }}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-zinc-800 shadow-[0_2px_10px_rgba(0,0,0,0.06)] ring-1 ring-zinc-200 transition hover:scale-105"
-              aria-label="More options"
+              aria-label="Share this item"
             >
               <IoEllipsisVertical className="h-5 w-5" />
             </button>

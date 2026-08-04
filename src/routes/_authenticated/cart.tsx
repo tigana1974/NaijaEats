@@ -319,7 +319,12 @@ function CartPage() {
                   <div className="divide-y divide-border">
                     {cart.items.map((item) => (
                       <div key={item.menuItemId} className="flex items-center gap-3 p-3.5 sm:p-4">
-                        <div className="h-16 w-16 shrink-0 rounded-lg bg-muted overflow-hidden ring-1 ring-border">
+                        <Link
+                          to="/vendor/$slug/item/$itemId"
+                          params={{ slug: cart.vendorSlug, itemId: item.menuItemId }}
+                          className="h-16 w-16 shrink-0 rounded-lg bg-muted overflow-hidden ring-1 ring-border block"
+                          aria-label={`View ${item.name}`}
+                        >
                           {item.imageUrl && (
                             <img
                               src={item.imageUrl}
@@ -327,9 +332,15 @@ function CartPage() {
                               className="h-full w-full object-cover"
                             />
                           )}
-                        </div>
+                        </Link>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold line-clamp-1">{item.name}</div>
+                          <Link
+                            to="/vendor/$slug/item/$itemId"
+                            params={{ slug: cart.vendorSlug, itemId: item.menuItemId }}
+                            className="text-sm font-semibold line-clamp-1 hover:underline"
+                          >
+                            {item.name}
+                          </Link>
                           <div className="text-xs text-muted-foreground">
                             {fmt(item.price)} each
                           </div>
