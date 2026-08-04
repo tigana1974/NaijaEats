@@ -234,6 +234,28 @@ function XoraChatPage() {
         // Safety net: if Xora *claims* it did something but produced no action,
         // say so plainly instead of leaving the user waiting for a button that
         // will never appear.
+        if (chunk.done) {
+          // Money claims are checked ALWAYS, not only when no action came back:
+          // fund_wallet/prepare_payment return an action but change nothing, so
+          // a "topped up" or "paid" claim is false either way.
+          const falseMoneyClaim =
+            /\b(topped up|top up complete|funded|wallet funded|has been paid|payment (?:complete|successful|done))\b/i.test(
+              acc,
+            );
+          if (falseMoneyClaim) {
+            const note =
+              " — correction: nothing has been charged or added yet. Use the buttons below to complete it.";
+            setThread((prev) => ({
+              ...prev,
+              messages: prev.messages.map((m) =>
+                m.id === xoraId && !m.content.includes(note)
+                  ? { ...m, content: m.content + note }
+                  : m,
+              ),
+              updatedAt: new Date().toISOString(),
+            }));
+          }
+        }
         if (chunk.done && !chunk.xoraActions?.length) {
           const claimed = /\b(payment ready|confirm below|added|opened|placed your order)\b/i.test(acc);
           if (claimed) {

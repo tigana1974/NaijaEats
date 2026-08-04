@@ -773,7 +773,7 @@ function toolsForRole(role: AppRole) {
         strict: false,
         name: "fund_wallet",
         description:
-          "Start a wallet top-up. Use when the user agrees to add money. amount is what they want to add.",
+          "Offer the user a wallet top-up button. This does NOT add money and does NOT change the balance — the user still has to complete payment with Paystack/Stripe. Never report the wallet as funded after calling this.",
         parameters: {
           type: "object",
           properties: { amount: { type: "number" } },
@@ -942,7 +942,17 @@ async function runTool(
     const amount = Math.max(0, Number(args?.amount ?? 0));
     const currency = ctx.region === "UK" ? "GBP" : "NGN";
     return {
-      result: { ok: true, startingTopUp: amount || null },
+      result: {
+        // NOT a success signal. Nothing has been charged or credited: this only
+        // offers the user a top-up button. Saying otherwise is a false claim
+        // about the user's money.
+        funded: false,
+        balanceChanged: false,
+        status: "awaiting_user_payment",
+        requestedAmount: amount || null,
+        tellUser:
+          "Do NOT say the wallet was funded or topped up. Say only that a top-up is ready for them to complete.",
+      },
       action: {
         type: "fund_wallet",
         label: amount ? `Add ${currency === "GBP" ? "£" : "₦"}${amount.toLocaleString()}` : "Fund wallet",
@@ -1230,6 +1240,8 @@ function personaInstructions(context: ContextBlock): string {
     "To pay: call prepare_payment (order id optional — it picks the latest unpaid order). Never announce a payment you have not prepared.",
     "A cart is NOT an order. If there is nothing to pay for, the user must check out first — send them to checkout.",
     "If prepare_payment reports insufficientFunds, say the shortfall in a few words. The app then asks whether to fund the wallet and for how much — do not ask those questions yourself.",
+    "MONEY TRUTHFULNESS: never state that a wallet was funded/topped up, or that an order was paid, unless a tool result explicitly confirms the balance changed. fund_wallet and prepare_payment only PREPARE things — the user still has to complete them.",
+    "After fund_wallet say something like 'Top-up ready — choose an amount below.' NEVER 'Wallet topped up'.",
     "To add items: you MUST call search_catalog, then add_to_cart with the returned id. Never claim an item was added otherwise.",
     "Only after the tool returns, confirm in a few words what happened.",
     "For questions, answer with a bare list or the single fact asked for. No preamble, no closing line, no offers of further help, no 'let me know if…'.",
