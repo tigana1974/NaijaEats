@@ -22,6 +22,19 @@ export default defineConfig({
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
+        // Without this, superseded precaches linger and the installed PWA keeps
+        // serving the previous JS bundle — which is why a reinstall was needed
+        // before new Xora code took effect.
+        cleanupOutdatedCaches: true,
+        // Never let the SPA fallback swallow API calls: /api/xora must always
+        // hit the network, never a cached document.
+        navigateFallbackDenylist: [/^\/api\//],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/api/'),
+            handler: 'NetworkOnly',
+          },
+        ],
       },
       includeAssets: ['favicon.ico', 'logo.png', 'apple-touch-icon.png'],
       manifest: {

@@ -223,6 +223,24 @@ function XoraChatPage() {
             updatedAt: new Date().toISOString(),
           }));
         }
+        // Safety net: if Xora *claims* it did something but produced no action,
+        // say so plainly instead of leaving the user waiting for a button that
+        // will never appear.
+        if (chunk.done && !chunk.xoraActions?.length) {
+          const claimed = /\b(payment ready|confirm below|added|opened|placed your order)\b/i.test(acc);
+          if (claimed) {
+            const note = " (Nothing was actually carried out — please try again.)";
+            setThread((prev) => ({
+              ...prev,
+              messages: prev.messages.map((m) =>
+                m.id === xoraId && !m.content.includes(note)
+                  ? { ...m, content: m.content + note }
+                  : m,
+              ),
+              updatedAt: new Date().toISOString(),
+            }));
+          }
+        }
         if (chunk.done && chunk.xoraActions?.length) {
           // Safe actions fire immediately; money / status changes wait for a tap.
           const auto = chunk.xoraActions.filter((a) => !requiresConfirmation(a));
